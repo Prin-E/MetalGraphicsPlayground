@@ -84,6 +84,28 @@ void draw_circle_equation(int xc, int yc, int r, int color) {
     }
 }
 
+#pragma mark - Bresenham's algorithm based plot
+// Bresenham's algorithm for a line
+// from "A Rasterizing Algorithm for Drawing Curves" by Alois Zingl
+void plotLine(int x0, int y0, int x1, int y1, int color) {
+    int dx = abs(x1 - x0), sx = x0 < x1 ? 1 : -1;
+    int dy = -abs(y1 - y0), sy = y0 < y1 ? 1 : -1;
+    int err = dx + dy, e2;          /* error value e_xy */
+    
+    for(;;) {
+        write_pixel(x0, y0, color);
+        e2 = 2 * err;
+        if(e2 >= dy) {              /* e_xy + e_x > 0 */
+            if(x0 == x1) break;
+            err += dy; x0 += sx;
+        }
+        if(e2 <= dx) {              /* e_xy + e_y < 0 */
+            if(y0 == y1) break;
+            err += dx; y0 += sy;
+        }
+    }
+}
+
 #pragma mark - AppDelegate
 @interface AppDelegate () {
     id<MTLDevice> _device;
@@ -194,27 +216,30 @@ void draw_circle_equation(int xc, int yc, int r, int color) {
     if(_pixels == nil)
         _pixels = (unsigned char *)malloc(sizeof(char) * kTextureWidth * kTextureHeight * kTextureComp);
     
-    static char off = 0;
-    for(int i = 0; i < kTextureHeight; i++) {
-        for(int j = 0; j < kTextureWidth; j++) {
-            NSUInteger offset = i * kTextureWidth * kTextureComp + j * kTextureComp;
-            _pixels[offset] = 255;
-            _pixels[offset + 1] = 255;
-            _pixels[offset + 2] = 255;
-            _pixels[offset + 3] = 255;
-        }
-    }
-    off++;
+    // fill texture with black color
+    memset(_pixels, 0x11, kTextureWidth * kTextureHeight * kTextureComp);
+    
+    // variables for line rotation
+    static float line_rot = 0;
+    int line_cx = 50, line_cy = 50, line_radius = 50;
+    float line_x0 = cos(line_rot)*line_radius+line_cx, line_y0 = sin(line_rot)*line_radius+line_cy;
+    float line_x1 = -cos(line_rot)*line_radius+line_cx, line_y1 = -sin(line_rot)*line_radius+line_cy;
     
     write_pixel(10, 10, 0xffff00ff);
     draw_line_equation(75, 30, 10, 114, 0x0000ffff);
     draw_circle_equation(60, 60, 28, 0xff0000ff);
+    //plotLine(60, 80, 30, 30, 0x0000ffff);
+    plotLine(line_x0, line_y0, line_x1, line_y1, 0x008800ff);
+    
+    line_rot += M_PI * 0.25 * 0.0166666;    // PI/4 per sec
     
     [_texture replaceRegion: MTLRegionMake2D(0, 0, kTextureWidth, kTextureHeight) mipmapLevel: 0 withBytes: _pixels bytesPerRow: kTextureWidth * kTextureComp];
+    
 }
 
 - (void)drawInMTKView:(MTKView *)view {
     dispatch_semaphore_wait(_semaphore, DISPATCH_TIME_FOREVER);
+    [self _prepare];
     
     id<MTLCommandBuffer> buffer = [_queue commandBuffer];
     buffer.label = @"MyBuffer";
