@@ -92,6 +92,12 @@
 		959B51FD1B9F3C690059E40B /* PrinE2013.png in Resources */ = {isa = PBXBuildFile; fileRef = 959B51FC1B9F3C690059E40B /* PrinE2013.png */; };
 		95C42C541D29501F00806E15 /* Shadow.metal in Sources */ = {isa = PBXBuildFile; fileRef = 95C42C531D29501F00806E15 /* Shadow.metal */; };
 		95CF822F1E098365001BDF8D /* MetalView.m in Sources */ = {isa = PBXBuildFile; fileRef = 958A9C2D1D16D14F00021744 /* MetalView.m */; };
+		95D6C40E21DBA0470007BB90 /* SimpleMetalRenderer.m in Sources */ = {isa = PBXBuildFile; fileRef = 95D6C40D21DBA0470007BB90 /* SimpleMetalRenderer.m */; };
+		95FF569F21DA453D00A52B3C /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 95FF569E21DA453D00A52B3C /* AppDelegate.m */; };
+		95FF56A121DA454000A52B3C /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 95FF56A021DA454000A52B3C /* Assets.xcassets */; };
+		95FF56A421DA454000A52B3C /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 95FF56A221DA454000A52B3C /* MainMenu.xib */; };
+		95FF56A721DA454000A52B3C /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 95FF56A621DA454000A52B3C /* main.m */; };
+		95FF56AE21DA457C00A52B3C /* CustomMetalLayerView.m in Sources */ = {isa = PBXBuildFile; fileRef = 95FF56AD21DA457C00A52B3C /* CustomMetalLayerView.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -197,6 +203,18 @@
 		958A9C361D16E08200021744 /* MetalMath.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = MetalMath.c; sourceTree = "<group>"; };
 		959B51FC1B9F3C690059E40B /* PrinE2013.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = PrinE2013.png; sourceTree = "<group>"; };
 		95C42C531D29501F00806E15 /* Shadow.metal */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.metal; path = Shadow.metal; sourceTree = "<group>"; };
+		95D6C40C21DBA0470007BB90 /* SimpleMetalRenderer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SimpleMetalRenderer.h; sourceTree = "<group>"; };
+		95D6C40D21DBA0470007BB90 /* SimpleMetalRenderer.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SimpleMetalRenderer.m; sourceTree = "<group>"; };
+		95FF569B21DA453D00A52B3C /* MetalCustomCALayer.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MetalCustomCALayer.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		95FF569D21DA453D00A52B3C /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
+		95FF569E21DA453D00A52B3C /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
+		95FF56A021DA454000A52B3C /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		95FF56A321DA454000A52B3C /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/MainMenu.xib; sourceTree = "<group>"; };
+		95FF56A521DA454000A52B3C /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		95FF56A621DA454000A52B3C /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
+		95FF56A821DA454000A52B3C /* MetalCustomCALayer.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = MetalCustomCALayer.entitlements; sourceTree = "<group>"; };
+		95FF56AC21DA457C00A52B3C /* CustomMetalLayerView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CustomMetalLayerView.h; sourceTree = "<group>"; };
+		95FF56AD21DA457C00A52B3C /* CustomMetalLayerView.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CustomMetalLayerView.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -274,6 +292,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		95FF569821DA453D00A52B3C /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -337,6 +362,7 @@
 				958A9C1B1D16D0F600021744 /* MetalIZBShadow */,
 				9553ABB61E097642004E8465 /* MetalEnvironmentMapping */,
 				955DA6AC1F0E74E100464E54 /* MetalInstancing */,
+				95FF569C21DA453D00A52B3C /* MetalCustomCALayer */,
 				953EAB7C1B9B5AFC0024994F /* Products */,
 				957ED5591EF980F800F15B76 /* Frameworks */,
 			);
@@ -353,6 +379,7 @@
 				958A9C1A1D16D0F600021744 /* MetalIZBShadow.app */,
 				9553ABB51E097641004E8465 /* MetalEnvironmentMapping.app */,
 				955DA6AB1F0E74E100464E54 /* MetalInstancing.app */,
+				95FF569B21DA453D00A52B3C /* MetalCustomCALayer.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -529,6 +556,24 @@
 			path = Common;
 			sourceTree = "<group>";
 		};
+		95FF569C21DA453D00A52B3C /* MetalCustomCALayer */ = {
+			isa = PBXGroup;
+			children = (
+				95FF569D21DA453D00A52B3C /* AppDelegate.h */,
+				95FF569E21DA453D00A52B3C /* AppDelegate.m */,
+				95FF56A021DA454000A52B3C /* Assets.xcassets */,
+				95FF56A221DA454000A52B3C /* MainMenu.xib */,
+				95FF56A521DA454000A52B3C /* Info.plist */,
+				95FF56A621DA454000A52B3C /* main.m */,
+				95FF56A821DA454000A52B3C /* MetalCustomCALayer.entitlements */,
+				95FF56AC21DA457C00A52B3C /* CustomMetalLayerView.h */,
+				95FF56AD21DA457C00A52B3C /* CustomMetalLayerView.m */,
+				95D6C40C21DBA0470007BB90 /* SimpleMetalRenderer.h */,
+				95D6C40D21DBA0470007BB90 /* SimpleMetalRenderer.m */,
+			);
+			path = MetalCustomCALayer;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -668,12 +713,30 @@
 			productReference = 958A9C1A1D16D0F600021744 /* MetalIZBShadow.app */;
 			productType = "com.apple.product-type.application";
 		};
+		95FF569A21DA453D00A52B3C /* MetalCustomCALayer */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 95FF56AB21DA454000A52B3C /* Build configuration list for PBXNativeTarget "MetalCustomCALayer" */;
+			buildPhases = (
+				95FF569721DA453D00A52B3C /* Sources */,
+				95FF569821DA453D00A52B3C /* Frameworks */,
+				95FF569921DA453D00A52B3C /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = MetalCustomCALayer;
+			productName = MetalCustomCALayer;
+			productReference = 95FF569B21DA453D00A52B3C /* MetalCustomCALayer.app */;
+			productType = "com.apple.product-type.application";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
 		953EAB731B9B5AFC0024994F /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
+				DefaultBuildSystemTypeForWorkspace = Latest;
 				LastUpgradeCheck = 0940;
 				ORGANIZATIONNAME = Prin_E;
 				TargetAttributes = {
@@ -710,6 +773,11 @@
 						DevelopmentTeam = EQPSU577A8;
 						ProvisioningStyle = Automatic;
 					};
+					95FF569A21DA453D00A52B3C = {
+						CreatedOnToolsVersion = 10.1;
+						DevelopmentTeam = EQPSU577A8;
+						ProvisioningStyle = Automatic;
+					};
 				};
 			};
 			buildConfigurationList = 953EAB761B9B5AFC0024994F /* Build configuration list for PBXProject "MetalGraphicsPlayground" */;
@@ -733,6 +801,7 @@
 				958A9C191D16D0F600021744 /* MetalIZBShadow */,
 				9553ABB41E097641004E8465 /* MetalEnvironmentMapping */,
 				955DA6AA1F0E74E100464E54 /* MetalInstancing */,
+				95FF569A21DA453D00A52B3C /* MetalCustomCALayer */,
 			);
 		};
 /* End PBXProject section */
@@ -824,6 +893,15 @@
 			files = (
 				958A9C231D16D0F600021744 /* Assets.xcassets in Resources */,
 				958A9C261D16D0F600021744 /* MainMenu.xib in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		95FF569921DA453D00A52B3C /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				95FF56A121DA454000A52B3C /* Assets.xcassets in Resources */,
+				95FF56A421DA454000A52B3C /* MainMenu.xib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -920,6 +998,17 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		95FF569721DA453D00A52B3C /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				95D6C40E21DBA0470007BB90 /* SimpleMetalRenderer.m in Sources */,
+				95FF56AE21DA457C00A52B3C /* CustomMetalLayerView.m in Sources */,
+				95FF56A721DA454000A52B3C /* main.m in Sources */,
+				95FF569F21DA453D00A52B3C /* AppDelegate.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXVariantGroup section */
@@ -983,6 +1072,14 @@
 			isa = PBXVariantGroup;
 			children = (
 				958A9C251D16D0F600021744 /* Base */,
+			);
+			name = MainMenu.xib;
+			sourceTree = "<group>";
+		};
+		95FF56A221DA454000A52B3C /* MainMenu.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				95FF56A321DA454000A52B3C /* Base */,
 			);
 			name = MainMenu.xib;
 			sourceTree = "<group>";
@@ -1339,6 +1436,57 @@
 			};
 			name = Release;
 		};
+		95FF56A921DA454000A52B3C /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CODE_SIGN_ENTITLEMENTS = MetalCustomCALayer/MetalCustomCALayer.entitlements;
+				CODE_SIGN_IDENTITY = "Mac Developer";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				DEVELOPMENT_TEAM = EQPSU577A8;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				INFOPLIST_FILE = MetalCustomCALayer/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
+				MACOSX_DEPLOYMENT_TARGET = 10.14;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.Prin-E.test.MetalCustomCALayer";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		95FF56AA21DA454000A52B3C /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CODE_SIGN_ENTITLEMENTS = MetalCustomCALayer/MetalCustomCALayer.entitlements;
+				CODE_SIGN_IDENTITY = "Mac Developer";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				DEVELOPMENT_TEAM = EQPSU577A8;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				INFOPLIST_FILE = MetalCustomCALayer/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
+				MACOSX_DEPLOYMENT_TARGET = 10.14;
+				MTL_FAST_MATH = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.Prin-E.test.MetalCustomCALayer";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -1419,6 +1567,15 @@
 			buildConfigurations = (
 				958A9C281D16D0F600021744 /* Debug */,
 				958A9C291D16D0F600021744 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		95FF56AB21DA454000A52B3C /* Build configuration list for PBXNativeTarget "MetalCustomCALayer" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				95FF56A921DA454000A52B3C /* Debug */,
+				95FF56AA21DA454000A52B3C /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

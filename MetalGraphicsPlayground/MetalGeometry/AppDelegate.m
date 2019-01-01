@@ -150,7 +150,7 @@ void plotLine(int x0, int y0, int x1, int y1, int color) {
 - (void)_initView {
     _view.delegate = self;
     _view.device = _device;
-    _view.preferredFramesPerSecond = 15;
+    _view.preferredFramesPerSecond = 60;
     _view.depthStencilPixelFormat = MTLPixelFormatDepth32Float_Stencil8;
     _view.sampleCount = 1;
 }
@@ -231,7 +231,7 @@ void plotLine(int x0, int y0, int x1, int y1, int color) {
     //plotLine(60, 80, 30, 30, 0x0000ffff);
     plotLine(line_x0, line_y0, line_x1, line_y1, 0x008800ff);
     
-    line_rot += M_PI * 0.25 * 0.0166666;    // PI/4 per sec
+    line_rot += M_PI * 0.125 / self.view.preferredFramesPerSecond;    // PI/16 per sec
     
     [_texture replaceRegion: MTLRegionMake2D(0, 0, kTextureWidth, kTextureHeight) mipmapLevel: 0 withBytes: _pixels bytesPerRow: kTextureWidth * kTextureComp];
     
