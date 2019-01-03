@@ -17,6 +17,7 @@
     id<MTLDevice> _device;
     id<MTLLibrary> _library;
     id<MTLCommandQueue> _queue;
+    dispatch_semaphore_t _semaphore;
 }
 @synthesize device = _device;
 
@@ -32,6 +33,7 @@
     _device = MTLCreateSystemDefaultDevice();
     _library = [_device newDefaultLibrary];
     _queue = [_device newCommandQueue];
+    _semaphore = dispatch_semaphore_create(3);
 }
 
 - (nonnull id<MTLDevice>)device {
@@ -39,8 +41,9 @@
 }
 
 - (void)renderFromView:(CustomMetalLayerView *)view {
-    id<MTLCommandBuffer> buffer = [_queue commandBuffer];
+    dispatch_semaphore_wait(_semaphore, DISPATCH_TIME_FOREVER);
     
+    id<MTLCommandBuffer> buffer = [_queue commandBuffer];
     static float f = 0.0f;
     static float inc = 1.0f;
     f += view.deltaTime * inc;
@@ -58,6 +61,9 @@
     id<MTLRenderCommandEncoder> enc = [buffer renderCommandEncoderWithDescriptor: renderPass];
     [enc endEncoding];
     [buffer presentDrawable: view.currentDrawable];
+    [buffer addCompletedHandler:^(id<MTLCommandBuffer> buffer) {
+        dispatch_semaphore_signal(self->_semaphore);
+    }];
     [buffer commit];
 }
 
