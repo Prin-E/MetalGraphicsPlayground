@@ -16,7 +16,7 @@
 @protocol MetalViewDelegate <MTKViewDelegate>
 
 @optional
-- (void)metalView: (MetalView *)view keyDown: (NSEvent *)theEvent;
+- (void)metalView:(MetalView *)view keyDown:(NSEvent *)theEvent;
 - (void)metalView:(MetalView *)view mouseDown:(NSEvent *)theEvent;
 - (void)metalView:(MetalView *)view mouseDragged:(NSEvent *)theEvent;
 - (void)metalView:(MetalView *)view mouseUp:(NSEvent *)theEvent;
