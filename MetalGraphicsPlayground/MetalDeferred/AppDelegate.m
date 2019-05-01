@@ -7,6 +7,7 @@
 //
 
 #import "AppDelegate.h"
+#import "../Common/Shaders/SharedStructures.h"
 
 @interface AppDelegate ()
 

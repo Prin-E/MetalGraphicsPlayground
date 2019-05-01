@@ -73,6 +73,7 @@ const inline __attribute__((__always_inline__)) float lerp(float a, float b, flo
     NSLog(@"Initializing metal layer...");
     _metalLayer = [CAMetalLayer layer];
     _metalLayer.pixelFormat = MTLPixelFormatBGRA8Unorm;
+    _currentDrawable = _metalLayer.nextDrawable;
     //_metalLayer.framebufferOnly = YES;
     //_metalLayer.displaySyncEnabled = NO;
     //_metalLayer.allowsNextDrawableTimeout = NO;
@@ -161,10 +162,27 @@ const inline __attribute__((__always_inline__)) float lerp(float a, float b, flo
     });
 }
 
+- (void)keyDown:(NSEvent *)event {
+    [_delegate view: self keyDown: event];
+}
+
+- (void)mouseDown:(NSEvent *)event {
+    [_delegate view: self mouseDown: event];
+}
+
+- (void)mouseDragged:(NSEvent *)event {
+    [_delegate view: self mouseDragged: event];
+}
+
+- (void)mouseUp:(NSEvent *)event {
+    [_delegate view: self mouseUp: event];
+}
+
 - (void)setFrame:(NSRect)frame {
     [super setFrame:frame];
     NSRect pixelFrame = [self convertRectToBacking:frame];
     _metalLayer.drawableSize = pixelFrame.size;
+    _currentDrawable = _metalLayer.nextDrawable;
     [self.renderer resize:pixelFrame.size];
     
     NSLog(@"New frame pixel size : %@", NSStringFromSize(pixelFrame.size));

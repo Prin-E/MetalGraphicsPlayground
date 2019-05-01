@@ -126,6 +126,8 @@ static NSUInteger kTextureComp = 4;
             NSLog(@"MTLIndirectArgumentBuffersTier1");
         else if (iabTier == MTLArgumentBuffersTier2)
             NSLog(@"MTLIndirectArgumentBuffersTier2");
+        BOOL rasterOrderGroupsSupported = _device.rasterOrderGroupsSupported;
+        NSLog(@"Raster order group : %d", rasterOrderGroupsSupported);
     }
     
     _library = [_device newDefaultLibrary];

@@ -95,6 +95,8 @@
 		95C42C541D29501F00806E15 /* Shadow.metal in Sources */ = {isa = PBXBuildFile; fileRef = 95C42C531D29501F00806E15 /* Shadow.metal */; };
 		95CF822F1E098365001BDF8D /* MetalView.m in Sources */ = {isa = PBXBuildFile; fileRef = 958A9C2D1D16D14F00021744 /* MetalView.m */; };
 		95D6C40E21DBA0470007BB90 /* SimpleMetalRenderer.m in Sources */ = {isa = PBXBuildFile; fileRef = 95D6C40D21DBA0470007BB90 /* SimpleMetalRenderer.m */; };
+		95F4CB2A2279937200F51454 /* MGPGBuffer.m in Sources */ = {isa = PBXBuildFile; fileRef = 95F4CB292279937200F51454 /* MGPGBuffer.m */; };
+		95F4CB2D22799BFF00F51454 /* GBuffer.metal in Sources */ = {isa = PBXBuildFile; fileRef = 95F4CB2C22799BFF00F51454 /* GBuffer.metal */; };
 		95F5E0952276255600445BB0 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 95F5E0942276255600445BB0 /* AppDelegate.m */; };
 		95F5E0972276255900445BB0 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 95F5E0962276255900445BB0 /* Assets.xcassets */; };
 		95F5E09A2276255900445BB0 /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 95F5E0982276255900445BB0 /* MainMenu.xib */; };
@@ -215,6 +217,10 @@
 		95C42C531D29501F00806E15 /* Shadow.metal */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.metal; path = Shadow.metal; sourceTree = "<group>"; };
 		95D6C40C21DBA0470007BB90 /* SimpleMetalRenderer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SimpleMetalRenderer.h; sourceTree = "<group>"; };
 		95D6C40D21DBA0470007BB90 /* SimpleMetalRenderer.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SimpleMetalRenderer.m; sourceTree = "<group>"; };
+		95F4CB282279937200F51454 /* MGPGBuffer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MGPGBuffer.h; sourceTree = "<group>"; };
+		95F4CB292279937200F51454 /* MGPGBuffer.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MGPGBuffer.m; sourceTree = "<group>"; };
+		95F4CB2C22799BFF00F51454 /* GBuffer.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = GBuffer.metal; sourceTree = "<group>"; };
+		95F4CB2E2279FE5900F51454 /* SharedStructures.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SharedStructures.h; sourceTree = "<group>"; };
 		95F5E0912276255600445BB0 /* MetalDeferred.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MetalDeferred.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		95F5E0932276255600445BB0 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		95F5E0942276255600445BB0 /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
@@ -575,6 +581,7 @@
 		958A9C2B1D16D11200021744 /* Common */ = {
 			isa = PBXGroup;
 			children = (
+				95F4CB2B22799BED00F51454 /* Shaders */,
 				958A9C2C1D16D14F00021744 /* MetalView.h */,
 				958A9C2D1D16D14F00021744 /* MetalView.m */,
 				958A9C2F1D16D1C600021744 /* MetalMath.h */,
@@ -583,8 +590,19 @@
 				958955C72277369B00414591 /* MGPView.m */,
 				958955C9227736F700414591 /* MGPRenderer.h */,
 				958955CA227736F700414591 /* MGPRenderer.m */,
+				95F4CB282279937200F51454 /* MGPGBuffer.h */,
+				95F4CB292279937200F51454 /* MGPGBuffer.m */,
 			);
 			path = Common;
+			sourceTree = "<group>";
+		};
+		95F4CB2B22799BED00F51454 /* Shaders */ = {
+			isa = PBXGroup;
+			children = (
+				95F4CB2C22799BFF00F51454 /* GBuffer.metal */,
+				95F4CB2E2279FE5900F51454 /* SharedStructures.h */,
+			);
+			path = Shaders;
 			sourceTree = "<group>";
 		};
 		95F5E0922276255600445BB0 /* MetalDeferred */ = {
@@ -1083,6 +1101,8 @@
 				95F5E09D2276255900445BB0 /* main.m in Sources */,
 				95F5E0952276255600445BB0 /* AppDelegate.m in Sources */,
 				958955C82277369B00414591 /* MGPView.m in Sources */,
+				95F4CB2D22799BFF00F51454 /* GBuffer.metal in Sources */,
+				95F4CB2A2279937200F51454 /* MGPGBuffer.m in Sources */,
 				958955CB227736F700414591 /* MGPRenderer.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

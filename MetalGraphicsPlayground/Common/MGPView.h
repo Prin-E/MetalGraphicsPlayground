@@ -16,6 +16,7 @@ NS_ASSUME_NONNULL_BEGIN
 /*
  Custom implementation like MTKView for macOS
  */
+@protocol MGPViewDelegate;
 @interface MGPView : NSView
 
 // frame info
@@ -26,6 +27,16 @@ NS_ASSUME_NONNULL_BEGIN
 
 // renderer
 @property (strong) MGPRenderer *renderer;
+@property (strong) id<MGPViewDelegate> delegate;
+@end
+
+@protocol MGPViewDelegate
+
+@optional
+- (void)view:(MGPView *)view keyDown:(NSEvent *)theEvent;
+- (void)view:(MGPView *)view mouseDown:(NSEvent *)theEvent;
+- (void)view:(MGPView *)view mouseDragged:(NSEvent *)theEvent;
+- (void)view:(MGPView *)view mouseUp:(NSEvent *)theEvent;
 
 @end
 
