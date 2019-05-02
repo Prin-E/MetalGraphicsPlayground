@@ -91,6 +91,9 @@
 		958A9C341D16DA5C00021744 /* MetalKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 95273DD71B9BEB180015BB27 /* MetalKit.framework */; };
 		958A9C351D16DA6000021744 /* ModelIO.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9554894A1BA8663100F4868E /* ModelIO.framework */; };
 		958A9C371D16E08200021744 /* MetalMath.c in Sources */ = {isa = PBXBuildFile; fileRef = 958A9C361D16E08200021744 /* MetalMath.c */; };
+		959A344A227B33560034AA82 /* firetruck.mtl in Resources */ = {isa = PBXBuildFile; fileRef = 959A3448227B33550034AA82 /* firetruck.mtl */; };
+		959A344B227B33560034AA82 /* firetruck.obj in Resources */ = {isa = PBXBuildFile; fileRef = 959A3449227B33560034AA82 /* firetruck.obj */; };
+		959A344E227B59750034AA82 /* DeferredRenderer.m in Sources */ = {isa = PBXBuildFile; fileRef = 959A344D227B59750034AA82 /* DeferredRenderer.m */; };
 		959B51FD1B9F3C690059E40B /* PrinE2013.png in Resources */ = {isa = PBXBuildFile; fileRef = 959B51FC1B9F3C690059E40B /* PrinE2013.png */; };
 		95C42C541D29501F00806E15 /* Shadow.metal in Sources */ = {isa = PBXBuildFile; fileRef = 95C42C531D29501F00806E15 /* Shadow.metal */; };
 		95CF822F1E098365001BDF8D /* MetalView.m in Sources */ = {isa = PBXBuildFile; fileRef = 958A9C2D1D16D14F00021744 /* MetalView.m */; };
@@ -213,6 +216,10 @@
 		958A9C301D16D36C00021744 /* Shaders.metal */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.metal; path = Shaders.metal; sourceTree = "<group>"; };
 		958A9C321D16D37B00021744 /* SharedStructures.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SharedStructures.h; sourceTree = "<group>"; };
 		958A9C361D16E08200021744 /* MetalMath.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = MetalMath.c; sourceTree = "<group>"; };
+		959A3448227B33550034AA82 /* firetruck.mtl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = firetruck.mtl; sourceTree = "<group>"; };
+		959A3449227B33560034AA82 /* firetruck.obj */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = firetruck.obj; sourceTree = "<group>"; };
+		959A344C227B59750034AA82 /* DeferredRenderer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DeferredRenderer.h; sourceTree = "<group>"; };
+		959A344D227B59750034AA82 /* DeferredRenderer.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DeferredRenderer.m; sourceTree = "<group>"; };
 		959B51FC1B9F3C690059E40B /* PrinE2013.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = PrinE2013.png; sourceTree = "<group>"; };
 		95C42C531D29501F00806E15 /* Shadow.metal */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.metal; path = Shadow.metal; sourceTree = "<group>"; };
 		95D6C40C21DBA0470007BB90 /* SimpleMetalRenderer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SimpleMetalRenderer.h; sourceTree = "<group>"; };
@@ -608,6 +615,8 @@
 		95F5E0922276255600445BB0 /* MetalDeferred */ = {
 			isa = PBXGroup;
 			children = (
+				959A3448227B33550034AA82 /* firetruck.mtl */,
+				959A3449227B33560034AA82 /* firetruck.obj */,
 				95F5E0932276255600445BB0 /* AppDelegate.h */,
 				95F5E0942276255600445BB0 /* AppDelegate.m */,
 				95F5E0962276255900445BB0 /* Assets.xcassets */,
@@ -615,6 +624,8 @@
 				95F5E09B2276255900445BB0 /* Info.plist */,
 				95F5E09C2276255900445BB0 /* main.m */,
 				95F5E09E2276255900445BB0 /* MetalDeferred.entitlements */,
+				959A344C227B59750034AA82 /* DeferredRenderer.h */,
+				959A344D227B59750034AA82 /* DeferredRenderer.m */,
 			);
 			path = MetalDeferred;
 			sourceTree = "<group>";
@@ -987,6 +998,8 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				959A344A227B33560034AA82 /* firetruck.mtl in Resources */,
+				959A344B227B33560034AA82 /* firetruck.obj in Resources */,
 				95F5E0972276255900445BB0 /* Assets.xcassets in Resources */,
 				95F5E09A2276255900445BB0 /* MainMenu.xib in Resources */,
 			);
@@ -1103,6 +1116,7 @@
 				958955C82277369B00414591 /* MGPView.m in Sources */,
 				95F4CB2D22799BFF00F51454 /* GBuffer.metal in Sources */,
 				95F4CB2A2279937200F51454 /* MGPGBuffer.m in Sources */,
+				959A344E227B59750034AA82 /* DeferredRenderer.m in Sources */,
 				958955CB227736F700414591 /* MGPRenderer.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

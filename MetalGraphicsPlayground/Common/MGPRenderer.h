@@ -7,10 +7,10 @@
 //
 
 @import Metal;
+#import "MGPView.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
-@class MGPView;
 @interface MGPRenderer : NSObject
 
 @property (readonly) id<MTLDevice> device;

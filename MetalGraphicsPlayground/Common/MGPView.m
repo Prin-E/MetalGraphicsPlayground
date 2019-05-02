@@ -73,7 +73,6 @@ const inline __attribute__((__always_inline__)) float lerp(float a, float b, flo
     NSLog(@"Initializing metal layer...");
     _metalLayer = [CAMetalLayer layer];
     _metalLayer.pixelFormat = MTLPixelFormatBGRA8Unorm;
-    _currentDrawable = _metalLayer.nextDrawable;
     //_metalLayer.framebufferOnly = YES;
     //_metalLayer.displaySyncEnabled = NO;
     //_metalLayer.allowsNextDrawableTimeout = NO;
@@ -90,6 +89,7 @@ const inline __attribute__((__always_inline__)) float lerp(float a, float b, flo
         _renderer.view = self;
         _metalLayer.device = _renderer.device;
         if(_metalLayer.device != nil) {
+            _currentDrawable = _metalLayer.nextDrawable;
             [self initDisplayLink];
         }
         else {

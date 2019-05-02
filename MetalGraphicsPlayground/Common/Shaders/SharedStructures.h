@@ -16,8 +16,21 @@ typedef struct __attribute__((__aligned__(256))) {
     matrix_float4x4 projection;
 } camera_props_t;
 
+typedef struct {
+    float roughness;
+    float metalic;
+} material_t;
+
 typedef struct __attribute__((__aligned__(256))) {
     matrix_float4x4 model;
+    material_t material;
 } instance_props_t;
+
+typedef enum function_constant_values {
+    fcv_albedo,
+    fcv_normal,
+    fcv_roughness,
+    fcv_metalic
+} function_constant_values;
 
 #endif /* SharedStructures_h */

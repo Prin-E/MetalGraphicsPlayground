@@ -7,7 +7,8 @@
 //
 
 #import "AppDelegate.h"
-#import "../Common/Shaders/SharedStructures.h"
+#import "../Common/MGPView.h"
+#import "DeferredRenderer.h"
 
 @interface AppDelegate ()
 
@@ -17,7 +18,8 @@
 @implementation AppDelegate
 
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification {
-    // Insert code here to initialize your application
+    DeferredRenderer *renderer = [[DeferredRenderer alloc] init];
+    self.view.renderer = renderer;
 }
 
 
