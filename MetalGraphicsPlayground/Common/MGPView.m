@@ -90,6 +90,10 @@ const inline __attribute__((__always_inline__)) float lerp(float a, float b, flo
         _metalLayer.device = _renderer.device;
         if(_metalLayer.device != nil) {
             _currentDrawable = _metalLayer.nextDrawable;
+            NSRect pixelFrame = [self convertRectToBacking: self.frame];
+            _metalLayer.drawableSize = pixelFrame.size;
+            _currentDrawable = _metalLayer.nextDrawable;
+            [self.renderer resize:pixelFrame.size];
             [self initDisplayLink];
         }
         else {

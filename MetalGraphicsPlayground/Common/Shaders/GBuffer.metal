@@ -18,17 +18,17 @@ constant bool has_metalic_map [[function_constant(fcv_metalic)]];
 
 // g-buffer fragment output data
 typedef struct {
-    half4 albedo    [[color(0)]];
-    half4 normal    [[color(1)]];
-    float4 pos      [[color(2)]];
-    half4 shading   [[color(3)]];
+    half4 albedo    [[color(attachment_albedo)]];
+    half4 normal    [[color(attachment_normal)]];
+    float4 pos      [[color(attachment_pos)]];
+    half4 shading   [[color(attachment_shading)]];
 } GBufferData;
 
 typedef struct {
-    float3 pos     [[attribute(0)]];
-    float2 uv      [[attribute(1)]];
-    float3 normal  [[attribute(2)]];
-    float3 tangent [[attribute(3)]];
+    float3 pos     [[attribute(attrib_pos)]];
+    float2 uv      [[attribute(attrib_uv)]];
+    float3 normal  [[attribute(attrib_normal)]];
+    float3 tangent [[attribute(attrib_tangent)]];
 } GBufferVertex;
 
 typedef struct {
@@ -40,9 +40,19 @@ typedef struct {
     float3 bitangent;
 } GBufferFragment;
 
+typedef struct {
+    float3 pos  [[attribute(attrib_pos)]];
+    float2 uv   [[attribute(attrib_uv)]];
+} LightingVertex;
+
+typedef struct {
+    float4 clipPos      [[position]];
+    float2 uv;
+} LightingFragment;
+
 vertex GBufferFragment gbuffer_vert(GBufferVertex in [[stage_in]],
-                                    constant camera_props_t &cameraProps [[buffer(0)]],
-                                    device instance_props_t *instanceProps [[buffer(1)]],
+                                    constant camera_props_t &cameraProps [[buffer(1)]],
+                                    device instance_props_t *instanceProps [[buffer(2)]],
                                     uint instanceId [[instance_id]]) {
     GBufferFragment out;
     float4 v = float4(in.pos, 1.0);
@@ -57,11 +67,12 @@ vertex GBufferFragment gbuffer_vert(GBufferVertex in [[stage_in]],
 }
 
 fragment GBufferData gbuffer_frag(GBufferFragment in [[stage_in]],
-                                  constant camera_props_t &cameraProps [[buffer(0)]],
-                                  texture2d<half> albedoMap [[texture(0), function_constant(has_albedo_map)]],
-                                  texture2d<half> normalMap [[texture(1), function_constant(has_normal_map)]],
-                                  texture2d<half> roughnessMap [[texture(2), function_constant(has_roughness_map)]],
-                                  texture2d<half> metalicMap [[texture(3), function_constant(has_metalic_map)]]
+                                  constant camera_props_t &cameraProps [[buffer(1)]],
+                                  device instance_props_t *instanceProps [[buffer(2)]],
+                                  texture2d<half> albedoMap [[texture(tex_albedo), function_constant(has_albedo_map)]],
+                                  texture2d<half> normalMap [[texture(tex_normal), function_constant(has_normal_map)]],
+                                  texture2d<half> roughnessMap [[texture(tex_roughness), function_constant(has_roughness_map)]],
+                                  texture2d<half> metalicMap [[texture(tex_metalic), function_constant(has_metalic_map)]]
                                   ) {
     constexpr sampler linear(mip_filter::linear,
                              mag_filter::linear,
@@ -92,4 +103,23 @@ fragment GBufferData gbuffer_frag(GBufferFragment in [[stage_in]],
         out.shading.y = metalicMap.sample(linear, in.uv).r;
     }
     return out;
+}
+
+vertex LightingFragment lighting_vert(LightingVertex in [[stage_in]]) {
+    LightingFragment out;
+    out.clipPos = float4(in.pos, 1.0);
+    out.uv = in.uv;
+    return out;
+}
+
+fragment half4 lighting_frag(LightingFragment in [[stage_in]],
+                             texture2d<half> albedo [[texture(attachment_albedo)]],
+                             texture2d<half> normal [[texture(attachment_normal)]],
+                             texture2d<float> pos [[texture(attachment_pos)]],
+                             texture2d<half> shading [[texture(attachment_shading)]]) {
+    constexpr sampler linear(mip_filter::linear,
+                             mag_filter::linear,
+                             min_filter::linear);
+    
+    return albedo.sample(linear, in.uv);
 }

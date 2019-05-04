@@ -11,61 +11,63 @@
 #import "MGPRenderer.h"
 
 @implementation MGPGBuffer {
-    MGPView *_view;
+    id<MTLDevice> _device;
+    CGSize _size;
     MTLRenderPassDescriptor *_renderPassDescriptor;
+    MTLRenderPassDescriptor *_lightingPassDescriptor;
+    MTLRenderPipelineDescriptor *_renderPipelineDescriptor;
 }
 
 #pragma mark - Initialization
-- (instancetype)initWithView:(MGPView *)view {
+- (instancetype)initWithDevice:(id<MTLDevice>)device size:(CGSize)newSize {
     self = [super init];
     if(self) {
-        [self _initWithView: view];
+        [self _initWithDevice:device
+                         size:newSize];
     }
     return self;
 }
 
-- (void)_initWithView: (MGPView *)view {
-    _view = view;
+- (void)_initWithDevice:(id<MTLDevice>)device size:(CGSize)newSize {
+    _device = device;
+    _size = newSize;
     [self _makeGBufferTextures];
-    [self _makeRenderPipeline];
+    [self _makeRenderPipelineDescriptor];
     [self _makeRenderPassDescriptor];
+    [self _makeLightingPassDescriptor];
 }
 
 - (void)_makeGBufferTextures {
-    id<MTLTexture> drawableTexture = [_view currentDrawable].texture;
-    NSUInteger width = drawableTexture.width;
-    NSUInteger height = drawableTexture.height;
-    
-    id<MTLDevice> device = [_view.renderer device];
+    NSUInteger width = _size.width;
+    NSUInteger height = _size.height;
     
     // albedo
-    MTLTextureDescriptor *desc = [MTLTextureDescriptor texture2DDescriptorWithPixelFormat: MTLPixelFormatRGBA8Unorm
+    MTLTextureDescriptor *desc = [MTLTextureDescriptor texture2DDescriptorWithPixelFormat: MTLPixelFormatBGRA8Unorm
                                                                                     width: width
                                                                                    height: height
                                                                                 mipmapped: NO];
     desc.usage = MTLTextureUsageShaderRead | MTLTextureUsageRenderTarget;
-    _albedo = [device newTextureWithDescriptor: desc];
+    desc.storageMode = MTLStorageModePrivate;
+    _albedo = [_device newTextureWithDescriptor: desc];
     
     // normal
     desc.pixelFormat = MTLPixelFormatRGBA8Unorm;
-    _depth = [device newTextureWithDescriptor: desc];
+    _depth = [_device newTextureWithDescriptor: desc];
     
     // pos
     desc.pixelFormat = MTLPixelFormatRGBA32Float;
-    _pos = [device newTextureWithDescriptor: desc];
+    _pos = [_device newTextureWithDescriptor: desc];
     
     // depth
     desc.pixelFormat = MTLPixelFormatDepth32Float;
-    _depth = [device newTextureWithDescriptor: desc];
+    _depth = [_device newTextureWithDescriptor: desc];
     
     // shading
     desc.pixelFormat = MTLPixelFormatRGBA8Unorm;
-    _shading = [device newTextureWithDescriptor: desc];
+    _shading = [_device newTextureWithDescriptor: desc];
 }
 
-- (void)_makeRenderPipeline {
-    id<MTLDevice> device = [_view.renderer device];
-    
+- (void)_makeRenderPipelineDescriptor {
     MTLRenderPipelineDescriptor *desc = [[MTLRenderPipelineDescriptor alloc] init];
     
     // color attachments
@@ -77,14 +79,7 @@
     // depth attachment
     desc.depthAttachmentPixelFormat = _depth.pixelFormat;
     
-    NSError *error = nil;
-    _gBufferPipeline = [device newRenderPipelineStateWithDescriptor: desc
-                                                              error: &error];
-    if(error) {
-        @throw [NSException exceptionWithName:@"MGPGBufferException"
-                                       reason:self.debugDescription
-                                     userInfo:@{ @"NSError" : error }];
-    }
+    _renderPipelineDescriptor = desc;
 }
 
 - (void)_makeRenderPassDescriptor {
@@ -92,17 +87,21 @@
         _renderPassDescriptor = [[MTLRenderPassDescriptor alloc] init];
         
         // color attachments
-        _renderPassDescriptor.colorAttachments[0].loadAction = MTLLoadActionDontCare;
+        _renderPassDescriptor.colorAttachments[0].loadAction = MTLLoadActionClear;
         _renderPassDescriptor.colorAttachments[0].storeAction = MTLStoreActionStore;
-        _renderPassDescriptor.colorAttachments[1].loadAction = MTLLoadActionDontCare;
+        _renderPassDescriptor.colorAttachments[1].loadAction = MTLLoadActionClear;
         _renderPassDescriptor.colorAttachments[1].storeAction = MTLStoreActionStore;
-        _renderPassDescriptor.colorAttachments[2].loadAction = MTLLoadActionDontCare;
+        _renderPassDescriptor.colorAttachments[2].loadAction = MTLLoadActionClear;
         _renderPassDescriptor.colorAttachments[2].storeAction = MTLStoreActionStore;
-        _renderPassDescriptor.colorAttachments[3].loadAction = MTLLoadActionDontCare;
+        _renderPassDescriptor.colorAttachments[3].loadAction = MTLLoadActionClear;
         _renderPassDescriptor.colorAttachments[3].storeAction = MTLStoreActionStore;
+        _renderPassDescriptor.colorAttachments[0].clearColor = MTLClearColorMake(0, 0, 0, 0);
+        _renderPassDescriptor.colorAttachments[1].clearColor = MTLClearColorMake(0, 0, 0, 0);
+        _renderPassDescriptor.colorAttachments[2].clearColor = MTLClearColorMake(0, 0, 0, 0);
+        _renderPassDescriptor.colorAttachments[3].clearColor = MTLClearColorMake(0, 0, 0, 0);
         
         // depth attachments
-        _renderPassDescriptor.depthAttachment.loadAction = MTLLoadActionDontCare;
+        _renderPassDescriptor.depthAttachment.loadAction = MTLLoadActionClear;
         _renderPassDescriptor.depthAttachment.storeAction = MTLStoreActionStore;
     }
     
@@ -114,17 +113,37 @@
     _renderPassDescriptor.depthAttachment.texture = _depth;
 }
 
+- (void)_makeLightingPassDescriptor {
+    _lightingPassDescriptor = [[MTLRenderPassDescriptor alloc] init];
+    
+    // color attachments
+    _renderPassDescriptor.colorAttachments[0].loadAction = MTLLoadActionClear;
+    _renderPassDescriptor.colorAttachments[0].storeAction = MTLStoreActionStore;
+}
+
 #pragma mark - Properties
 - (MTLRenderPassDescriptor *)renderPassDescriptor {
     return _renderPassDescriptor;
 }
 
+- (MTLRenderPassDescriptor *)lightingPassDescriptor {
+    return _lightingPassDescriptor;
+}
+
+- (MTLRenderPipelineDescriptor *)renderPipelineDescriptor {
+    return _renderPipelineDescriptor;
+}
+
+- (CGSize)size {
+    return _size;
+}
+
 #pragma mark - Resize
-- (void)resize {
-    id<MTLTexture> drawableTexture = [_view currentDrawable].texture;
-    NSUInteger width = drawableTexture.width;
-    NSUInteger height = drawableTexture.height;
+- (void)resize:(CGSize)newSize {
+    NSUInteger width = newSize.width;
+    NSUInteger height = newSize.height;
     if(_albedo.width != width || _albedo.height != height) {
+        _size = newSize;
         [self _makeGBufferTextures];
         [self _makeRenderPassDescriptor];
     }

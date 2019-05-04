@@ -75,6 +75,8 @@
 		9564D3EB1C1F17CC00C6E316 /* posy.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 9564D3E51C1F17CC00C6E316 /* posy.jpg */; };
 		9564D3EC1C1F17CC00C6E316 /* posz.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 9564D3E61C1F17CC00C6E316 /* posz.jpg */; };
 		95699DF81C46A1EF000C0C6F /* lego.obj in Resources */ = {isa = PBXBuildFile; fileRef = 95699DF71C46A1EF000C0C6F /* lego.obj */; };
+		95765E3F227D7EEA0053D66D /* MGPMesh.m in Sources */ = {isa = PBXBuildFile; fileRef = 95F0D28A227D4DF600DEEC3B /* MGPMesh.m */; };
+		95765E40227D81060053D66D /* MetalMath.c in Sources */ = {isa = PBXBuildFile; fileRef = 958A9C361D16E08200021744 /* MetalMath.c */; };
 		957C604C1E48EFA700132359 /* bun_zipper_res3.obj in Resources */ = {isa = PBXBuildFile; fileRef = 957C604B1E48EFA700132359 /* bun_zipper_res3.obj */; };
 		957E3C031E4B658300C10FB2 /* BRDF.metal in Sources */ = {isa = PBXBuildFile; fileRef = 957E3C021E4B658300C10FB2 /* BRDF.metal */; };
 		957ED55B1EF9810100F15B76 /* CoreML.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 957ED55A1EF980F900F15B76 /* CoreML.framework */; };
@@ -98,6 +100,7 @@
 		95C42C541D29501F00806E15 /* Shadow.metal in Sources */ = {isa = PBXBuildFile; fileRef = 95C42C531D29501F00806E15 /* Shadow.metal */; };
 		95CF822F1E098365001BDF8D /* MetalView.m in Sources */ = {isa = PBXBuildFile; fileRef = 958A9C2D1D16D14F00021744 /* MetalView.m */; };
 		95D6C40E21DBA0470007BB90 /* SimpleMetalRenderer.m in Sources */ = {isa = PBXBuildFile; fileRef = 95D6C40D21DBA0470007BB90 /* SimpleMetalRenderer.m */; };
+		95F0D28B227D4DF600DEEC3B /* MGPMesh.m in Sources */ = {isa = PBXBuildFile; fileRef = 95F0D28A227D4DF600DEEC3B /* MGPMesh.m */; };
 		95F4CB2A2279937200F51454 /* MGPGBuffer.m in Sources */ = {isa = PBXBuildFile; fileRef = 95F4CB292279937200F51454 /* MGPGBuffer.m */; };
 		95F4CB2D22799BFF00F51454 /* GBuffer.metal in Sources */ = {isa = PBXBuildFile; fileRef = 95F4CB2C22799BFF00F51454 /* GBuffer.metal */; };
 		95F5E0952276255600445BB0 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 95F5E0942276255600445BB0 /* AppDelegate.m */; };
@@ -224,6 +227,8 @@
 		95C42C531D29501F00806E15 /* Shadow.metal */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.metal; path = Shadow.metal; sourceTree = "<group>"; };
 		95D6C40C21DBA0470007BB90 /* SimpleMetalRenderer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SimpleMetalRenderer.h; sourceTree = "<group>"; };
 		95D6C40D21DBA0470007BB90 /* SimpleMetalRenderer.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SimpleMetalRenderer.m; sourceTree = "<group>"; };
+		95F0D289227D4DF600DEEC3B /* MGPMesh.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MGPMesh.h; sourceTree = "<group>"; };
+		95F0D28A227D4DF600DEEC3B /* MGPMesh.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MGPMesh.m; sourceTree = "<group>"; };
 		95F4CB282279937200F51454 /* MGPGBuffer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MGPGBuffer.h; sourceTree = "<group>"; };
 		95F4CB292279937200F51454 /* MGPGBuffer.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MGPGBuffer.m; sourceTree = "<group>"; };
 		95F4CB2C22799BFF00F51454 /* GBuffer.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = GBuffer.metal; sourceTree = "<group>"; };
@@ -599,6 +604,8 @@
 				958955CA227736F700414591 /* MGPRenderer.m */,
 				95F4CB282279937200F51454 /* MGPGBuffer.h */,
 				95F4CB292279937200F51454 /* MGPGBuffer.m */,
+				95F0D289227D4DF600DEEC3B /* MGPMesh.h */,
+				95F0D28A227D4DF600DEEC3B /* MGPMesh.m */,
 			);
 			path = Common;
 			sourceTree = "<group>";
@@ -1046,6 +1053,7 @@
 				953EAB901B9B5E9B0024994F /* Shaders.metal in Sources */,
 				953EAB831B9B5AFC0024994F /* main.m in Sources */,
 				953EAB801B9B5AFC0024994F /* AppDelegate.m in Sources */,
+				95F0D28B227D4DF600DEEC3B /* MGPMesh.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1111,6 +1119,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				95765E40227D81060053D66D /* MetalMath.c in Sources */,
+				95765E3F227D7EEA0053D66D /* MGPMesh.m in Sources */,
 				95F5E09D2276255900445BB0 /* main.m in Sources */,
 				95F5E0952276255600445BB0 /* AppDelegate.m in Sources */,
 				958955C82277369B00414591 /* MGPView.m in Sources */,
