@@ -52,7 +52,7 @@
     
     // normal
     desc.pixelFormat = MTLPixelFormatRGBA8Unorm;
-    _depth = [_device newTextureWithDescriptor: desc];
+    _normal = [_device newTextureWithDescriptor: desc];
     
     // pos
     desc.pixelFormat = MTLPixelFormatRGBA32Float;

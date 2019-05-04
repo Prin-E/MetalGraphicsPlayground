@@ -41,8 +41,7 @@ typedef struct {
 } GBufferFragment;
 
 typedef struct {
-    float3 pos  [[attribute(attrib_pos)]];
-    float2 uv   [[attribute(attrib_uv)]];
+    float3 pos;
 } LightingVertex;
 
 typedef struct {
@@ -105,10 +104,12 @@ fragment GBufferData gbuffer_frag(GBufferFragment in [[stage_in]],
     return out;
 }
 
-vertex LightingFragment lighting_vert(LightingVertex in [[stage_in]]) {
+vertex LightingFragment lighting_vert(constant LightingVertex *in [[buffer(0)]],
+                                      uint vid [[vertex_id]]) {
     LightingFragment out;
-    out.clipPos = float4(in.pos, 1.0);
-    out.uv = in.uv;
+    out.clipPos = float4(in[vid].pos, 1.0);
+    out.uv = (out.clipPos.xy + 1.0) * 0.5;
+    out.uv.y = 1.0 - out.uv.y;
     return out;
 }
 
@@ -121,5 +122,5 @@ fragment half4 lighting_frag(LightingFragment in [[stage_in]],
                              mag_filter::linear,
                              min_filter::linear);
     
-    return albedo.sample(linear, in.uv);
+    return normal.sample(linear, in.uv);
 }

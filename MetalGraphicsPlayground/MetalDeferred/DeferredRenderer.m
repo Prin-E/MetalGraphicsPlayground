@@ -12,19 +12,33 @@
 #import "../Common/MGPMesh.h"
 #import "../Common/MetalMath.h"
 
+const size_t kMaxBuffersInFlight = 3;
+
 @implementation DeferredRenderer {
-    camera_props_t camera_props;
-    instance_props_t instance_props;
+    camera_props_t camera_props[kMaxBuffersInFlight];
+    instance_props_t instance_props[kMaxBuffersInFlight];
+    size_t _currentBufferIndex;
+    float _elapsedTime;
+    
+    // props
     id<MTLBuffer> _cameraPropsBuffer;
     id<MTLBuffer> _instancePropsBuffer;
     
+    // quad vertex buffer
+    id<MTLBuffer> _quadVertexBuffer;
+    
+    // g-buffer
     MGPGBuffer *_gBuffer;
     
+    // render pass, pipeline states
     MTLRenderPassDescriptor *_renderPassGBuffer;
     MTLRenderPipelineDescriptor *_baseRenderPipelineDescriptorGBuffer;
     id<MTLRenderPipelineState> _renderPipelineGBuffer;
     MTLRenderPassDescriptor *_renderPassLighting;
     id<MTLRenderPipelineState> _renderPipelineLighting;
+    
+    // depth-stencil
+    id<MTLDepthStencilState> _depthStencil;
     
     NSArray<MGPMesh *> *_meshes;
     MTLVertexDescriptor *_baseVertexDescriptor;
@@ -33,30 +47,36 @@
 - (instancetype)init {
     self = [super init];
     if(self) {
+        [self initUniformBuffers];
         [self initAssets];
     }
     return self;
 }
 
-- (void)initAssets {
+- (void)initUniformBuffers {
     // props
-    camera_props.view = matrix_lookat(vector3(0.0f, 25.0f, -60.0f),
-                                      vector3(0.0f, 0.0f, 0.0f),
-                                      vector3(0.0f, 1.0f, 0.0f));
-    camera_props.projection = matrix_from_perspective_fov_aspectLH(45.0f, 1.77778f, 0.01f, 300.0f);
-    
-    instance_props.model = matrix_identity_float4x4;
-    instance_props.material.roughness = 0;
-    instance_props.material.metalic = 0;
-    
-    _cameraPropsBuffer = [self.device newBufferWithLength: sizeof(camera_props_t)
+    _cameraPropsBuffer = [self.device newBufferWithLength: sizeof(camera_props)
                                                   options: MTLResourceStorageModeManaged];
-    memcpy(_cameraPropsBuffer.contents, &camera_props, sizeof(camera_props_t));
-    [_cameraPropsBuffer didModifyRange: NSMakeRange(0, sizeof(camera_props_t))];
-    _instancePropsBuffer = [self.device newBufferWithLength: sizeof(instance_props_t)
+    _instancePropsBuffer = [self.device newBufferWithLength: sizeof(instance_props)
                                                     options: MTLResourceStorageModeManaged];
-    memcpy(_instancePropsBuffer.contents, &instance_props, sizeof(instance_props_t));
-    [_instancePropsBuffer didModifyRange: NSMakeRange(0, sizeof(instance_props_t))];
+}
+
+- (void)initAssets {
+    // quad vertex
+    static const simd_float3 QuadVertices[] =
+    {
+        { -1.0f, -1.0f, 0.0f },
+        { -1.0f, 1.0f, 0.0f },
+        { 1.0f, -1.0f, 0.0f },
+        { 1.0f, -1.0f, 0.0f },
+        { -1.0f, 1.0f, 0.0f },
+        { 1.0f, 1.0f, 0.0f }
+    };
+    
+    _quadVertexBuffer = [self.device newBufferWithBytes:QuadVertices
+                                                 length:sizeof(QuadVertices)
+                                                options:0];
+    
     
     // G-buffer
     _gBuffer = [[MGPGBuffer alloc] initWithDevice:self.device
@@ -103,8 +123,8 @@
     // TODO
     bool hasAlbedoMap = true;
     bool hasNormalMap = true;
-    bool hasRoughnessMap = false;
-    bool hasMetalicMap = false;
+    bool hasRoughnessMap = true;
+    bool hasMetalicMap = true;
     
     [constantValues setConstantValue: &hasAlbedoMap type: MTLDataTypeBool atIndex: fcv_albedo];
     [constantValues setConstantValue: &hasNormalMap type: MTLDataTypeBool atIndex: fcv_normal];
@@ -127,9 +147,42 @@
     renderPipelineDescriptorLighting.fragmentFunction = [self.defaultLibrary newFunctionWithName: @"lighting_frag"];
     renderPipelineDescriptorLighting.label = @"Lighting";
     renderPipelineDescriptorLighting.vertexDescriptor = nil;
+    renderPipelineDescriptorLighting.colorAttachments[0].pixelFormat = MTLPixelFormatBGRA8Unorm;
+    
+    _renderPipelineLighting = [self.device newRenderPipelineStateWithDescriptor: renderPipelineDescriptorLighting
+                                                                          error: nil];
+    
+    // depth-stencil
+    MTLDepthStencilDescriptor *depthStencilDescriptor = [[MTLDepthStencilDescriptor alloc] init];
+    depthStencilDescriptor.depthWriteEnabled = YES;
+    depthStencilDescriptor.depthCompareFunction = MTLCompareFunctionLess;
+    _depthStencil = [self.device newDepthStencilStateWithDescriptor: depthStencilDescriptor];
 }
 
 - (void)update:(float)deltaTime {
+    [self updateUniformBuffers: deltaTime];
+}
+
+- (void)updateUniformBuffers: (float)deltaTime {
+    camera_props[_currentBufferIndex].view = matrix_lookat(vector3(0.0f, 15.0f, -30.0f),
+                                                           vector3(0.0f, 2.5f, 0.0f),
+                                                           vector3(0.0f, 1.0f, 0.0f));
+    camera_props[_currentBufferIndex].projection = matrix_from_perspective_fov_aspectLH(45.0f, _gBuffer.size.width / _gBuffer.size.height, 0.01f, 300.0f);
+    
+    instance_props[_currentBufferIndex].model = matrix_from_rotation(_elapsedTime, 0, 1, 0);
+    instance_props[_currentBufferIndex].material.roughness = 0;
+    instance_props[_currentBufferIndex].material.metalic = 0;
+    
+    memcpy(_cameraPropsBuffer.contents + _currentBufferIndex * sizeof(camera_props_t),
+           &camera_props[_currentBufferIndex], sizeof(camera_props_t));
+    [_cameraPropsBuffer didModifyRange: NSMakeRange(_currentBufferIndex * sizeof(camera_props_t),
+                                                    sizeof(camera_props_t))];
+    memcpy(_instancePropsBuffer.contents + _currentBufferIndex * sizeof(instance_props_t),
+           &instance_props[_currentBufferIndex], sizeof(instance_props_t));
+    [_instancePropsBuffer didModifyRange: NSMakeRange(_currentBufferIndex * sizeof(instance_props_t),
+                                                      sizeof(instance_props_t))];
+    
+    _elapsedTime += deltaTime;
 }
 
 - (void)render {
@@ -144,7 +197,12 @@
     [self renderGBuffer:gBufferPassEncoder];
     
     // lighting pass
-    id<MTLRenderCommandEncoder> lightingPassEncoder = [commandBuffer renderCommandEncoderWithDescriptor: _gBuffer.renderPassDescriptor];
+    MTLRenderPassDescriptor *lightingRenderPassDescriptor = [[MTLRenderPassDescriptor alloc] init];
+    lightingRenderPassDescriptor.colorAttachments[0].texture = self.view.currentDrawable.texture;
+    lightingRenderPassDescriptor.colorAttachments[0].loadAction = MTLLoadActionClear;
+    lightingRenderPassDescriptor.colorAttachments[0].storeAction = MTLStoreActionStore;
+    lightingRenderPassDescriptor.colorAttachments[0].clearColor = MTLClearColorMake(0, 0, 0, 0);
+    id<MTLRenderCommandEncoder> lightingPassEncoder = [commandBuffer renderCommandEncoderWithDescriptor: lightingRenderPassDescriptor];
     [self renderLighting:lightingPassEncoder];
     
     // present
@@ -153,26 +211,31 @@
         [self endFrame];
     }];
     [commandBuffer commit];
+    
+    _currentBufferIndex = (_currentBufferIndex + 1) % kMaxBuffersInFlight;
 }
 
 - (void)renderGBuffer:(id<MTLRenderCommandEncoder>)encoder {
     encoder.label = @"G-buffer";
     
     [encoder setRenderPipelineState: _renderPipelineGBuffer];
+    [encoder setDepthStencilState: _depthStencil];
     for(MGPMesh *mesh in _meshes) {
         for(MGPSubmesh *submesh in mesh.submeshes) {
             [encoder setVertexBuffer: mesh.metalKitMesh.vertexBuffers[0].buffer
                               offset: 0
                              atIndex: 0];
             [encoder setVertexBuffer: _cameraPropsBuffer
-                              offset: 0
+                              offset: _currentBufferIndex * sizeof(camera_props_t)
                              atIndex: 1];
             [encoder setVertexBuffer: _instancePropsBuffer
-                              offset: 0
+                              offset: _currentBufferIndex * sizeof(instance_props_t)
                              atIndex: 2];
             
             [encoder setFragmentTexture: submesh.textures[tex_albedo] atIndex: tex_albedo];
             [encoder setFragmentTexture: submesh.textures[tex_normal] atIndex: tex_normal];
+            [encoder setFragmentTexture: submesh.textures[tex_roughness] atIndex: tex_roughness];
+            [encoder setFragmentTexture: submesh.textures[tex_metalic] atIndex: tex_metalic];
             [encoder setFragmentBuffer: _cameraPropsBuffer
                                 offset: 0
                                atIndex: 1];
@@ -193,8 +256,21 @@
 
 - (void)renderLighting:(id<MTLRenderCommandEncoder>)encoder {
     encoder.label = @"Lighting";
-    
-    // TODO
+    [encoder setRenderPipelineState: _renderPipelineLighting];
+    [encoder setVertexBuffer: _quadVertexBuffer
+                      offset: 0
+                     atIndex: 0];
+    [encoder setFragmentTexture: _gBuffer.albedo
+                        atIndex: attachment_albedo];
+    [encoder setFragmentTexture: _gBuffer.normal
+                        atIndex: attachment_normal];
+    [encoder setFragmentTexture: _gBuffer.pos
+                        atIndex: attachment_pos];
+    [encoder setFragmentTexture: _gBuffer.shading
+                        atIndex: attachment_shading];
+    [encoder drawPrimitives: MTLPrimitiveTypeTriangle
+                vertexStart: 0
+                vertexCount: 6];
     
     [encoder endEncoding];
 }
