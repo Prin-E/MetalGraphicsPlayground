@@ -26,6 +26,13 @@ typedef struct __attribute__((__aligned__(256))) {
     material_t material;
 } instance_props_t;
 
+typedef struct {
+    vector_float3 position;
+    vector_float3 direction;
+    vector_float3 color;
+    float intensity;
+} light_t;
+
 typedef enum {
     attachment_albedo,
     attachment_normal,

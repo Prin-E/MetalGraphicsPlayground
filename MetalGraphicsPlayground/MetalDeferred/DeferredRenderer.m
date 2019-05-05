@@ -13,10 +13,13 @@
 #import "../Common/MetalMath.h"
 
 const size_t kMaxBuffersInFlight = 3;
+const size_t kNumInstance = 11;
+
+#define DEG_TO_RAD(x) ((x)*0.0174532925)
 
 @implementation DeferredRenderer {
     camera_props_t camera_props[kMaxBuffersInFlight];
-    instance_props_t instance_props[kMaxBuffersInFlight];
+    instance_props_t instance_props[kMaxBuffersInFlight * kNumInstance];
     size_t _currentBufferIndex;
     float _elapsedTime;
     
@@ -164,23 +167,39 @@ const size_t kMaxBuffersInFlight = 3;
 }
 
 - (void)updateUniformBuffers: (float)deltaTime {
-    camera_props[_currentBufferIndex].view = matrix_lookat(vector3(0.0f, 15.0f, -30.0f),
+    camera_props[_currentBufferIndex].view = matrix_lookat(vector3(0.0f, 20.0f, -60.0f),
                                                            vector3(0.0f, 2.5f, 0.0f),
                                                            vector3(0.0f, 1.0f, 0.0f));
-    camera_props[_currentBufferIndex].projection = matrix_from_perspective_fov_aspectLH(45.0f, _gBuffer.size.width / _gBuffer.size.height, 0.01f, 300.0f);
+    camera_props[_currentBufferIndex].projection = matrix_from_perspective_fov_aspectLH(DEG_TO_RAD(60.0f), _gBuffer.size.width / _gBuffer.size.height, 0.01f, 300.0f);
     
-    instance_props[_currentBufferIndex].model = matrix_from_rotation(_elapsedTime, 0, 1, 0);
-    instance_props[_currentBufferIndex].material.roughness = 0;
-    instance_props[_currentBufferIndex].material.metalic = 0;
+    static const simd_float3 instance_pos[] = {
+        { 0, 0, 0 },
+        { 30, 0, 30 },
+        { 30, 0, -30 },
+        { -30, 0, 30 },
+        { -30, 0, -30 },
+        { 60, 0, 0 },
+        { -60, 0, 0 },
+        { 0, 0, 60 },
+        { 0, 0, -60 },
+        { -90, 0, 30 },
+        { 90, 0, 30 }
+    };
+    for(NSInteger i = 0; i < kNumInstance; i++) {
+        instance_props_t *p = &instance_props[_currentBufferIndex * kNumInstance + i];
+        p->model = matrix_multiply(matrix_from_translation(instance_pos[i].x, instance_pos[i].y, instance_pos[i].z), matrix_from_rotation(_elapsedTime, 0, 1, 0));
+        p->material.roughness = 0;
+        p->material.metalic = 0;
+    }
     
     memcpy(_cameraPropsBuffer.contents + _currentBufferIndex * sizeof(camera_props_t),
            &camera_props[_currentBufferIndex], sizeof(camera_props_t));
     [_cameraPropsBuffer didModifyRange: NSMakeRange(_currentBufferIndex * sizeof(camera_props_t),
                                                     sizeof(camera_props_t))];
-    memcpy(_instancePropsBuffer.contents + _currentBufferIndex * sizeof(instance_props_t),
-           &instance_props[_currentBufferIndex], sizeof(instance_props_t));
-    [_instancePropsBuffer didModifyRange: NSMakeRange(_currentBufferIndex * sizeof(instance_props_t),
-                                                      sizeof(instance_props_t))];
+    memcpy(_instancePropsBuffer.contents + _currentBufferIndex * sizeof(instance_props_t) * kNumInstance,
+           &instance_props[_currentBufferIndex * kNumInstance], sizeof(instance_props_t) * kNumInstance);
+    [_instancePropsBuffer didModifyRange: NSMakeRange(_currentBufferIndex * sizeof(instance_props_t) * kNumInstance,
+                                                      sizeof(instance_props_t) * kNumInstance)];
     
     _elapsedTime += deltaTime;
 }
@@ -229,7 +248,7 @@ const size_t kMaxBuffersInFlight = 3;
                               offset: _currentBufferIndex * sizeof(camera_props_t)
                              atIndex: 1];
             [encoder setVertexBuffer: _instancePropsBuffer
-                              offset: _currentBufferIndex * sizeof(instance_props_t)
+                              offset: _currentBufferIndex * sizeof(instance_props_t) * kNumInstance
                              atIndex: 2];
             
             [encoder setFragmentTexture: submesh.textures[tex_albedo] atIndex: tex_albedo];
@@ -237,17 +256,18 @@ const size_t kMaxBuffersInFlight = 3;
             [encoder setFragmentTexture: submesh.textures[tex_roughness] atIndex: tex_roughness];
             [encoder setFragmentTexture: submesh.textures[tex_metalic] atIndex: tex_metalic];
             [encoder setFragmentBuffer: _cameraPropsBuffer
-                                offset: 0
+                                offset: _currentBufferIndex * sizeof(camera_props_t)
                                atIndex: 1];
             [encoder setFragmentBuffer: _instancePropsBuffer
-                                offset: 0
+                                offset: _currentBufferIndex * sizeof(instance_props_t) * kNumInstance
                                atIndex: 2];
             
             [encoder drawIndexedPrimitives: submesh.metalKitSubmesh.primitiveType
                                 indexCount: submesh.metalKitSubmesh.indexCount
                                  indexType: submesh.metalKitSubmesh.indexType
                                indexBuffer: submesh.metalKitSubmesh.indexBuffer.buffer
-                         indexBufferOffset: submesh.metalKitSubmesh.indexBuffer.offset];
+                         indexBufferOffset: submesh.metalKitSubmesh.indexBuffer.offset
+                             instanceCount: kNumInstance];
         }
     }
     

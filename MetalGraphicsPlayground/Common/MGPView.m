@@ -159,10 +159,12 @@ const inline __attribute__((__always_inline__)) float lerp(float a, float b, flo
         }
         
         // Render
-        id<CAMetalDrawable> nextDrawable = self->_metalLayer.nextDrawable;
-        self->_currentDrawable = nextDrawable;
         [self.renderer update: self->_deltaTime];
         [self.renderer render];
+        
+        // Next drawable
+        id<CAMetalDrawable> nextDrawable = self->_metalLayer.nextDrawable;
+        self->_currentDrawable = nextDrawable;
     });
 }
 

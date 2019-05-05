@@ -51,11 +51,11 @@ typedef struct {
 
 vertex GBufferFragment gbuffer_vert(GBufferVertex in [[stage_in]],
                                     constant camera_props_t &cameraProps [[buffer(1)]],
-                                    device instance_props_t *instanceProps [[buffer(2)]],
-                                    uint instanceId [[instance_id]]) {
+                                    constant instance_props_t *instanceProps [[buffer(2)]],
+                                    uint iid [[instance_id]]) {
     GBufferFragment out;
     float4 v = float4(in.pos, 1.0);
-    float4x4 modelView = cameraProps.view * instanceProps[instanceId].model;
+    float4x4 modelView = cameraProps.view * instanceProps[iid].model;
     out.viewPos = modelView * v;
     out.clipPos = cameraProps.projection * out.viewPos;
     out.normal = (modelView * float4(in.normal, 0.0)).xyz;
@@ -67,7 +67,7 @@ vertex GBufferFragment gbuffer_vert(GBufferVertex in [[stage_in]],
 
 fragment GBufferData gbuffer_frag(GBufferFragment in [[stage_in]],
                                   constant camera_props_t &cameraProps [[buffer(1)]],
-                                  device instance_props_t *instanceProps [[buffer(2)]],
+                                  constant instance_props_t *instanceProps [[buffer(2)]],
                                   texture2d<half> albedoMap [[texture(tex_albedo), function_constant(has_albedo_map)]],
                                   texture2d<half> normalMap [[texture(tex_normal), function_constant(has_normal_map)]],
                                   texture2d<half> roughnessMap [[texture(tex_roughness), function_constant(has_roughness_map)]],
@@ -122,5 +122,5 @@ fragment half4 lighting_frag(LightingFragment in [[stage_in]],
                              mag_filter::linear,
                              min_filter::linear);
     
-    return normal.sample(linear, in.uv);
+    return shading.sample(linear, in.uv);
 }
