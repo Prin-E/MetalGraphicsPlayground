@@ -13,7 +13,7 @@ NS_ASSUME_NONNULL_BEGIN
 @interface MGPGBuffer : NSObject
 
 @property (readonly) id<MTLTexture> albedo;     // RGB+A
-@property (readonly) id<MTLTexture> normal;     // view-space
+@property (readonly) id<MTLTexture> normal;     // view-space (XYZ+A(0.0:empty-space))
 @property (readonly) id<MTLTexture> pos;        // view-space (XYZ)
 @property (readonly) id<MTLTexture> depth;      // depth
 @property (readonly) id<MTLTexture> shading;    // R:roughness,G:metalic,BA:TODO

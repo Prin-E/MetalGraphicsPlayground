@@ -228,6 +228,7 @@
 		959B51FC1B9F3C690059E40B /* PrinE2013.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = PrinE2013.png; sourceTree = "<group>"; };
 		959C8300227F409E00C2C245 /* Lighting.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = Lighting.metal; sourceTree = "<group>"; };
 		959C8302227F424900C2C245 /* BRDF.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = BRDF.metal; sourceTree = "<group>"; };
+		95B9508B22808F5400E45D08 /* BRDF.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BRDF.h; sourceTree = "<group>"; };
 		95C42C531D29501F00806E15 /* Shadow.metal */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.metal; path = Shadow.metal; sourceTree = "<group>"; };
 		95D6C40C21DBA0470007BB90 /* SimpleMetalRenderer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SimpleMetalRenderer.h; sourceTree = "<group>"; };
 		95D6C40D21DBA0470007BB90 /* SimpleMetalRenderer.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SimpleMetalRenderer.m; sourceTree = "<group>"; };
@@ -618,6 +619,7 @@
 			isa = PBXGroup;
 			children = (
 				95F4CB2C22799BFF00F51454 /* GBuffer.metal */,
+				95B9508B22808F5400E45D08 /* BRDF.h */,
 				959C8302227F424900C2C245 /* BRDF.metal */,
 				959C8300227F409E00C2C245 /* Lighting.metal */,
 				95F4CB2E2279FE5900F51454 /* SharedStructures.h */,

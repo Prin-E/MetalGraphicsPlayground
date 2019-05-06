@@ -9,6 +9,7 @@
 #import "MGPGBuffer.h"
 #import "MGPView.h"
 #import "MGPRenderer.h"
+#import "Shaders/SharedStructures.h"
 
 @implementation MGPGBuffer {
     id<MTLDevice> _device;
@@ -87,18 +88,18 @@
         _renderPassDescriptor = [[MTLRenderPassDescriptor alloc] init];
         
         // color attachments
-        _renderPassDescriptor.colorAttachments[0].loadAction = MTLLoadActionClear;
-        _renderPassDescriptor.colorAttachments[0].storeAction = MTLStoreActionStore;
-        _renderPassDescriptor.colorAttachments[1].loadAction = MTLLoadActionClear;
-        _renderPassDescriptor.colorAttachments[1].storeAction = MTLStoreActionStore;
-        _renderPassDescriptor.colorAttachments[2].loadAction = MTLLoadActionClear;
-        _renderPassDescriptor.colorAttachments[2].storeAction = MTLStoreActionStore;
-        _renderPassDescriptor.colorAttachments[3].loadAction = MTLLoadActionClear;
-        _renderPassDescriptor.colorAttachments[3].storeAction = MTLStoreActionStore;
-        _renderPassDescriptor.colorAttachments[0].clearColor = MTLClearColorMake(0, 0, 0, 0);
-        _renderPassDescriptor.colorAttachments[1].clearColor = MTLClearColorMake(0, 0, 0, 0);
-        _renderPassDescriptor.colorAttachments[2].clearColor = MTLClearColorMake(0, 0, 0, 0);
-        _renderPassDescriptor.colorAttachments[3].clearColor = MTLClearColorMake(0, 0, 0, 0);
+        _renderPassDescriptor.colorAttachments[attachment_albedo].loadAction = MTLLoadActionClear;
+        _renderPassDescriptor.colorAttachments[attachment_albedo].storeAction = MTLStoreActionStore;
+        _renderPassDescriptor.colorAttachments[attachment_normal].loadAction = MTLLoadActionClear;
+        _renderPassDescriptor.colorAttachments[attachment_normal].storeAction = MTLStoreActionStore;
+        _renderPassDescriptor.colorAttachments[attachment_pos].loadAction = MTLLoadActionClear;
+        _renderPassDescriptor.colorAttachments[attachment_pos].storeAction = MTLStoreActionStore;
+        _renderPassDescriptor.colorAttachments[attachment_shading].loadAction = MTLLoadActionClear;
+        _renderPassDescriptor.colorAttachments[attachment_shading].storeAction = MTLStoreActionStore;
+        _renderPassDescriptor.colorAttachments[attachment_albedo].clearColor = MTLClearColorMake(0, 0, 0, 0);
+        _renderPassDescriptor.colorAttachments[attachment_normal].clearColor = MTLClearColorMake(0, 0, 0, 0);
+        _renderPassDescriptor.colorAttachments[attachment_pos].clearColor = MTLClearColorMake(0, 0, 0, 0);
+        _renderPassDescriptor.colorAttachments[attachment_shading].clearColor = MTLClearColorMake(0, 0, 0, 0);
         
         // depth attachments
         _renderPassDescriptor.depthAttachment.loadAction = MTLLoadActionClear;
@@ -106,10 +107,10 @@
     }
     
     // assign or replace textures
-    _renderPassDescriptor.colorAttachments[0].texture = _albedo;
-    _renderPassDescriptor.colorAttachments[1].texture = _normal;
-    _renderPassDescriptor.colorAttachments[2].texture = _pos;
-    _renderPassDescriptor.colorAttachments[3].texture = _shading;
+    _renderPassDescriptor.colorAttachments[attachment_albedo].texture = _albedo;
+    _renderPassDescriptor.colorAttachments[attachment_normal].texture = _normal;
+    _renderPassDescriptor.colorAttachments[attachment_pos].texture = _pos;
+    _renderPassDescriptor.colorAttachments[attachment_shading].texture = _shading;
     _renderPassDescriptor.depthAttachment.texture = _depth;
 }
 

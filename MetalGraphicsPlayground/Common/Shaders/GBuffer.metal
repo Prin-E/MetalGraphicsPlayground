@@ -8,6 +8,7 @@
 
 #include <metal_stdlib>
 #include "SharedStructures.h"
+#include "BRDF.h"
 
 using namespace metal;
 
@@ -38,6 +39,7 @@ typedef struct {
     float3 normal;
     float3 tangent;
     float3 bitangent;
+    uint iid;
 } GBufferFragment;
 
 typedef struct {
@@ -62,6 +64,7 @@ vertex GBufferFragment gbuffer_vert(GBufferVertex in [[stage_in]],
     out.tangent = (modelView * float4(in.tangent, 0.0)).xyz;
     out.bitangent = cross(out.tangent, out.normal);
     out.uv = in.uv;
+    out.iid = iid;
     return out;
 }
 
@@ -84,17 +87,18 @@ fragment GBufferData gbuffer_frag(GBufferFragment in [[stage_in]],
     else {
         out.albedo = half4(1.0);
     }
+    
     if(has_normal_map) {
         half4 nc = normalMap.sample(linear, in.uv);
         nc = nc * 2.0 - 1.0;
-        float3 n = in.normal * nc.z + in.tangent * nc.x + in.bitangent * nc.y;
-        out.normal = half4(half3((n + 1.0) * 0.5), 0.0);
+        float3 n = normalize(in.normal) * nc.z + normalize(in.tangent) * nc.x + normalize(in.bitangent) * nc.y;
+        out.normal = half4(half3((normalize(n) + 1.0) * 0.5), 1.0);
     }
     else {
-        out.normal = half4(half3((in.normal + 1.0) * 0.5), 0.0);
+        out.normal = half4(half3((normalize(in.normal) + 1.0) * 0.5), 1.0);
     }
     out.pos = in.viewPos;
-    out.shading = half4(0,0,0,0);
+    out.shading = half4(instanceProps[in.iid].material.roughness,instanceProps[in.iid].material.metalic,0,0);
     if(has_roughness_map) {
         out.shading.x = roughnessMap.sample(linear, in.uv).r;
     }
@@ -122,5 +126,33 @@ fragment half4 lighting_frag(LightingFragment in [[stage_in]],
                              mag_filter::linear,
                              min_filter::linear);
     
-    return shading.sample(linear, in.uv);
+    // TODO
+    float3 light_dir = normalize(float3(0, 0, -1));
+    float3 light_color = float3(0.89, 0.94, 1.0);
+    float light_intensity = 2.5;
+    
+    float4 n_c = float4(normal.sample(linear, in.uv));
+    if(n_c.w == 0.0)
+        return half4(0, 0, 0, 1);
+    float3 n = (n_c.xyz - 0.5) * 2.0 * n_c.w;
+    float3 v = -normalize(pos.sample(linear, in.uv).xyz);
+    float n_l = max(0.001, saturate(dot(n, light_dir)));
+    float n_v = max(0.001, saturate(dot(n, v)));
+    float n_h = max(0.001, saturate(dot(n, normalize(light_dir + v))));
+    half4 shading_values = shading.sample(linear, in.uv);
+    
+    shading_t shading_params;
+    shading_params.albedo = float4(albedo.sample(linear, in.uv)).xyz;
+    shading_params.light = light_color * light_intensity;
+    shading_params.roughness = shading_values.x;
+    shading_params.metalic = shading_values.y;
+    shading_params.n_l = n_l;
+    shading_params.n_v = n_h;
+    shading_params.n_h = n_v;
+    
+    float3 out_diffuse = diffuse(shading_params);
+    float3 out_specular = specular(shading_params);
+    float3 out_color = mix(out_diffuse, out_specular, 0.0);
+    out_color = pow(out_color, 1.0/2.2);    // gamma correction
+    return half4(half3(out_color), 1.0);
 }
