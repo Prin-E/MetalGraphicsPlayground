@@ -15,6 +15,7 @@ NS_ASSUME_NONNULL_BEGIN
 @interface DeferredRenderer : MGPRenderer <MGPViewDelegate>
 
 @property (readwrite) float roughness, metalic;
+@property (readwrite) unsigned int numLights;
 
 @end
 

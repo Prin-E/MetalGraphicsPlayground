@@ -16,7 +16,9 @@
 
 const size_t kMaxBuffersInFlight = 3;
 const size_t kNumInstance = 8;
-const uint32_t kNumLight = 32;
+const uint32_t kNumLight = 128;
+const float kLightIntensityBase = 0.25;
+const float kLightIntensityVariation = 3.0;
 
 #define DEG_TO_RAD(x) ((x)*0.0174532925)
 
@@ -24,11 +26,15 @@ const uint32_t kNumLight = 32;
     camera_props_t camera_props[kMaxBuffersInFlight];
     instance_props_t instance_props[kMaxBuffersInFlight * kNumInstance];
     light_t light_props[kMaxBuffersInFlight * kNumLight];
+    light_global_t light_globals[kMaxBuffersInFlight];
     
     size_t _currentBufferIndex;
     float _elapsedTime;
     bool _animate;
     float _animationTime;
+    
+    BOOL _moveFront, _moveBack, _moveLeft, _moveRight;
+    vector_float3 _cameraPos;
     
     // props
     id<MTLBuffer> _cameraPropsBuffer;
@@ -65,7 +71,43 @@ const uint32_t kNumLight = 32;
 
 - (void)view:(MGPView *)view keyDown:(NSEvent *)theEvent {
     if(theEvent.keyCode == 49) {
+        // space key
         _animate = !_animate;
+    }
+    if(theEvent.keyCode == 13) {
+        // w
+        _moveFront = true;
+    }
+    if(theEvent.keyCode == 1) {
+        // s
+        _moveBack = true;
+    }
+    if(theEvent.keyCode == 0) {
+        // a
+        _moveLeft = true;
+    }
+    if(theEvent.keyCode == 2) {
+        // d
+        _moveRight = true;
+    }
+}
+
+- (void)view:(MGPView *)view keyUp:(NSEvent *)theEvent {
+    if(theEvent.keyCode == 13) {
+        // w
+        _moveFront = false;
+    }
+    if(theEvent.keyCode == 1) {
+        // s
+        _moveBack = false;
+    }
+    if(theEvent.keyCode == 0) {
+        // a
+        _moveLeft = false;
+    }
+    if(theEvent.keyCode == 2) {
+        // d
+        _moveRight = false;
     }
 }
 
@@ -73,6 +115,7 @@ const uint32_t kNumLight = 32;
     self = [super init];
     if(self) {
         _animate = YES;
+        _cameraPos = vector3(0.0f, 20.0f, -60.0f);
         [self initUniformBuffers];
         [self initAssets];
     }
@@ -87,9 +130,8 @@ const uint32_t kNumLight = 32;
                                                     options: MTLResourceStorageModeManaged];
     _lightPropsBuffer = [self.device newBufferWithLength: sizeof(light_props)
                                                  options: MTLResourceStorageModeManaged];
-    _lightGlobalBuffer = [self.device newBufferWithBytes: &kNumLight
-                                                  length: sizeof(light_global_t)
-                                                 options: MTLResourceStorageModeManaged];
+    _lightGlobalBuffer = [self.device newBufferWithLength: sizeof(light_globals)
+                                                  options: MTLResourceStorageModeManaged];
 }
 
 - (void)initAssets {
@@ -214,13 +256,22 @@ const uint32_t kNumLight = 32;
 }
 
 - (void)update:(float)deltaTime {
+    if(_moveFront)
+        _cameraPos.z += 50.0f * deltaTime;
+    if(_moveBack)
+        _cameraPos.z -= 50.0f * deltaTime;
+    if(_moveRight)
+        _cameraPos.x += 50.0f * deltaTime;
+    if(_moveLeft)
+        _cameraPos.x -= 50.0f * deltaTime;
+    
     [self updateUniformBuffers: deltaTime];
 }
 
 - (void)updateUniformBuffers: (float)deltaTime {
     // Update camera properties
-    camera_props[_currentBufferIndex].view = matrix_lookat(vector3(0.0f, 20.0f, -60.0f),
-                                                           vector3(0.0f, 2.5f, 0.0f),
+    camera_props[_currentBufferIndex].view = matrix_lookat(_cameraPos,
+                                                           _cameraPos + vector3(0.0f, -17.5f, 60.0f),
                                                            vector3(0.0f, 1.0f, 0.0f));
     camera_props[_currentBufferIndex].projection = matrix_from_perspective_fov_aspectLH(DEG_TO_RAD(60.0f), _gBuffer.size.width / _gBuffer.size.height, 0.5f, 150.0f);
     
@@ -252,7 +303,7 @@ const uint32_t kNumLight = 32;
         init_light_value = YES;
         for(int i = 0; i < kNumLight; i++) {
             light_colors[i] = vector3(rand() / (float)RAND_MAX, rand() / (float)RAND_MAX, rand() / (float)RAND_MAX);
-            light_intensities[i] = 0.1f + rand() / (float)RAND_MAX * 0.5f;
+            light_intensities[i] = kLightIntensityBase + rand() / (float)RAND_MAX * kLightIntensityVariation;
             light_dirs[i] = simd_normalize(vector4(rand() / (float)RAND_MAX - 0.5f, rand() / (float)RAND_MAX - 0.5f,
                                                    rand() / (float)RAND_MAX - 0.5f, 0.0f));
         }
@@ -281,6 +332,8 @@ const uint32_t kNumLight = 32;
         l->direction = vector3(dir.x, dir.y, dir.z);
     }
     
+    light_globals[_currentBufferIndex].num_light = _numLights;
+    
     // Synchronize buffers
     memcpy(_cameraPropsBuffer.contents + _currentBufferIndex * sizeof(camera_props_t),
            &camera_props[_currentBufferIndex], sizeof(camera_props_t));
@@ -294,6 +347,10 @@ const uint32_t kNumLight = 32;
            &light_props[_currentBufferIndex * kNumLight], sizeof(light_t) * kNumLight);
     [_lightPropsBuffer didModifyRange: NSMakeRange(_currentBufferIndex * sizeof(light_t) * kNumLight,
                                                    sizeof(light_t) * kNumLight)];
+    
+    memcpy(_lightGlobalBuffer.contents, &light_globals[_currentBufferIndex], sizeof(light_global_t));
+    [_lightGlobalBuffer didModifyRange: NSMakeRange(_currentBufferIndex * sizeof(light_global_t),
+                                                    sizeof(light_global_t))];
     
     _elapsedTime += deltaTime;
     if(_animate)

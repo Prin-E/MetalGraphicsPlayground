@@ -24,6 +24,7 @@
     self.view.renderer = renderer;
     self.roughness = 0.5f;
     self.metalic = 0.5f;
+    self.numLights = 4;
 }
 
 
@@ -45,6 +46,14 @@
 
 - (void)setMetalic:(float)metalic {
     renderer.metalic = metalic;
+}
+
+- (unsigned int)numLights {
+    return renderer.numLights;
+}
+
+- (void)setNumLights:(unsigned int)numLights {
+    renderer.numLights = numLights;
 }
 
 

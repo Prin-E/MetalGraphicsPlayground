@@ -9,6 +9,7 @@
 #include "BRDF.h"
 
 constant constexpr float PI = 3.14159265;
+constant constexpr float PI_DIV = 1.0 / PI;
 
 inline float sqr(float f0) {
     return f0 * f0;
@@ -37,23 +38,21 @@ inline float distribution_ggx(float n_h, float a) {
     return a_sqr / max(0.001, PI * d * d);
 }
 
-float3 diffuse(shading_t shading) {
-    return shading.albedo * shading.light * shading.n_l / PI;
-}
-
-float3 specular(shading_t shading) {
-    float r = shading.roughness;
-    float a = sqr(r);
+float3 calculate_brdf(shading_t shading) {
+    // NDF
+    float a = sqr(shading.roughness);
     float g_s = geometry_smith(shading.n_l, shading.n_v, a);
     float d_s = distribution_ggx(shading.n_h, a);
-    return g_s * d_s * shading.albedo * shading.light / max(0.001, 4.0 * shading.n_l * shading.n_v);
-}
-
-float3 calculate_brdf(shading_t shading) {
-    float3 c_d = diffuse(shading);
-    float3 c_s = specular(shading);
     float3 f_s = fresnel(mix(0.04, shading.albedo, shading.metalic), shading.h_v);
+    
+    // diffuse, specular
+    float3 c_d = PI_DIV;
+    float3 c_s = g_s * d_s * f_s / max(0.001, 4.0 * shading.n_l * shading.n_v);
+    
+    // output
     float3 k_d = (float3(1.0) - f_s) * (1.0 - shading.metalic);
-    return k_d * c_d + f_s * c_s;
+    float3 out_color = k_d * c_d + c_s;
+    out_color *= shading.albedo * shading.light * shading.n_l;
+    return out_color;
     
 }

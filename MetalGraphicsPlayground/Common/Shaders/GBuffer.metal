@@ -135,6 +135,24 @@ fragment half4 lighting_frag(LightingFragment in [[stage_in]],
                              texture2d<float> pos [[texture(attachment_pos)]],
                              texture2d<half> shading [[texture(attachment_shading)]]) {
     float3 out_color = float3(0);
+    float4 n_c = float4(normal.sample(linear, in.uv));
+    if(n_c.w == 0.0)
+        return half4(0, 0, 0, 1);
+    float3 n = (n_c.xyz - 0.5) * 2.0 * n_c.w;
+    float3 v = -normalize(pos.sample(linear, in.uv).xyz);
+    float3 albedo_c = float4(albedo.sample(linear, in.uv)).xyz;
+    half4 shading_values = shading.sample(linear, in.uv);
+    
+    // shared values
+    float n_v = max(0.001, saturate(dot(n, v)));
+    
+    // make shading parameters
+    shading_t shading_params;
+    shading_params.albedo = albedo_c;
+    shading_params.roughness = shading_values.x;
+    shading_params.metalic = shading_values.y;
+    shading_params.n_v = n_v;
+    
     const uint num_light = lightGlobal.num_light;
     for(uint light_index = 0; light_index < num_light; light_index++) {
         light_t light = lightProps[light_index];
@@ -142,30 +160,21 @@ fragment half4 lighting_frag(LightingFragment in [[stage_in]],
         float3 light_color = light.color;
         float light_intensity = light.intensity;
         
-        float4 n_c = float4(normal.sample(linear, in.uv));
-        if(n_c.w == 0.0)
-            return half4(0, 0, 0, 1);
-        float3 n = (n_c.xyz - 0.5) * 2.0 * n_c.w;
-        float3 v = -normalize(pos.sample(linear, in.uv).xyz);
         float3 h = normalize(light_dir + v);
         float n_l = max(0.001, saturate(dot(n, light_dir)));
-        float n_v = max(0.001, saturate(dot(n, v)));
         float n_h = max(0.001, saturate(dot(n, h)));
         float h_v = max(0.001, saturate(dot(h, v)));
-        half4 shading_values = shading.sample(linear, in.uv);
         
-        shading_t shading_params;
-        shading_params.albedo = float4(albedo.sample(linear, in.uv)).xyz;
         shading_params.light = light_color * light_intensity;
-        shading_params.roughness = shading_values.x;
-        shading_params.metalic = shading_values.y;
         shading_params.n_l = n_l;
-        shading_params.n_v = n_v;
         shading_params.n_h = n_h;
         shading_params.h_v = h_v;
         
         out_color += calculate_brdf(shading_params);
     }
+    
+    // reinhard tone-mapping
+    out_color = out_color / (out_color + float3(1.0));
     
     return half4(half3(out_color), 1.0);
 }

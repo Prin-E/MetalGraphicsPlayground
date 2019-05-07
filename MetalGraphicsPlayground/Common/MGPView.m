@@ -186,6 +186,12 @@ const inline __attribute__((__always_inline__)) float lerp(float a, float b, flo
     }
 }
 
+- (void)keyUp:(NSEvent *)event {
+    if([_delegate respondsToSelector:@selector(view:keyUp:)]) {
+        [_delegate view: self keyUp: event];
+    }
+}
+
 - (void)mouseDown:(NSEvent *)event {
     if([_delegate respondsToSelector:@selector(view:mouseDown:)]) {
         [_delegate view: self mouseDown: event];
