@@ -23,15 +23,20 @@ typedef struct {
 
 typedef struct __attribute__((__aligned__(256))) {
     matrix_float4x4 model;
+    matrix_float4x4 modelView;
     material_t material;
 } instance_props_t;
 
-typedef struct {
+typedef struct __attribute__((__aligned__(256))) {
     vector_float3 position;
     vector_float3 direction;
     vector_float3 color;
     float intensity;
 } light_t;
+
+typedef struct __attribute__((__aligned__(256))) {
+    unsigned int num_light;
+} light_global_t;
 
 typedef enum {
     attachment_albedo,
@@ -52,7 +57,8 @@ typedef enum {
     attrib_pos,
     attrib_uv,
     attrib_normal,
-    attrib_tangent
+    attrib_tangent,
+    attrib_bitangent
 } attribute_index;
 
 // texture index

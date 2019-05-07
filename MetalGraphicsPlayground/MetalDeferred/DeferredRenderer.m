@@ -12,21 +12,29 @@
 #import "../Common/MGPMesh.h"
 #import "../Common/MetalMath.h"
 
+#define TEST 1
+
 const size_t kMaxBuffersInFlight = 3;
-const size_t kNumInstance = 3;
+const size_t kNumInstance = 8;
+const uint32_t kNumLight = 32;
 
 #define DEG_TO_RAD(x) ((x)*0.0174532925)
 
 @implementation DeferredRenderer {
     camera_props_t camera_props[kMaxBuffersInFlight];
     instance_props_t instance_props[kMaxBuffersInFlight * kNumInstance];
+    light_t light_props[kMaxBuffersInFlight * kNumLight];
+    
     size_t _currentBufferIndex;
     float _elapsedTime;
     bool _animate;
+    float _animationTime;
     
     // props
     id<MTLBuffer> _cameraPropsBuffer;
     id<MTLBuffer> _instancePropsBuffer;
+    id<MTLBuffer> _lightPropsBuffer;
+    id<MTLBuffer> _lightGlobalBuffer;
     
     // quad vertex buffer
     id<MTLBuffer> _quadVertexBuffer;
@@ -77,6 +85,11 @@ const size_t kNumInstance = 3;
                                                   options: MTLResourceStorageModeManaged];
     _instancePropsBuffer = [self.device newBufferWithLength: sizeof(instance_props)
                                                     options: MTLResourceStorageModeManaged];
+    _lightPropsBuffer = [self.device newBufferWithLength: sizeof(light_props)
+                                                 options: MTLResourceStorageModeManaged];
+    _lightGlobalBuffer = [self.device newBufferWithBytes: &kNumLight
+                                                  length: sizeof(light_global_t)
+                                                 options: MTLResourceStorageModeManaged];
 }
 
 - (void)initAssets {
@@ -119,7 +132,10 @@ const size_t kNumInstance = 3;
     _baseVertexDescriptor.attributes[attrib_tangent].format = MTLVertexFormatFloat3;
     _baseVertexDescriptor.attributes[attrib_tangent].offset = 32;
     _baseVertexDescriptor.attributes[attrib_tangent].bufferIndex = 0;
-    _baseVertexDescriptor.layouts[0].stride = 44;
+    _baseVertexDescriptor.attributes[attrib_bitangent].format = MTLVertexFormatFloat3;
+    _baseVertexDescriptor.attributes[attrib_bitangent].offset = 44;
+    _baseVertexDescriptor.attributes[attrib_bitangent].bufferIndex = 0;
+    _baseVertexDescriptor.layouts[0].stride = 56;
     _baseVertexDescriptor.layouts[0].stepRate = 1;
     _baseVertexDescriptor.layouts[0].stepFunction = MTLStepFunctionPerVertex;
     
@@ -128,6 +144,7 @@ const size_t kNumInstance = 3;
     mdlVertexDescriptor.attributes[attrib_uv].name = MDLVertexAttributeTextureCoordinate;
     mdlVertexDescriptor.attributes[attrib_normal].name = MDLVertexAttributeNormal;
     mdlVertexDescriptor.attributes[attrib_tangent].name = MDLVertexAttributeTangent;
+    mdlVertexDescriptor.attributes[attrib_bitangent].name = MDLVertexAttributeBitangent;
     
     // meshes
     _meshes = [MGPMesh loadMeshesFromURL: [[NSBundle mainBundle] URLForResource: @"firetruck"
@@ -136,7 +153,7 @@ const size_t kNumInstance = 3;
                                   device: self.device
                                    error: nil];
     
-    MDLMesh *mdlMesh = [MDLMesh newEllipsoidWithRadii: vector3(20.0f, 20.0f, 20.0f)
+    MDLMesh *mdlMesh = [MDLMesh newEllipsoidWithRadii: vector3(10.0f, 10.0f, 10.0f)
                                        radialSegments: 32
                                      verticalSegments: 32
                                          geometryType: MDLGeometryTypeTriangles
@@ -151,10 +168,17 @@ const size_t kNumInstance = 3;
     // build render pipeline
     MTLFunctionConstantValues *constantValues = [[MTLFunctionConstantValues alloc] init];
     // TODO
+#if !TEST
     BOOL hasAlbedoMap = YES;
     BOOL hasNormalMap = YES;
     BOOL hasRoughnessMap = YES;
     BOOL hasMetalicMap = YES;
+#else
+    BOOL hasAlbedoMap = NO;
+    BOOL hasNormalMap = NO;
+    BOOL hasRoughnessMap = NO;
+    BOOL hasMetalicMap = NO;
+#endif
     
     [constantValues setConstantValue: &hasAlbedoMap type: MTLDataTypeBool atIndex: fcv_albedo];
     [constantValues setConstantValue: &hasNormalMap type: MTLDataTypeBool atIndex: fcv_normal];
@@ -194,11 +218,13 @@ const size_t kNumInstance = 3;
 }
 
 - (void)updateUniformBuffers: (float)deltaTime {
+    // Update camera properties
     camera_props[_currentBufferIndex].view = matrix_lookat(vector3(0.0f, 20.0f, -60.0f),
                                                            vector3(0.0f, 2.5f, 0.0f),
                                                            vector3(0.0f, 1.0f, 0.0f));
-    camera_props[_currentBufferIndex].projection = matrix_from_perspective_fov_aspectLH(DEG_TO_RAD(60.0f), _gBuffer.size.width / _gBuffer.size.height, 0.5f, 100.0f);
+    camera_props[_currentBufferIndex].projection = matrix_from_perspective_fov_aspectLH(DEG_TO_RAD(60.0f), _gBuffer.size.width / _gBuffer.size.height, 0.5f, 150.0f);
     
+    // Update per-instance properties
     static const simd_float3 instance_pos[] = {
         { 0, 0, 0 },
         { 30, 0, 30 },
@@ -207,18 +233,55 @@ const size_t kNumInstance = 3;
         { -30, 0, -30 },
         { 60, 0, 0 },
         { -60, 0, 0 },
-        { 0, 0, 60 },
-        { 0, 0, -60 },
-        { -90, 0, 30 },
-        { 90, 0, 30 }
+        { 0, 0, 60 }
     };
     for(NSInteger i = 0; i < kNumInstance; i++) {
         instance_props_t *p = &instance_props[_currentBufferIndex * kNumInstance + i];
-        p->model = matrix_multiply(matrix_from_translation(instance_pos[i].x, instance_pos[i].y, instance_pos[i].z), matrix_from_rotation(_elapsedTime, 0, 1, 0));
+        p->model = matrix_multiply(matrix_from_translation(instance_pos[i].x, instance_pos[i].y, instance_pos[i].z), matrix_from_rotation(_animationTime, 0, 1, 0));
+        p->modelView = matrix_multiply(camera_props[_currentBufferIndex].view, p->model);
         p->material.roughness = self.roughness;
         p->material.metalic = self.metalic;
     }
     
+    // Update lights
+    static simd_float3 light_colors[kNumLight];
+    static float light_intensities[kNumLight];
+    static simd_float4 light_dirs[kNumLight];
+    static BOOL init_light_value = NO;
+    if(!init_light_value) {
+        init_light_value = YES;
+        for(int i = 0; i < kNumLight; i++) {
+            light_colors[i] = vector3(rand() / (float)RAND_MAX, rand() / (float)RAND_MAX, rand() / (float)RAND_MAX);
+            light_intensities[i] = 0.1f + rand() / (float)RAND_MAX * 0.5f;
+            light_dirs[i] = simd_normalize(vector4(rand() / (float)RAND_MAX - 0.5f, rand() / (float)RAND_MAX - 0.5f,
+                                                   rand() / (float)RAND_MAX - 0.5f, 0.0f));
+        }
+    }
+    /*
+    static const simd_float3 light_colors[] = {
+        { 0.4, 0.8, 1 },
+        { 0.1, 0.8, 0.4 },
+        { 1.0, 1.0, 1.0 }
+    };
+    static const float light_intensities[] = {
+        1.5, 0.8, 1.0
+    };
+    static const simd_float4 light_dirs[] = {
+        { -1.0, -1.0, 1.0, 0.0 },
+        { 1.0, 1.0, 1.0, 0.0 },
+        { -1.0, 0.0, 0.0, 0.0 }
+    };
+    */
+    for(NSInteger i = 0; i < kNumLight; i++) {
+        light_t *l = &light_props[_currentBufferIndex * kNumLight + i];
+        l->color = light_colors[i];
+        l->intensity = light_intensities[i];
+        simd_float3 rot_dir = simd_cross(vector3(light_dirs[i].x, light_dirs[i].y, light_dirs[i].z), vector3(0.0f, 1.0f, 0.0f));
+        simd_float4 dir = matrix_multiply(matrix_from_rotation(_animationTime * 3.0f, rot_dir.x, rot_dir.y, rot_dir.z), light_dirs[i]);
+        l->direction = vector3(dir.x, dir.y, dir.z);
+    }
+    
+    // Synchronize buffers
     memcpy(_cameraPropsBuffer.contents + _currentBufferIndex * sizeof(camera_props_t),
            &camera_props[_currentBufferIndex], sizeof(camera_props_t));
     [_cameraPropsBuffer didModifyRange: NSMakeRange(_currentBufferIndex * sizeof(camera_props_t),
@@ -227,9 +290,14 @@ const size_t kNumInstance = 3;
            &instance_props[_currentBufferIndex * kNumInstance], sizeof(instance_props_t) * kNumInstance);
     [_instancePropsBuffer didModifyRange: NSMakeRange(_currentBufferIndex * sizeof(instance_props_t) * kNumInstance,
                                                       sizeof(instance_props_t) * kNumInstance)];
+    memcpy(_lightPropsBuffer.contents + _currentBufferIndex * sizeof(light_t) * kNumLight,
+           &light_props[_currentBufferIndex * kNumLight], sizeof(light_t) * kNumLight);
+    [_lightPropsBuffer didModifyRange: NSMakeRange(_currentBufferIndex * sizeof(light_t) * kNumLight,
+                                                   sizeof(light_t) * kNumLight)];
     
+    _elapsedTime += deltaTime;
     if(_animate)
-        _elapsedTime += deltaTime;
+        _animationTime += deltaTime;
 }
 
 - (void)render {
@@ -268,6 +336,7 @@ const size_t kNumInstance = 3;
     [encoder setRenderPipelineState: _renderPipelineGBuffer];
     [encoder setDepthStencilState: _depthStencil];
     
+#if !TEST
     for(MGPMesh *mesh in _meshes) {
         for(MGPSubmesh *submesh in mesh.submeshes) {
             [encoder setVertexBuffer: mesh.metalKitMesh.vertexBuffers[0].buffer
@@ -299,8 +368,7 @@ const size_t kNumInstance = 3;
                              instanceCount: kNumInstance];
         }
     }
-    
-    /*
+#else
     for(MTKSubmesh* submesh in _sphereMesh.submeshes) {
         [encoder setVertexBuffer: _sphereMesh.vertexBuffers[0].buffer
                           offset: 0
@@ -326,7 +394,7 @@ const size_t kNumInstance = 3;
                      indexBufferOffset: submesh.indexBuffer.offset
                          instanceCount: kNumInstance];
     }
-    */
+#endif
     
     [encoder endEncoding];
 }
@@ -337,6 +405,12 @@ const size_t kNumInstance = 3;
     [encoder setVertexBuffer: _quadVertexBuffer
                       offset: 0
                      atIndex: 0];
+    [encoder setFragmentBuffer: _lightPropsBuffer
+                        offset: 0
+                       atIndex: 1];
+    [encoder setFragmentBuffer: _lightGlobalBuffer
+                        offset: 0
+                       atIndex: 2];
     [encoder setFragmentTexture: _gBuffer.albedo
                         atIndex: attachment_albedo];
     [encoder setFragmentTexture: _gBuffer.normal

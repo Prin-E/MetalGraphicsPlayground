@@ -20,6 +20,7 @@ typedef struct {
     float n_l;
     float n_v;
     float n_h;
+    float h_v;
 } shading_t;
 
 float3 calculate_brdf(shading_t shading);

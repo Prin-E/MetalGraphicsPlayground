@@ -210,8 +210,7 @@ const inline __attribute__((__always_inline__)) float lerp(float a, float b, flo
     _metalLayer.drawableSize = pixelFrame.size;
     _currentDrawable = _metalLayer.nextDrawable;
     [self.renderer resize:pixelFrame.size];
-    
-    NSLog(@"New frame pixel size : %@", NSStringFromSize(pixelFrame.size));
+    //NSLog(@"New frame pixel size : %@", NSStringFromSize(pixelFrame.size));
 }
 
 - (void)windowDidMinimize: (NSNotification *)n {

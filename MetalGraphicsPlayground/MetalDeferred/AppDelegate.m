@@ -22,6 +22,8 @@
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification {
     renderer = [[DeferredRenderer alloc] init];
     self.view.renderer = renderer;
+    self.roughness = 0.5f;
+    self.metalic = 0.5f;
 }
 
 

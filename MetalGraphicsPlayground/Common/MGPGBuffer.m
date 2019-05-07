@@ -43,7 +43,7 @@
     NSUInteger height = _size.height;
     
     // albedo
-    MTLTextureDescriptor *desc = [MTLTextureDescriptor texture2DDescriptorWithPixelFormat: MTLPixelFormatRGBA16Float
+    MTLTextureDescriptor *desc = [MTLTextureDescriptor texture2DDescriptorWithPixelFormat: MTLPixelFormatBGRA8Unorm
                                                                                     width: width
                                                                                    height: height
                                                                                 mipmapped: NO];
