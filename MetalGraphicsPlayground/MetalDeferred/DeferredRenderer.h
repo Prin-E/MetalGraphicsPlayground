@@ -8,10 +8,13 @@
 
 #import <Foundation/Foundation.h>
 #import "../Common/MGPRenderer.h"
+#import "../Common/MGPView.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface DeferredRenderer : MGPRenderer
+@interface DeferredRenderer : MGPRenderer <MGPViewDelegate>
+
+@property (readwrite) float roughness, metalic;
 
 @end
 

@@ -127,9 +127,9 @@ fragment half4 lighting_frag(LightingFragment in [[stage_in]],
                              min_filter::linear);
     
     // TODO
-    float3 light_dir = normalize(float3(0, 0, -1));
-    float3 light_color = float3(0.89, 0.94, 1.0);
-    float light_intensity = 2.5;
+    float3 light_dir = normalize(float3(1.0, 1.0, -1.0));
+    float3 light_color = float3(0.24, 0.48, 1.0);
+    float light_intensity = 20;
     
     float4 n_c = float4(normal.sample(linear, in.uv));
     if(n_c.w == 0.0)
@@ -150,9 +150,6 @@ fragment half4 lighting_frag(LightingFragment in [[stage_in]],
     shading_params.n_v = n_h;
     shading_params.n_h = n_v;
     
-    float3 out_diffuse = diffuse(shading_params);
-    float3 out_specular = specular(shading_params);
-    float3 out_color = mix(out_diffuse, out_specular, 0.0);
-    out_color = pow(out_color, 1.0/2.2);    // gamma correction
+    float3 out_color = calculate_brdf(shading_params);
     return half4(half3(out_color), 1.0);
 }

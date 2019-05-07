@@ -147,11 +147,15 @@
                               error: (NSError **)error {
     self = [super init];
     if(self) {
+        [mdlMesh addNormalsWithAttributeNamed:MDLVertexAttributeNormal
+                              creaseThreshold:0.2];
+        
         [mdlMesh addTangentBasisForTextureCoordinateAttributeNamed: MDLVertexAttributeTextureCoordinate
                                               normalAttributeNamed: MDLVertexAttributeNormal
                                              tangentAttributeNamed: MDLVertexAttributeTangent];
         [mdlMesh addTangentBasisForTextureCoordinateAttributeNamed: MDLVertexAttributeTextureCoordinate
-                                             tangentAttributeNamed: MDLVertexAttributeTangent bitangentAttributeNamed: MDLVertexAttributeBitangent];
+                                             tangentAttributeNamed: MDLVertexAttributeTangent
+                                           bitangentAttributeNamed: MDLVertexAttributeBitangent];
         
         mdlMesh.vertexDescriptor = descriptor;
         

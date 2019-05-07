@@ -15,7 +15,11 @@ inline float sqr(float f0) {
 }
 
 inline float fresnel(float f0, float n_h) {
-    return f0 + (1.0 - f0) * pow(n_h, 5.0f);
+    return f0 + (1.0 - f0) * pow(1.0 - n_h, 5.0f);
+}
+
+inline float3 fresnel(float3 f0, float n_h) {
+    return f0 + (1.0 - f0) * pow(1.0 - n_h, 5.0f);
 }
 
 inline float geometry_schlick(float n_v, float a) {
@@ -40,8 +44,15 @@ float3 diffuse(shading_t shading) {
 float3 specular(shading_t shading) {
     float r = shading.roughness;
     float a = sqr(r);
-    float f_s = fresnel(0.2, shading.n_h);
-    float g_s = geometry_smith(shading.n_h, shading.n_h, a);
+    float g_s = geometry_smith(shading.n_l, shading.n_v, a);
     float d_s = distribution_ggx(shading.n_h, a);
-    return f_s * g_s * d_s * shading.albedo * shading.light / (4.0 * shading.n_l * shading.n_v);
+    return g_s * d_s * shading.albedo * shading.light / max(0.001, 4.0 * shading.n_l * shading.n_v);
+}
+
+float3 calculate_brdf(shading_t shading) {
+    float3 c_d = diffuse(shading);
+    float3 c_s = specular(shading);
+    float3 f_s = fresnel(mix(0.0, shading.albedo, shading.metalic), shading.n_h);
+    float3 k_d = (float3(1.0) - f_s) * (1.0 - shading.metalic);
+    return k_d * c_d + f_s * c_s;
 }

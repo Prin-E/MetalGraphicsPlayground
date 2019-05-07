@@ -15,16 +15,34 @@
 @property (weak) IBOutlet NSWindow *window;
 @end
 
-@implementation AppDelegate
+@implementation AppDelegate {
+    DeferredRenderer *renderer;
+}
 
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification {
-    DeferredRenderer *renderer = [[DeferredRenderer alloc] init];
+    renderer = [[DeferredRenderer alloc] init];
     self.view.renderer = renderer;
 }
 
 
 - (void)applicationWillTerminate:(NSNotification *)aNotification {
     // Insert code here to tear down your application
+}
+
+- (float)roughness {
+    return renderer.roughness;
+}
+
+- (void)setRoughness:(float)roughness {
+    renderer.roughness = roughness;
+}
+
+- (float)metalic {
+    return renderer.metalic;
+}
+
+- (void)setMetalic:(float)metalic {
+    renderer.metalic = metalic;
 }
 
 

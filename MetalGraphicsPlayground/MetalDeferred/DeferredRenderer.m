@@ -13,7 +13,7 @@
 #import "../Common/MetalMath.h"
 
 const size_t kMaxBuffersInFlight = 3;
-const size_t kNumInstance = 11;
+const size_t kNumInstance = 3;
 
 #define DEG_TO_RAD(x) ((x)*0.0174532925)
 
@@ -22,6 +22,7 @@ const size_t kNumInstance = 11;
     instance_props_t instance_props[kMaxBuffersInFlight * kNumInstance];
     size_t _currentBufferIndex;
     float _elapsedTime;
+    bool _animate;
     
     // props
     id<MTLBuffer> _cameraPropsBuffer;
@@ -45,11 +46,25 @@ const size_t kNumInstance = 11;
     
     NSArray<MGPMesh *> *_meshes;
     MTLVertexDescriptor *_baseVertexDescriptor;
+    
+    MTKMesh *_sphereMesh;
+}
+
+- (void)setView:(MGPView *)view {
+    [super setView:view];
+    [view setDelegate:self];
+}
+
+- (void)view:(MGPView *)view keyDown:(NSEvent *)theEvent {
+    if(theEvent.keyCode == 49) {
+        _animate = !_animate;
+    }
 }
 
 - (instancetype)init {
     self = [super init];
     if(self) {
+        _animate = YES;
         [self initUniformBuffers];
         [self initAssets];
     }
@@ -121,13 +136,25 @@ const size_t kNumInstance = 11;
                                   device: self.device
                                    error: nil];
     
+    MDLMesh *mdlMesh = [MDLMesh newEllipsoidWithRadii: vector3(20.0f, 20.0f, 20.0f)
+                                       radialSegments: 32
+                                     verticalSegments: 32
+                                         geometryType: MDLGeometryTypeTriangles
+                                        inwardNormals: NO
+                                           hemisphere: NO
+                                            allocator: [[MTKMeshBufferAllocator alloc] initWithDevice: self.device]];
+    mdlMesh.vertexDescriptor = mdlVertexDescriptor;
+    _sphereMesh = [[MTKMesh alloc] initWithMesh:mdlMesh
+                                         device:self.device
+                                          error:nil];
+    
     // build render pipeline
     MTLFunctionConstantValues *constantValues = [[MTLFunctionConstantValues alloc] init];
     // TODO
-    bool hasAlbedoMap = true;
-    bool hasNormalMap = true;
-    bool hasRoughnessMap = true;
-    bool hasMetalicMap = true;
+    BOOL hasAlbedoMap = YES;
+    BOOL hasNormalMap = YES;
+    BOOL hasRoughnessMap = YES;
+    BOOL hasMetalicMap = YES;
     
     [constantValues setConstantValue: &hasAlbedoMap type: MTLDataTypeBool atIndex: fcv_albedo];
     [constantValues setConstantValue: &hasNormalMap type: MTLDataTypeBool atIndex: fcv_normal];
@@ -150,7 +177,7 @@ const size_t kNumInstance = 11;
     renderPipelineDescriptorLighting.fragmentFunction = [self.defaultLibrary newFunctionWithName: @"lighting_frag"];
     renderPipelineDescriptorLighting.label = @"Lighting";
     renderPipelineDescriptorLighting.vertexDescriptor = nil;
-    renderPipelineDescriptorLighting.colorAttachments[0].pixelFormat = MTLPixelFormatBGRA8Unorm;
+    renderPipelineDescriptorLighting.colorAttachments[0].pixelFormat = MTLPixelFormatBGRA8Unorm_sRGB;
     
     _renderPipelineLighting = [self.device newRenderPipelineStateWithDescriptor: renderPipelineDescriptorLighting
                                                                           error: nil];
@@ -170,7 +197,7 @@ const size_t kNumInstance = 11;
     camera_props[_currentBufferIndex].view = matrix_lookat(vector3(0.0f, 20.0f, -60.0f),
                                                            vector3(0.0f, 2.5f, 0.0f),
                                                            vector3(0.0f, 1.0f, 0.0f));
-    camera_props[_currentBufferIndex].projection = matrix_from_perspective_fov_aspectLH(DEG_TO_RAD(60.0f), _gBuffer.size.width / _gBuffer.size.height, 0.01f, 300.0f);
+    camera_props[_currentBufferIndex].projection = matrix_from_perspective_fov_aspectLH(DEG_TO_RAD(60.0f), _gBuffer.size.width / _gBuffer.size.height, 0.5f, 100.0f);
     
     static const simd_float3 instance_pos[] = {
         { 0, 0, 0 },
@@ -188,8 +215,8 @@ const size_t kNumInstance = 11;
     for(NSInteger i = 0; i < kNumInstance; i++) {
         instance_props_t *p = &instance_props[_currentBufferIndex * kNumInstance + i];
         p->model = matrix_multiply(matrix_from_translation(instance_pos[i].x, instance_pos[i].y, instance_pos[i].z), matrix_from_rotation(_elapsedTime, 0, 1, 0));
-        p->material.roughness = 0;
-        p->material.metalic = 0;
+        p->material.roughness = self.roughness;
+        p->material.metalic = self.metalic;
     }
     
     memcpy(_cameraPropsBuffer.contents + _currentBufferIndex * sizeof(camera_props_t),
@@ -201,7 +228,8 @@ const size_t kNumInstance = 11;
     [_instancePropsBuffer didModifyRange: NSMakeRange(_currentBufferIndex * sizeof(instance_props_t) * kNumInstance,
                                                       sizeof(instance_props_t) * kNumInstance)];
     
-    _elapsedTime += deltaTime;
+    if(_animate)
+        _elapsedTime += deltaTime;
 }
 
 - (void)render {
@@ -239,6 +267,7 @@ const size_t kNumInstance = 11;
     
     [encoder setRenderPipelineState: _renderPipelineGBuffer];
     [encoder setDepthStencilState: _depthStencil];
+    
     for(MGPMesh *mesh in _meshes) {
         for(MGPSubmesh *submesh in mesh.submeshes) {
             [encoder setVertexBuffer: mesh.metalKitMesh.vertexBuffers[0].buffer
@@ -270,6 +299,34 @@ const size_t kNumInstance = 11;
                              instanceCount: kNumInstance];
         }
     }
+    
+    /*
+    for(MTKSubmesh* submesh in _sphereMesh.submeshes) {
+        [encoder setVertexBuffer: _sphereMesh.vertexBuffers[0].buffer
+                          offset: 0
+                         atIndex: 0];
+        [encoder setVertexBuffer: _cameraPropsBuffer
+                          offset: _currentBufferIndex * sizeof(camera_props_t)
+                         atIndex: 1];
+        [encoder setVertexBuffer: _instancePropsBuffer
+                          offset: _currentBufferIndex * sizeof(instance_props_t) * kNumInstance
+                         atIndex: 2];
+        
+        [encoder setFragmentBuffer: _cameraPropsBuffer
+                            offset: _currentBufferIndex * sizeof(camera_props_t)
+                           atIndex: 1];
+        [encoder setFragmentBuffer: _instancePropsBuffer
+                            offset: _currentBufferIndex * sizeof(instance_props_t) * kNumInstance
+                           atIndex: 2];
+        
+        [encoder drawIndexedPrimitives: submesh.primitiveType
+                            indexCount: submesh.indexCount
+                             indexType: submesh.indexType
+                           indexBuffer: submesh.indexBuffer.buffer
+                     indexBufferOffset: submesh.indexBuffer.offset
+                         instanceCount: kNumInstance];
+    }
+    */
     
     [encoder endEncoding];
 }

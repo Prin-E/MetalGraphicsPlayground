@@ -28,6 +28,12 @@ NS_ASSUME_NONNULL_BEGIN
                                  device: (id<MTLDevice>)device
                                   error: (NSError * __nullable * __nullable)error;
 
+
++ (NSArray<MGPMesh*>*)loadMeshesFromModelIOObject: (MDLObject *)object
+                          modelIOVertexDescriptor: (nonnull MDLVertexDescriptor *)descriptor
+                                           device: (id<MTLDevice>)device
+                                            error: (NSError **)error;
+
 @property (readonly) MTKMesh *metalKitMesh;
 @property (readonly, nonnull) NSArray<MGPSubmesh *> *submeshes;
 

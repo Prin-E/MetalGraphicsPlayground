@@ -22,7 +22,6 @@ typedef struct {
     float n_h;
 } shading_t;
 
-float3 diffuse(shading_t shading);
-float3 specular(shading_t shading);
+float3 calculate_brdf(shading_t shading);
 
 #endif /* BRDF_h */

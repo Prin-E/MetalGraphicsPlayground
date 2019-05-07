@@ -43,29 +43,34 @@
     NSUInteger height = _size.height;
     
     // albedo
-    MTLTextureDescriptor *desc = [MTLTextureDescriptor texture2DDescriptorWithPixelFormat: MTLPixelFormatBGRA8Unorm
+    MTLTextureDescriptor *desc = [MTLTextureDescriptor texture2DDescriptorWithPixelFormat: MTLPixelFormatRGBA16Float
                                                                                     width: width
                                                                                    height: height
                                                                                 mipmapped: NO];
     desc.usage = MTLTextureUsageShaderRead | MTLTextureUsageRenderTarget;
     desc.storageMode = MTLStorageModePrivate;
     _albedo = [_device newTextureWithDescriptor: desc];
+    _albedo.label = @"Albedo G-buffer";
     
     // normal
-    desc.pixelFormat = MTLPixelFormatRGBA8Unorm;
+    desc.pixelFormat = MTLPixelFormatRGBA16Float;
     _normal = [_device newTextureWithDescriptor: desc];
+    _normal.label = @"Normal G-buffer";
     
     // pos
     desc.pixelFormat = MTLPixelFormatRGBA32Float;
     _pos = [_device newTextureWithDescriptor: desc];
+    _pos.label = @"Position G-buffer";
     
     // depth
-    desc.pixelFormat = MTLPixelFormatDepth32Float;
+    desc.pixelFormat = MTLPixelFormatDepth32Float_Stencil8;
     _depth = [_device newTextureWithDescriptor: desc];
+    _depth.label = @"Depth G-buffer";
     
     // shading
-    desc.pixelFormat = MTLPixelFormatRGBA8Unorm;
+    desc.pixelFormat = MTLPixelFormatBGRA8Unorm;
     _shading = [_device newTextureWithDescriptor: desc];
+    _shading.label = @"Shading G-buffer";
 }
 
 - (void)_makeRenderPipelineDescriptor {

@@ -22,10 +22,24 @@
 }
 
 - (void)initMetal {
-    _device = MTLCreateSystemDefaultDevice();
+    // Selcct low power device (for debugging)
+    /*
+    NSArray *devices = MTLCopyAllDevices();
+    for(id<MTLDevice> device in devices) {
+        if(device.isLowPower) {
+            _device = device;
+            break;
+        }
+    }
+    */
+    if(_device == nil) {
+        _device = MTLCreateSystemDefaultDevice();
+    }
     _defaultLibrary = [_device newDefaultLibrary];
     _queue = [_device newCommandQueue];
     _semaphore = dispatch_semaphore_create(3);
+    
+    NSLog(@"Selected GPU : %@", _device.name);
 }
 
 - (void)update:(float)deltaTime {

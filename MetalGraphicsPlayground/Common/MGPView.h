@@ -30,7 +30,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (strong) id<MGPViewDelegate> delegate;
 @end
 
-@protocol MGPViewDelegate
+@protocol MGPViewDelegate <NSObject>
 
 @optional
 - (void)view:(MGPView *)view keyDown:(NSEvent *)theEvent;

@@ -72,11 +72,23 @@ const inline __attribute__((__always_inline__)) float lerp(float a, float b, flo
     // Meke metal layer and set it as view's main layer.
     NSLog(@"Initializing metal layer...");
     _metalLayer = [CAMetalLayer layer];
-    _metalLayer.pixelFormat = MTLPixelFormatBGRA8Unorm;
+    _metalLayer.pixelFormat = MTLPixelFormatBGRA8Unorm_sRGB;
     //_metalLayer.framebufferOnly = YES;
     //_metalLayer.displaySyncEnabled = NO;
     //_metalLayer.allowsNextDrawableTimeout = NO;
     return _metalLayer;
+}
+
+- (BOOL)acceptsFirstResponder {
+    return YES;
+}
+
+- (BOOL)becomeFirstResponder {
+    return YES;
+}
+
+- (BOOL)resignFirstResponder {
+    return YES;
 }
 
 - (MGPRenderer *)renderer {
@@ -169,19 +181,27 @@ const inline __attribute__((__always_inline__)) float lerp(float a, float b, flo
 }
 
 - (void)keyDown:(NSEvent *)event {
-    [_delegate view: self keyDown: event];
+    if([_delegate respondsToSelector:@selector(view:keyDown:)]) {
+        [_delegate view: self keyDown: event];
+    }
 }
 
 - (void)mouseDown:(NSEvent *)event {
-    [_delegate view: self mouseDown: event];
+    if([_delegate respondsToSelector:@selector(view:mouseDown:)]) {
+        [_delegate view: self mouseDown: event];
+    }
 }
 
 - (void)mouseDragged:(NSEvent *)event {
-    [_delegate view: self mouseDragged: event];
+    if([_delegate respondsToSelector:@selector(view:mouseDragged:)]) {
+        [_delegate view: self mouseDragged: event];
+    }
 }
 
 - (void)mouseUp:(NSEvent *)event {
-    [_delegate view: self mouseUp: event];
+    if([_delegate respondsToSelector:@selector(view:mouseUp:)]) {
+        [_delegate view: self mouseUp: event];
+    }
 }
 
 - (void)setFrame:(NSRect)frame {
