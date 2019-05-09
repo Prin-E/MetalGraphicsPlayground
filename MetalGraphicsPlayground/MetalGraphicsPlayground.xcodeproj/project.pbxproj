@@ -97,8 +97,11 @@
 		959A344B227B33560034AA82 /* firetruck.obj in Resources */ = {isa = PBXBuildFile; fileRef = 959A3449227B33560034AA82 /* firetruck.obj */; };
 		959A344E227B59750034AA82 /* DeferredRenderer.m in Sources */ = {isa = PBXBuildFile; fileRef = 959A344D227B59750034AA82 /* DeferredRenderer.m */; };
 		959B51FD1B9F3C690059E40B /* PrinE2013.png in Resources */ = {isa = PBXBuildFile; fileRef = 959B51FC1B9F3C690059E40B /* PrinE2013.png */; };
-		959C8301227F409E00C2C245 /* Lighting.metal in Sources */ = {isa = PBXBuildFile; fileRef = 959C8300227F409E00C2C245 /* Lighting.metal */; };
+		959C8301227F409E00C2C245 /* ImageBasedLighting.metal in Sources */ = {isa = PBXBuildFile; fileRef = 959C8300227F409E00C2C245 /* ImageBasedLighting.metal */; };
 		959C8303227F424900C2C245 /* BRDF.metal in Sources */ = {isa = PBXBuildFile; fileRef = 959C8302227F424900C2C245 /* BRDF.metal */; };
+		95A4D9292283F1E0004653B6 /* MGPImageBasedLighting.m in Sources */ = {isa = PBXBuildFile; fileRef = 95A4D9282283F1E0004653B6 /* MGPImageBasedLighting.m */; };
+		95A4D92E22840A41004653B6 /* bush_restaurant_1k.hdr in Resources */ = {isa = PBXBuildFile; fileRef = 95A4D92D22840A41004653B6 /* bush_restaurant_1k.hdr */; };
+		95A4D93022840E5B004653B6 /* Skybox.metal in Sources */ = {isa = PBXBuildFile; fileRef = 95A4D92F22840E5B004653B6 /* Skybox.metal */; };
 		95C42C541D29501F00806E15 /* Shadow.metal in Sources */ = {isa = PBXBuildFile; fileRef = 95C42C531D29501F00806E15 /* Shadow.metal */; };
 		95CF822F1E098365001BDF8D /* MetalView.m in Sources */ = {isa = PBXBuildFile; fileRef = 958A9C2D1D16D14F00021744 /* MetalView.m */; };
 		95D6C40E21DBA0470007BB90 /* SimpleMetalRenderer.m in Sources */ = {isa = PBXBuildFile; fileRef = 95D6C40D21DBA0470007BB90 /* SimpleMetalRenderer.m */; };
@@ -226,8 +229,14 @@
 		959A344C227B59750034AA82 /* DeferredRenderer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DeferredRenderer.h; sourceTree = "<group>"; };
 		959A344D227B59750034AA82 /* DeferredRenderer.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DeferredRenderer.m; sourceTree = "<group>"; };
 		959B51FC1B9F3C690059E40B /* PrinE2013.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = PrinE2013.png; sourceTree = "<group>"; };
-		959C8300227F409E00C2C245 /* Lighting.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = Lighting.metal; sourceTree = "<group>"; };
+		959C8300227F409E00C2C245 /* ImageBasedLighting.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = ImageBasedLighting.metal; sourceTree = "<group>"; };
 		959C8302227F424900C2C245 /* BRDF.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = BRDF.metal; sourceTree = "<group>"; };
+		95A4D9272283F1E0004653B6 /* MGPImageBasedLighting.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MGPImageBasedLighting.h; sourceTree = "<group>"; };
+		95A4D9282283F1E0004653B6 /* MGPImageBasedLighting.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MGPImageBasedLighting.m; sourceTree = "<group>"; };
+		95A4D92C228406FF004653B6 /* MGPCommonVertices.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MGPCommonVertices.h; sourceTree = "<group>"; };
+		95A4D92D22840A41004653B6 /* bush_restaurant_1k.hdr */ = {isa = PBXFileReference; lastKnownFileType = file; path = bush_restaurant_1k.hdr; sourceTree = "<group>"; };
+		95A4D92F22840E5B004653B6 /* Skybox.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = Skybox.metal; sourceTree = "<group>"; };
+		95A4D93222841A59004653B6 /* stb_image.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = stb_image.h; sourceTree = "<group>"; };
 		95B9508B22808F5400E45D08 /* BRDF.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BRDF.h; sourceTree = "<group>"; };
 		95C42C531D29501F00806E15 /* Shadow.metal */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.metal; path = Shadow.metal; sourceTree = "<group>"; };
 		95D6C40C21DBA0470007BB90 /* SimpleMetalRenderer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SimpleMetalRenderer.h; sourceTree = "<group>"; };
@@ -598,6 +607,7 @@
 		958A9C2B1D16D11200021744 /* Common */ = {
 			isa = PBXGroup;
 			children = (
+				95A4D93122841A49004653B6 /* STB */,
 				95F4CB2B22799BED00F51454 /* Shaders */,
 				958A9C2C1D16D14F00021744 /* MetalView.h */,
 				958A9C2D1D16D14F00021744 /* MetalView.m */,
@@ -611,8 +621,19 @@
 				95F4CB292279937200F51454 /* MGPGBuffer.m */,
 				95F0D289227D4DF600DEEC3B /* MGPMesh.h */,
 				95F0D28A227D4DF600DEEC3B /* MGPMesh.m */,
+				95A4D9272283F1E0004653B6 /* MGPImageBasedLighting.h */,
+				95A4D9282283F1E0004653B6 /* MGPImageBasedLighting.m */,
+				95A4D92C228406FF004653B6 /* MGPCommonVertices.h */,
 			);
 			path = Common;
+			sourceTree = "<group>";
+		};
+		95A4D93122841A49004653B6 /* STB */ = {
+			isa = PBXGroup;
+			children = (
+				95A4D93222841A59004653B6 /* stb_image.h */,
+			);
+			path = STB;
 			sourceTree = "<group>";
 		};
 		95F4CB2B22799BED00F51454 /* Shaders */ = {
@@ -621,8 +642,9 @@
 				95F4CB2C22799BFF00F51454 /* GBuffer.metal */,
 				95B9508B22808F5400E45D08 /* BRDF.h */,
 				959C8302227F424900C2C245 /* BRDF.metal */,
-				959C8300227F409E00C2C245 /* Lighting.metal */,
+				959C8300227F409E00C2C245 /* ImageBasedLighting.metal */,
 				95F4CB2E2279FE5900F51454 /* SharedStructures.h */,
+				95A4D92F22840E5B004653B6 /* Skybox.metal */,
 			);
 			path = Shaders;
 			sourceTree = "<group>";
@@ -630,6 +652,7 @@
 		95F5E0922276255600445BB0 /* MetalDeferred */ = {
 			isa = PBXGroup;
 			children = (
+				95A4D92D22840A41004653B6 /* bush_restaurant_1k.hdr */,
 				959A3448227B33550034AA82 /* firetruck.mtl */,
 				959A3449227B33560034AA82 /* firetruck.obj */,
 				95F5E0932276255600445BB0 /* AppDelegate.h */,
@@ -1016,6 +1039,7 @@
 				959A344A227B33560034AA82 /* firetruck.mtl in Resources */,
 				959A344B227B33560034AA82 /* firetruck.obj in Resources */,
 				95F5E0972276255900445BB0 /* Assets.xcassets in Resources */,
+				95A4D92E22840A41004653B6 /* bush_restaurant_1k.hdr in Resources */,
 				95F5E09A2276255900445BB0 /* MainMenu.xib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1127,14 +1151,16 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				95765E40227D81060053D66D /* MetalMath.c in Sources */,
 				959C8303227F424900C2C245 /* BRDF.metal in Sources */,
+				95A4D93022840E5B004653B6 /* Skybox.metal in Sources */,
+				95F4CB2D22799BFF00F51454 /* GBuffer.metal in Sources */,
+				959C8301227F409E00C2C245 /* ImageBasedLighting.metal in Sources */,
+				95765E40227D81060053D66D /* MetalMath.c in Sources */,
 				95765E3F227D7EEA0053D66D /* MGPMesh.m in Sources */,
 				95F5E09D2276255900445BB0 /* main.m in Sources */,
 				95F5E0952276255600445BB0 /* AppDelegate.m in Sources */,
 				958955C82277369B00414591 /* MGPView.m in Sources */,
-				959C8301227F409E00C2C245 /* Lighting.metal in Sources */,
-				95F4CB2D22799BFF00F51454 /* GBuffer.metal in Sources */,
+				95A4D9292283F1E0004653B6 /* MGPImageBasedLighting.m in Sources */,
 				95F4CB2A2279937200F51454 /* MGPGBuffer.m in Sources */,
 				959A344E227B59750034AA82 /* DeferredRenderer.m in Sources */,
 				958955CB227736F700414591 /* MGPRenderer.m in Sources */,

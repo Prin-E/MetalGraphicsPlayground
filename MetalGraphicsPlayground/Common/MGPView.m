@@ -59,9 +59,13 @@ const inline __attribute__((__always_inline__)) float lerp(float a, float b, flo
              object: window];
     
     _renderQueue = dispatch_queue_create("render queue", nil);
-    
+        
     // Init metal layer
     self.wantsLayer = YES;
+    
+    // accepts mouse events from window
+    self.window.ignoresMouseEvents = NO;
+    self.window.acceptsMouseMovedEvents = YES;
 }
 
 - (BOOL)wantsUpdateLayer {
@@ -195,6 +199,12 @@ const inline __attribute__((__always_inline__)) float lerp(float a, float b, flo
 - (void)mouseDown:(NSEvent *)event {
     if([_delegate respondsToSelector:@selector(view:mouseDown:)]) {
         [_delegate view: self mouseDown: event];
+    }
+}
+
+- (void)mouseMoved:(NSEvent *)event {
+    if([_delegate respondsToSelector:@selector(view:mouseMoved:)]) {
+        [_delegate view: self mouseMoved: event];
     }
 }
 

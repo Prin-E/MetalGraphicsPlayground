@@ -56,6 +56,16 @@ typedef struct {
     float2 uv;
 } LightingFragment;
 
+// present vertex input data
+typedef struct {
+    float3 pos;
+} PresentVertex;
+
+typedef struct {
+    float4 clipPos      [[position]];
+    float2 uv;
+} PresentFragment;
+
 // sampler
 constexpr sampler linear(mip_filter::linear,
                          mag_filter::linear,
@@ -137,7 +147,7 @@ fragment half4 lighting_frag(LightingFragment in [[stage_in]],
     float3 out_color = float3(0);
     float4 n_c = float4(normal.sample(linear, in.uv));
     if(n_c.w == 0.0)
-        return half4(0, 0, 0, 1);
+        return half4(0, 0, 0, 0);
     float3 n = (n_c.xyz - 0.5) * 2.0 * n_c.w;
     float3 v = -normalize(pos.sample(linear, in.uv).xyz);
     float3 albedo_c = float4(albedo.sample(linear, in.uv)).xyz;
@@ -174,7 +184,24 @@ fragment half4 lighting_frag(LightingFragment in [[stage_in]],
     }
     
     // reinhard tone-mapping
-    out_color = out_color / (out_color + float3(1.0));
+    // out_color = out_color / (out_color + float3(1.0));
     
     return half4(half3(out_color), 1.0);
+}
+
+// Present
+vertex PresentFragment present_vert(constant PresentVertex *in [[buffer(0)]],
+                                    uint vid [[vertex_id]]) {
+    PresentFragment out;
+    out.clipPos = float4(in[vid].pos, 1.0);
+    out.uv = (out.clipPos.xy + 1.0) * 0.5;
+    out.uv.y = 1.0 - out.uv.y;
+    return out;
+}
+
+fragment half4 present_frag(LightingFragment in [[stage_in]],
+                            texture2d<half> lighting [[texture(0)]]) {
+    
+    half4 out_color = lighting.sample(linear, in.uv);
+    return out_color;
 }

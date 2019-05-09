@@ -14,6 +14,8 @@
 typedef struct __attribute__((__aligned__(256))) {
     matrix_float4x4 view;
     matrix_float4x4 projection;
+    matrix_float4x4 viewInverse;
+    matrix_float4x4 rotation;
 } camera_props_t;
 
 typedef struct {

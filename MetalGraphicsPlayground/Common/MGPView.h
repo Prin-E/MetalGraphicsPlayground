@@ -36,9 +36,9 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)view:(MGPView *)view keyDown:(NSEvent *)theEvent;
 - (void)view:(MGPView *)view keyUp:(NSEvent *)theEvent;
 - (void)view:(MGPView *)view mouseDown:(NSEvent *)theEvent;
+- (void)view:(MGPView *)view mouseMoved:(NSEvent *)theEvent;
 - (void)view:(MGPView *)view mouseDragged:(NSEvent *)theEvent;
 - (void)view:(MGPView *)view mouseUp:(NSEvent *)theEvent;
-
 @end
 
 NS_ASSUME_NONNULL_END

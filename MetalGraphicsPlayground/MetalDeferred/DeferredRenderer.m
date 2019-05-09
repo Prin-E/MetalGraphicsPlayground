@@ -11,6 +11,14 @@
 #import "../Common/MGPGBuffer.h"
 #import "../Common/MGPMesh.h"
 #import "../Common/MetalMath.h"
+#import "../Common/MGPCommonVertices.h"
+
+#define STB_IMAGE_IMPLEMENTATION
+#import "../Common/STB/stb_image.h"
+
+#ifndef LERP
+#define LERP(x,y,t) ((x)*(1.0-(t))+(y)*(t))
+#endif
 
 #define TEST 1
 
@@ -33,8 +41,15 @@ const float kLightIntensityVariation = 3.0;
     bool _animate;
     float _animationTime;
     
-    BOOL _moveFront, _moveBack, _moveLeft, _moveRight;
+    BOOL _moveFlags[6];     // Front, Back, Left, Right, Up, Down
+    float _moveSpeeds[6];   // same as flags
+    NSPoint _mouseDelta, _prevMousePos;
+    
+    BOOL _mouseDown;
     vector_float3 _cameraPos;
+    vector_float3 _cameraRot;
+    matrix_float4x4 _cameraRotationMatrix, _cameraRotationInverseMatrix;
+    matrix_float4x4 _cameraMatrix, _cameraInverseMatrix;
     
     // props
     id<MTLBuffer> _cameraPropsBuffer;
@@ -42,25 +57,31 @@ const float kLightIntensityVariation = 3.0;
     id<MTLBuffer> _lightPropsBuffer;
     id<MTLBuffer> _lightGlobalBuffer;
     
-    // quad vertex buffer
-    id<MTLBuffer> _quadVertexBuffer;
+    // common vertex buffer (quad + cube)
+    id<MTLBuffer> _commonVertexBuffer;
     
     // g-buffer
     MGPGBuffer *_gBuffer;
     
     // render pass, pipeline states
-    MTLRenderPassDescriptor *_renderPassGBuffer;
     MTLRenderPipelineDescriptor *_baseRenderPipelineDescriptorGBuffer;
+    id<MTLRenderPipelineState> _renderPipelineSkybox;
     id<MTLRenderPipelineState> _renderPipelineGBuffer;
-    MTLRenderPassDescriptor *_renderPassLighting;
     id<MTLRenderPipelineState> _renderPipelineLighting;
+    id<MTLRenderPipelineState> _renderPipelinePresent;
+    MTLRenderPassDescriptor *_renderPassSkybox;
+    MTLRenderPassDescriptor *_renderPassPresent;
     
     // depth-stencil
     id<MTLDepthStencilState> _depthStencil;
     
+    // textures
+    id<MTLTexture> _equirectangularMapTexture;
+    id<MTLTexture> _skyboxDepthTexture;
+    
+    // Meshes
     NSArray<MGPMesh *> *_meshes;
     MTLVertexDescriptor *_baseVertexDescriptor;
-    
     MTKMesh *_sphereMesh;
 }
 
@@ -76,46 +97,70 @@ const float kLightIntensityVariation = 3.0;
     }
     if(theEvent.keyCode == 13) {
         // w
-        _moveFront = true;
+        _moveFlags[0] = true;
     }
     if(theEvent.keyCode == 1) {
         // s
-        _moveBack = true;
-    }
-    if(theEvent.keyCode == 0) {
-        // a
-        _moveLeft = true;
+        _moveFlags[1] = true;
     }
     if(theEvent.keyCode == 2) {
         // d
-        _moveRight = true;
+        _moveFlags[2] = true;
+    }
+    if(theEvent.keyCode == 0) {
+        // a
+        _moveFlags[3] = true;
+    }
+    if(theEvent.keyCode == 12) {
+        // d
+        _moveFlags[4] = true;
+    }
+    if(theEvent.keyCode == 14) {
+        // a
+        _moveFlags[5] = true;
     }
 }
 
 - (void)view:(MGPView *)view keyUp:(NSEvent *)theEvent {
     if(theEvent.keyCode == 13) {
         // w
-        _moveFront = false;
+        _moveFlags[0] = false;
     }
     if(theEvent.keyCode == 1) {
         // s
-        _moveBack = false;
-    }
-    if(theEvent.keyCode == 0) {
-        // a
-        _moveLeft = false;
+        _moveFlags[1] = false;
     }
     if(theEvent.keyCode == 2) {
         // d
-        _moveRight = false;
+        _moveFlags[2] = false;
     }
+    if(theEvent.keyCode == 0) {
+        // a
+        _moveFlags[3] = false;
+    }
+    if(theEvent.keyCode == 12) {
+        // d
+        _moveFlags[4] = false;
+    }
+    if(theEvent.keyCode == 14) {
+        // a
+        _moveFlags[5] = false;
+    }
+}
+
+- (void)view:(MGPView *)view mouseDown:(NSEvent *)theEvent {
+    _mouseDown = YES;
+}
+
+- (void)view:(MGPView *)view mouseUp:(NSEvent *)theEvent {
+    _mouseDown = NO;
 }
 
 - (instancetype)init {
     self = [super init];
     if(self) {
         _animate = YES;
-        _cameraPos = vector3(0.0f, 20.0f, -60.0f);
+        _cameraPos = vector3(0.0f, 0.0f, -60.0f);
         [self initUniformBuffers];
         [self initAssets];
     }
@@ -135,30 +180,19 @@ const float kLightIntensityVariation = 3.0;
 }
 
 - (void)initAssets {
-    // quad vertex
-    static const simd_float3 QuadVertices[] =
-    {
-        { -1.0f, -1.0f, 0.0f },
-        { -1.0f, 1.0f, 0.0f },
-        { 1.0f, -1.0f, 0.0f },
-        { 1.0f, -1.0f, 0.0f },
-        { -1.0f, 1.0f, 0.0f },
-        { 1.0f, 1.0f, 0.0f }
-    };
-    
-    _quadVertexBuffer = [self.device newBufferWithBytes:QuadVertices
-                                                 length:sizeof(QuadVertices)
-                                                options:0];
-    
+    // vertex buffer
+    _commonVertexBuffer = [self.device newBufferWithLength:1024
+                                                   options:MTLResourceStorageModeManaged];
+    memcpy(_commonVertexBuffer.contents, QuadVertices, sizeof(QuadVertices));
+    memcpy(_commonVertexBuffer.contents + 256, EquirectangularMapVertices, sizeof(EquirectangularMapVertices));
+    [_commonVertexBuffer didModifyRange: NSMakeRange(0, 1024)];
     
     // G-buffer
     _gBuffer = [[MGPGBuffer alloc] initWithDevice:self.device
+                                          library:self.defaultLibrary
                                              size:CGSizeMake(512,512)];
     
-    _renderPassGBuffer = [[_gBuffer renderPassDescriptor] copy];
     _baseRenderPipelineDescriptorGBuffer = [[_gBuffer renderPipelineDescriptor] copy];
-    
-    _renderPassLighting = [[_gBuffer lightingPassDescriptor] copy];
     
     // vertex descriptor
     _baseVertexDescriptor = [[MTLVertexDescriptor alloc] init];
@@ -238,42 +272,122 @@ const float kLightIntensityVariation = 3.0;
     _renderPipelineGBuffer = [self.device newRenderPipelineStateWithDescriptor: _baseRenderPipelineDescriptorGBuffer
                                                                          error: nil];
     
-    MTLRenderPipelineDescriptor *renderPipelineDescriptorLighting = [[MTLRenderPipelineDescriptor alloc] init];
-    renderPipelineDescriptorLighting.vertexFunction = [self.defaultLibrary newFunctionWithName: @"lighting_vert"];
-    renderPipelineDescriptorLighting.fragmentFunction = [self.defaultLibrary newFunctionWithName: @"lighting_frag"];
-    renderPipelineDescriptorLighting.label = @"Lighting";
-    renderPipelineDescriptorLighting.vertexDescriptor = nil;
-    renderPipelineDescriptorLighting.colorAttachments[0].pixelFormat = MTLPixelFormatBGRA8Unorm_sRGB;
-    
+    MTLRenderPipelineDescriptor *renderPipelineDescriptorLighting = [_gBuffer lightingPipelineDescriptor];
     _renderPipelineLighting = [self.device newRenderPipelineStateWithDescriptor: renderPipelineDescriptorLighting
                                                                           error: nil];
+    
+    MTLRenderPipelineDescriptor *renderPipelineDescriptorPresent = [[MTLRenderPipelineDescriptor alloc] init];
+    renderPipelineDescriptorPresent.colorAttachments[0].pixelFormat = MTLPixelFormatBGRA8Unorm_sRGB;
+    renderPipelineDescriptorPresent.colorAttachments[0].blendingEnabled = YES;
+    renderPipelineDescriptorPresent.colorAttachments[0].sourceRGBBlendFactor = MTLBlendFactorSourceAlpha;
+    renderPipelineDescriptorPresent.colorAttachments[0].destinationRGBBlendFactor = MTLBlendFactorOneMinusSourceAlpha;
+    renderPipelineDescriptorPresent.colorAttachments[0].sourceAlphaBlendFactor = MTLBlendFactorOne;
+    renderPipelineDescriptorPresent.colorAttachments[0].sourceAlphaBlendFactor = MTLBlendFactorOne;
+    renderPipelineDescriptorPresent.vertexFunction = [self.defaultLibrary newFunctionWithName: @"present_vert"];
+    renderPipelineDescriptorPresent.fragmentFunction = [self.defaultLibrary newFunctionWithName: @"present_frag"];
+    _renderPipelinePresent = [self.device newRenderPipelineStateWithDescriptor: renderPipelineDescriptorPresent
+                                                                         error: nil];
+    
+    MTLRenderPipelineDescriptor *renderPipelineDescriptorSkybox = [[MTLRenderPipelineDescriptor alloc] init];
+    renderPipelineDescriptorSkybox.colorAttachments[0].pixelFormat = MTLPixelFormatBGRA8Unorm_sRGB;
+    renderPipelineDescriptorSkybox.vertexFunction = [self.defaultLibrary newFunctionWithName: @"skybox_vert"];
+    renderPipelineDescriptorSkybox.fragmentFunction = [self.defaultLibrary newFunctionWithName: @"skybox_frag"];
+    renderPipelineDescriptorSkybox.depthAttachmentPixelFormat = _gBuffer.depth.pixelFormat;
+    _renderPipelineSkybox = [self.device newRenderPipelineStateWithDescriptor: renderPipelineDescriptorSkybox
+                                                                        error: nil];
+    
+    // render pass
+    _renderPassSkybox = [[MTLRenderPassDescriptor alloc] init];
+    _renderPassSkybox.colorAttachments[0].loadAction = MTLLoadActionClear;
+    _renderPassSkybox.colorAttachments[0].storeAction = MTLStoreActionStore;
+    _renderPassSkybox.colorAttachments[0].clearColor = MTLClearColorMake(0, 0, 0, 0);
+    _renderPassSkybox.depthAttachment.loadAction = MTLLoadActionClear;
+    _renderPassSkybox.depthAttachment.storeAction = MTLStoreActionStore;
+    
+    _renderPassPresent = [[MTLRenderPassDescriptor alloc] init];
+    _renderPassPresent.colorAttachments[0].loadAction = MTLLoadActionDontCare;
+    _renderPassPresent.colorAttachments[0].storeAction = MTLStoreActionStore;
     
     // depth-stencil
     MTLDepthStencilDescriptor *depthStencilDescriptor = [[MTLDepthStencilDescriptor alloc] init];
     depthStencilDescriptor.depthWriteEnabled = YES;
     depthStencilDescriptor.depthCompareFunction = MTLCompareFunctionLess;
     _depthStencil = [self.device newDepthStencilStateWithDescriptor: depthStencilDescriptor];
+    
+    // textures
+    NSString *skyboxImagePath = [[NSBundle mainBundle] pathForResource:@"bush_restaurant_1k"
+                                                                ofType:@"hdr"];
+    int skyboxWidth, skyboxHeight, skyboxComps;
+    float* skyboxImageData = stbi_loadf(skyboxImagePath.UTF8String, &skyboxWidth, &skyboxHeight, &skyboxComps, 4);
+    
+    
+    MTLTextureDescriptor *skyboxTextureDescriptor = [MTLTextureDescriptor texture2DDescriptorWithPixelFormat:MTLPixelFormatRGBA32Float
+                                                                                                       width:skyboxWidth
+                                                                                                      height:skyboxHeight
+                                                                                                   mipmapped:NO];
+    skyboxTextureDescriptor.usage = MTLTextureUsageShaderRead;
+    _equirectangularMapTexture = [self.device newTextureWithDescriptor: skyboxTextureDescriptor];
+    [_equirectangularMapTexture replaceRegion:MTLRegionMake2D(0, 0, skyboxWidth, skyboxHeight)
+                                  mipmapLevel:0
+                                    withBytes:skyboxImageData
+                                  bytesPerRow:16*skyboxWidth];
+    stbi_image_free(skyboxImageData);
+}
+
+- (void)_initSkyboxDepthTexture {
+    MTLTextureDescriptor *desc = [MTLTextureDescriptor texture2DDescriptorWithPixelFormat:MTLPixelFormatDepth32Float_Stencil8
+                                                                                    width:_gBuffer.size.width
+                                                                                   height:_gBuffer.size.height
+                                                                                mipmapped:NO];
+    desc.usage = MTLTextureUsageRenderTarget;
+    desc.storageMode = MTLStorageModePrivate;
+    _skyboxDepthTexture = [self.device newTextureWithDescriptor:desc];
 }
 
 - (void)update:(float)deltaTime {
-    if(_moveFront)
-        _cameraPos.z += 50.0f * deltaTime;
-    if(_moveBack)
-        _cameraPos.z -= 50.0f * deltaTime;
-    if(_moveRight)
-        _cameraPos.x += 50.0f * deltaTime;
-    if(_moveLeft)
-        _cameraPos.x -= 50.0f * deltaTime;
+    // mouse pos
+    NSPoint mousePos = [NSEvent mouseLocation];
+    if(_prevMousePos.x == 0.0f && _prevMousePos.y == 0.0f)
+        _prevMousePos = mousePos;
+    _mouseDelta = NSMakePoint(mousePos.x - _prevMousePos.x, mousePos.y - _prevMousePos.y);
+    _prevMousePos = mousePos;
     
-    [self updateUniformBuffers: deltaTime];
+    // camera
+    [self _updateCameraMatrix: deltaTime];
+    [self _updateUniformBuffers: deltaTime];
 }
 
-- (void)updateUniformBuffers: (float)deltaTime {
+- (void)_updateCameraMatrix: (float)deltaTime {
+    // camera rotation
+    if(_mouseDown) {
+        NSPoint pixelMouseDelta = [self.view convertPointToBacking: _mouseDelta];
+        _cameraRot.y = _cameraRot.y + pixelMouseDelta.x / (0.5f * _gBuffer.size.height) * M_PI_2;
+        _cameraRot.x = MIN(MAX(_cameraRot.x + pixelMouseDelta.y / (0.5f * _gBuffer.size.height) * M_PI_2, -M_PI*0.4), M_PI*0.4);
+    }
+    _cameraRotationMatrix = matrix_multiply(matrix_from_rotation(_cameraRot.y, 0, 1, 0),
+                                            matrix_from_rotation(-_cameraRot.x, 1, 0, 0));
+    _cameraRotationInverseMatrix = matrix_invert(_cameraRotationMatrix);
+    
+    // move
+    static int columnIndices[] = {
+        2,2,0,0,1,1
+    };
+    for(int i = 0; i < 6; i++) {
+        float sign = (i % 2) ? -1.0f : 1.0f;
+        _moveSpeeds[i] = LERP(_moveSpeeds[i], _moveFlags[i] ? 100.0f : 0.0f, deltaTime * 14);
+        _cameraPos = _cameraPos + _cameraRotationMatrix.columns[columnIndices[i]].xyz * deltaTime * _moveSpeeds[i] * sign;
+    }
+    matrix_float4x4 cameraTranslationMatrix = matrix_from_translation(_cameraPos.x, _cameraPos.y, _cameraPos.z);
+    _cameraMatrix = matrix_multiply(cameraTranslationMatrix, _cameraRotationMatrix);
+    _cameraInverseMatrix = matrix_invert(_cameraMatrix);
+}
+
+- (void)_updateUniformBuffers: (float)deltaTime {
     // Update camera properties
-    camera_props[_currentBufferIndex].view = matrix_lookat(_cameraPos,
-                                                           _cameraPos + vector3(0.0f, -17.5f, 60.0f),
-                                                           vector3(0.0f, 1.0f, 0.0f));
-    camera_props[_currentBufferIndex].projection = matrix_from_perspective_fov_aspectLH(DEG_TO_RAD(60.0f), _gBuffer.size.width / _gBuffer.size.height, 0.5f, 150.0f);
+    camera_props[_currentBufferIndex].view = _cameraInverseMatrix;
+    camera_props[_currentBufferIndex].projection = matrix_from_perspective_fov_aspectLH(DEG_TO_RAD(60.0f), _gBuffer.size.width / _gBuffer.size.height, 0.5f, 300.0f);
+    camera_props[_currentBufferIndex].viewInverse = _cameraMatrix;
+    camera_props[_currentBufferIndex].rotation = _cameraRotationInverseMatrix;
     
     // Update per-instance properties
     static const simd_float3 instance_pos[] = {
@@ -308,27 +422,14 @@ const float kLightIntensityVariation = 3.0;
                                                    rand() / (float)RAND_MAX - 0.5f, 0.0f));
         }
     }
-    /*
-    static const simd_float3 light_colors[] = {
-        { 0.4, 0.8, 1 },
-        { 0.1, 0.8, 0.4 },
-        { 1.0, 1.0, 1.0 }
-    };
-    static const float light_intensities[] = {
-        1.5, 0.8, 1.0
-    };
-    static const simd_float4 light_dirs[] = {
-        { -1.0, -1.0, 1.0, 0.0 },
-        { 1.0, 1.0, 1.0, 0.0 },
-        { -1.0, 0.0, 0.0, 0.0 }
-    };
-    */
-    for(NSInteger i = 0; i < kNumLight; i++) {
+    
+    for(NSInteger i = 0; i < _numLights; i++) {
         light_t *l = &light_props[_currentBufferIndex * kNumLight + i];
         l->color = light_colors[i];
         l->intensity = light_intensities[i];
         simd_float3 rot_dir = simd_cross(vector3(light_dirs[i].x, light_dirs[i].y, light_dirs[i].z), vector3(0.0f, 1.0f, 0.0f));
         simd_float4 dir = matrix_multiply(matrix_from_rotation(_animationTime * 3.0f, rot_dir.x, rot_dir.y, rot_dir.z), light_dirs[i]);
+        dir = matrix_multiply(dir, _cameraRotationMatrix);
         l->direction = vector3(dir.x, dir.y, dir.z);
     }
     
@@ -339,16 +440,18 @@ const float kLightIntensityVariation = 3.0;
            &camera_props[_currentBufferIndex], sizeof(camera_props_t));
     [_cameraPropsBuffer didModifyRange: NSMakeRange(_currentBufferIndex * sizeof(camera_props_t),
                                                     sizeof(camera_props_t))];
+    
     memcpy(_instancePropsBuffer.contents + _currentBufferIndex * sizeof(instance_props_t) * kNumInstance,
            &instance_props[_currentBufferIndex * kNumInstance], sizeof(instance_props_t) * kNumInstance);
     [_instancePropsBuffer didModifyRange: NSMakeRange(_currentBufferIndex * sizeof(instance_props_t) * kNumInstance,
                                                       sizeof(instance_props_t) * kNumInstance)];
+    
     memcpy(_lightPropsBuffer.contents + _currentBufferIndex * sizeof(light_t) * kNumLight,
            &light_props[_currentBufferIndex * kNumLight], sizeof(light_t) * kNumLight);
     [_lightPropsBuffer didModifyRange: NSMakeRange(_currentBufferIndex * sizeof(light_t) * kNumLight,
                                                    sizeof(light_t) * kNumLight)];
     
-    memcpy(_lightGlobalBuffer.contents, &light_globals[_currentBufferIndex], sizeof(light_global_t));
+    memcpy(_lightGlobalBuffer.contents + _currentBufferIndex * sizeof(light_global_t), &light_globals[_currentBufferIndex], sizeof(light_global_t));
     [_lightGlobalBuffer didModifyRange: NSMakeRange(_currentBufferIndex * sizeof(light_global_t),
                                                     sizeof(light_global_t))];
     
@@ -364,18 +467,24 @@ const float kLightIntensityVariation = 3.0;
     id<MTLCommandBuffer> commandBuffer = [self.queue commandBuffer];
     commandBuffer.label = @"Render";
     
+    // skybox pass
+    _renderPassSkybox.colorAttachments[0].texture = self.view.currentDrawable.texture;
+    _renderPassSkybox.depthAttachment.texture = _skyboxDepthTexture;
+    id<MTLRenderCommandEncoder> skyboxPassEncoder = [commandBuffer renderCommandEncoderWithDescriptor: _renderPassSkybox];
+    [self renderSkybox:skyboxPassEncoder];
+    
     // G-buffer pass
     id<MTLRenderCommandEncoder> gBufferPassEncoder = [commandBuffer renderCommandEncoderWithDescriptor: _gBuffer.renderPassDescriptor];
     [self renderGBuffer:gBufferPassEncoder];
     
     // lighting pass
-    MTLRenderPassDescriptor *lightingRenderPassDescriptor = [[MTLRenderPassDescriptor alloc] init];
-    lightingRenderPassDescriptor.colorAttachments[0].texture = self.view.currentDrawable.texture;
-    lightingRenderPassDescriptor.colorAttachments[0].loadAction = MTLLoadActionClear;
-    lightingRenderPassDescriptor.colorAttachments[0].storeAction = MTLStoreActionStore;
-    lightingRenderPassDescriptor.colorAttachments[0].clearColor = MTLClearColorMake(0, 0, 0, 0);
-    id<MTLRenderCommandEncoder> lightingPassEncoder = [commandBuffer renderCommandEncoderWithDescriptor: lightingRenderPassDescriptor];
+    id<MTLRenderCommandEncoder> lightingPassEncoder = [commandBuffer renderCommandEncoderWithDescriptor: _gBuffer.lightingPassDescriptor];
     [self renderLighting:lightingPassEncoder];
+    
+    // present to framebuffer
+    _renderPassPresent.colorAttachments[0].texture = self.view.currentDrawable.texture;
+    id<MTLRenderCommandEncoder> presentCommandEncoder = [commandBuffer renderCommandEncoderWithDescriptor: _renderPassPresent];
+    [self renderFramebuffer:presentCommandEncoder];
     
     // present
     [commandBuffer presentDrawable: self.view.currentDrawable];
@@ -387,11 +496,31 @@ const float kLightIntensityVariation = 3.0;
     _currentBufferIndex = (_currentBufferIndex + 1) % kMaxBuffersInFlight;
 }
 
+- (void)renderSkybox:(id<MTLRenderCommandEncoder>)encoder {
+    encoder.label = @"Skybox";
+    [encoder setRenderPipelineState: _renderPipelineSkybox];
+    [encoder setDepthStencilState: _depthStencil];
+    [encoder setCullMode: MTLCullModeBack];
+    
+    [encoder setVertexBuffer: _commonVertexBuffer
+                      offset: 256
+                     atIndex: 0];
+    [encoder setVertexBuffer: _cameraPropsBuffer
+                      offset: _currentBufferIndex * sizeof(camera_props_t)
+                     atIndex: 1];
+    [encoder setFragmentTexture: _equirectangularMapTexture
+                        atIndex: 0];
+    [encoder drawPrimitives: MTLPrimitiveTypeTriangle
+                vertexStart: 0
+                vertexCount: 36];
+    [encoder endEncoding];
+}
+
 - (void)renderGBuffer:(id<MTLRenderCommandEncoder>)encoder {
     encoder.label = @"G-buffer";
-    
     [encoder setRenderPipelineState: _renderPipelineGBuffer];
     [encoder setDepthStencilState: _depthStencil];
+    [encoder setCullMode: MTLCullModeBack];
     
 #if !TEST
     for(MGPMesh *mesh in _meshes) {
@@ -459,14 +588,15 @@ const float kLightIntensityVariation = 3.0;
 - (void)renderLighting:(id<MTLRenderCommandEncoder>)encoder {
     encoder.label = @"Lighting";
     [encoder setRenderPipelineState: _renderPipelineLighting];
-    [encoder setVertexBuffer: _quadVertexBuffer
+    [encoder setCullMode: MTLCullModeBack];
+    [encoder setVertexBuffer: _commonVertexBuffer
                       offset: 0
                      atIndex: 0];
     [encoder setFragmentBuffer: _lightPropsBuffer
-                        offset: 0
+                        offset: _currentBufferIndex * sizeof(light_t) * kNumLight
                        atIndex: 1];
     [encoder setFragmentBuffer: _lightGlobalBuffer
-                        offset: 0
+                        offset: _currentBufferIndex * sizeof(light_global_t)
                        atIndex: 2];
     [encoder setFragmentTexture: _gBuffer.albedo
                         atIndex: attachment_albedo];
@@ -483,8 +613,25 @@ const float kLightIntensityVariation = 3.0;
     [encoder endEncoding];
 }
 
+- (void)renderFramebuffer:(id<MTLRenderCommandEncoder>)encoder {
+    encoder.label = @"Present";
+    [encoder setRenderPipelineState: _renderPipelinePresent];
+    [encoder setCullMode: MTLCullModeBack];
+    [encoder setVertexBuffer: _commonVertexBuffer
+                      offset: 0
+                     atIndex: 0];
+    [encoder setFragmentTexture: _gBuffer.lighting
+                        atIndex: 0];
+    [encoder drawPrimitives: MTLPrimitiveTypeTriangle
+                vertexStart: 0
+                vertexCount: 6];
+    
+    [encoder endEncoding];
+}
+
 - (void)resize:(CGSize)newSize {
     [_gBuffer resize:newSize];
+    [self _initSkyboxDepthTexture];
 }
 
 @end
