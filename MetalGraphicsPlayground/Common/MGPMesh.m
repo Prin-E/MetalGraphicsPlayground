@@ -7,6 +7,7 @@
 //
 
 #import "MGPMesh.h"
+#import "MGPCommonVertices.h"
 #import "Shaders/SharedStructures.h"
 
 @implementation MGPSubmesh {
@@ -233,6 +234,26 @@
     }
     
     return list;
+}
+
++ (id<MTLBuffer>)newQuadVerticesBuffer: (id<MTLDevice>)device {
+    // 0x100 = 256
+    NSUInteger bufferLength = (sizeof(QuadVertices)+0xFF)&(~0xFF);
+    id<MTLBuffer> buffer = [device newBufferWithLength: bufferLength
+                                               options: MTLResourceStorageModeManaged];
+    memcpy(buffer.contents, QuadVertices, sizeof(QuadVertices));
+    [buffer didModifyRange: NSMakeRange(0, sizeof(QuadVertices))];
+    return buffer;
+}
+
++ (id<MTLBuffer>)newSkyboxVerticesBuffer: (id<MTLDevice>)device {
+    // 0x100 = 256
+    NSUInteger bufferLength = (sizeof(QuadVertices)+0xFF)&(~0xFF);
+    id<MTLBuffer> buffer = [device newBufferWithLength: bufferLength
+                                               options: MTLResourceStorageModeManaged];
+    memcpy(buffer.contents, QuadVertices, sizeof(QuadVertices));
+    [buffer didModifyRange: NSMakeRange(0, sizeof(QuadVertices))];
+    return buffer;
 }
 
 @end

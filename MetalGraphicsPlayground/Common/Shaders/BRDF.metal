@@ -7,19 +7,14 @@
 //
 
 #include "BRDF.h"
+#include "CommonVariables.h"
+#include "CommonMath.h"
 
-constant constexpr float PI = 3.14159265;
-constant constexpr float PI_DIV = 1.0 / PI;
-
-inline float sqr(float f0) {
-    return f0 * f0;
-}
-
-inline float fresnel(float f0, float h_v) {
+float fresnel(float f0, float h_v) {
     return f0 + (1.0 - f0) * pow(1.0 - h_v, 5.0f);
 }
 
-inline float3 fresnel(float3 f0, float h_v) {
+float3 fresnel(float3 f0, float h_v) {
     return f0 + (1.0 - f0) * pow(1.0 - h_v, 5.0f);
 }
 

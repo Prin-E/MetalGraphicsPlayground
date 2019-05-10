@@ -9,6 +9,7 @@
 #include <metal_stdlib>
 #include "SharedStructures.h"
 #include "BRDF.h"
+#include "CommonVariables.h"
 
 using namespace metal;
 
@@ -65,14 +66,6 @@ typedef struct {
     float4 clipPos      [[position]];
     float2 uv;
 } PresentFragment;
-
-// sampler
-constexpr sampler linear(mip_filter::linear,
-                         mag_filter::linear,
-                         min_filter::linear);
-constexpr sampler nearest(mip_filter::nearest,
-                          mag_filter::nearest,
-                          min_filter::nearest);
 
 // g-buffer
 vertex GBufferFragment gbuffer_vert(GBufferVertex in [[stage_in]],
@@ -137,14 +130,30 @@ vertex LightingFragment lighting_vert(constant LightingVertex *in [[buffer(0)]],
     return out;
 }
 
+float2 get_equirectangular_uv(float3 viewVec) {
+    float pi = acos(viewVec.y);
+    float theta = atan2(viewVec.z,abs(viewVec.x));
+    
+    float2 uv;
+    uv.x = 0.75 + -theta * PI_DIV * 0.5;
+    if(viewVec.x < 0.0)
+        uv.x = (0.5 - uv.x) - 0.5;
+    uv.y = pi * PI_DIV;
+    return uv;
+}
+
 fragment half4 lighting_frag(LightingFragment in [[stage_in]],
-                             constant light_t *lightProps [[buffer(1)]],
-                             constant light_global_t &lightGlobal [[buffer(2)]],
+                             constant camera_props_t &cameraProps [[buffer(1)]],
+                             constant light_t *lightProps [[buffer(2)]],
+                             constant light_global_t &lightGlobal [[buffer(3)]],
                              texture2d<half> albedo [[texture(attachment_albedo)]],
                              texture2d<half> normal [[texture(attachment_normal)]],
                              texture2d<float> pos [[texture(attachment_pos)]],
-                             texture2d<half> shading [[texture(attachment_shading)]]) {
+                             texture2d<half> shading [[texture(attachment_shading)]],
+                             texture2d<half> irradiance [[texture(attachment_irradiance)]]) {
     float3 out_color = float3(0);
+    
+    // shared values
     float4 n_c = float4(normal.sample(linear, in.uv));
     if(n_c.w == 0.0)
         return half4(0, 0, 0, 0);
@@ -152,9 +161,8 @@ fragment half4 lighting_frag(LightingFragment in [[stage_in]],
     float3 v = -normalize(pos.sample(linear, in.uv).xyz);
     float3 albedo_c = float4(albedo.sample(linear, in.uv)).xyz;
     half4 shading_values = shading.sample(linear, in.uv);
-    
-    // shared values
     float n_v = max(0.001, saturate(dot(n, v)));
+    float3 n_w = (cameraProps.viewInverse * float4(n, 0.0)).xyz;
     
     // make shading parameters
     shading_t shading_params;
@@ -163,6 +171,13 @@ fragment half4 lighting_frag(LightingFragment in [[stage_in]],
     shading_params.metalic = shading_values.y;
     shading_params.n_v = n_v;
     
+    // irradiance
+    float3 irradiance_color = float3(irradiance.sample(linear, get_equirectangular_uv(n_w)).xyz);
+    float3 irradiance_f = fresnel(mix(0.04, shading_params.albedo, shading_params.metalic), n_v);
+    float3 irradiance_d = (float3(1.0) - irradiance_f) * (1.0 - shading_params.metalic);
+    out_color += irradiance_d * irradiance_color;
+    
+    // direct lights
     const uint num_light = lightGlobal.num_light;
     for(uint light_index = 0; light_index < num_light; light_index++) {
         light_t light = lightProps[light_index];
@@ -183,25 +198,5 @@ fragment half4 lighting_frag(LightingFragment in [[stage_in]],
         out_color += calculate_brdf(shading_params);
     }
     
-    // reinhard tone-mapping
-    // out_color = out_color / (out_color + float3(1.0));
-    
     return half4(half3(out_color), 1.0);
-}
-
-// Present
-vertex PresentFragment present_vert(constant PresentVertex *in [[buffer(0)]],
-                                    uint vid [[vertex_id]]) {
-    PresentFragment out;
-    out.clipPos = float4(in[vid].pos, 1.0);
-    out.uv = (out.clipPos.xy + 1.0) * 0.5;
-    out.uv.y = 1.0 - out.uv.y;
-    return out;
-}
-
-fragment half4 present_frag(LightingFragment in [[stage_in]],
-                            texture2d<half> lighting [[texture(0)]]) {
-    
-    half4 out_color = lighting.sample(linear, in.uv);
-    return out_color;
 }

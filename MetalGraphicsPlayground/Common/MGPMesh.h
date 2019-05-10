@@ -34,6 +34,9 @@ NS_ASSUME_NONNULL_BEGIN
                                            device: (id<MTLDevice>)device
                                             error: (NSError **)error;
 
++ (id<MTLBuffer> _Nonnull)newQuadVerticesBuffer: (id<MTLDevice>)device;
++ (id<MTLBuffer> _Nonnull)newSkyboxVerticesBuffer: (id<MTLDevice>)device;
+
 @property (readonly) MTKMesh *metalKitMesh;
 @property (readonly, nonnull) NSArray<MGPSubmesh *> *submeshes;
 

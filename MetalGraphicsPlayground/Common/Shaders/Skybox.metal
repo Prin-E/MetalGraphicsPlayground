@@ -8,11 +8,9 @@
 
 #include <metal_stdlib>
 #include "SharedStructures.h"
+#include "CommonVariables.h"
 
 using namespace metal;
-
-constant constexpr float PI = 3.14159265;
-constant constexpr float PI_DIV = 1.0 / PI;
 
 typedef struct {
     float3 pos;
@@ -22,12 +20,6 @@ typedef struct {
     float4 clipPos      [[position]];
     float3 pos;
 } SkyboxFragment;
-
-constexpr sampler linear(mip_filter::linear,
-                         mag_filter::linear,
-                         min_filter::linear,
-                         coord::normalized,
-                         address::repeat);
 
 // Skybox
 vertex SkyboxFragment skybox_vert(constant SkyboxVertex *in [[buffer(0)]],

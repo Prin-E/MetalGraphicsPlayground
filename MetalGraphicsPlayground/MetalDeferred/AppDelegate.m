@@ -24,7 +24,7 @@
     self.view.renderer = renderer;
     self.roughness = 0.5f;
     self.metalic = 0.5f;
-    self.numLights = 4;
+    self.numLights = 1;
 }
 
 

@@ -24,5 +24,7 @@ typedef struct {
 } shading_t;
 
 float3 calculate_brdf(shading_t shading);
+float fresnel(float f0, float h_v);
+float3 fresnel(float3 f0, float h_v);
 
 #endif /* BRDF_h */

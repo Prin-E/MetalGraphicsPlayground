@@ -44,7 +44,8 @@ typedef enum {
     attachment_albedo,
     attachment_normal,
     attachment_pos,
-    attachment_shading
+    attachment_shading,
+    attachment_irradiance
 } attachment_index;
 
 typedef enum {

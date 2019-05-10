@@ -730,7 +730,7 @@
                     <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="YFt-cM-Vrh">
                         <rect key="frame" x="194" y="75" width="40" height="17"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                        <textFieldCell key="cell" lineBreakMode="clipping" title="0.1" id="KbB-rT-LZ8">
+                        <textFieldCell key="cell" lineBreakMode="clipping" title="0.10" id="KbB-rT-LZ8">
                             <numberFormatter key="formatter" formatterBehavior="custom10_4" positiveFormat="0.00" negativeFormat="0.00" localizesFormat="NO" numberStyle="decimal" usesGroupingSeparator="NO" groupingSize="0" minimumIntegerDigits="1" maximumIntegerDigits="2000000000" minimumFractionDigits="2" maximumFractionDigits="2" id="SEe-08-29r"/>
                             <font key="font" metaFont="system"/>
                             <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
@@ -743,7 +743,7 @@
                     <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="raO-Kh-iMc">
                         <rect key="frame" x="194" y="51" width="40" height="17"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                        <textFieldCell key="cell" lineBreakMode="clipping" title="0.1" id="5MI-Or-vYC">
+                        <textFieldCell key="cell" lineBreakMode="clipping" title="0.10" id="5MI-Or-vYC">
                             <numberFormatter key="formatter" formatterBehavior="custom10_4" positiveFormat="0.00" negativeFormat="0.00" localizesFormat="NO" numberStyle="decimal" usesGroupingSeparator="NO" groupingSize="0" minimumIntegerDigits="1" maximumIntegerDigits="2000000000" minimumFractionDigits="2" maximumFractionDigits="2" id="Ixh-tv-bhf"/>
                             <font key="font" metaFont="system"/>
                             <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
@@ -754,9 +754,9 @@
                         </connections>
                     </textField>
                     <slider verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="3Hz-OT-fDC">
-                        <rect key="frame" x="94" y="23" width="224" height="24"/>
+                        <rect key="frame" x="94" y="23" width="224" height="19"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                        <sliderCell key="cell" state="on" alignment="left" minValue="1" maxValue="128" doubleValue="1" tickMarkPosition="above" numberOfTickMarks="128" allowsTickMarkValuesOnly="YES" sliderType="linear" id="IGK-w9-yhO"/>
+                        <sliderCell key="cell" continuous="YES" state="on" alignment="left" maxValue="64" doubleValue="4" tickMarkPosition="above" allowsTickMarkValuesOnly="YES" sliderType="linear" id="IGK-w9-yhO"/>
                         <connections>
                             <binding destination="Voe-Tx-rLC" name="value" keyPath="numLights" id="v4f-kL-1eS"/>
                         </connections>

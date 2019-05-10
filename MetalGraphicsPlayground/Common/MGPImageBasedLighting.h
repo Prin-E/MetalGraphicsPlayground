@@ -16,12 +16,14 @@ NS_ASSUME_NONNULL_BEGIN
                        library:(id<MTLLibrary>)library
                          queue:(id<MTLCommandQueue>)queue;
 
-@property (strong) id<MTLTexture> environmentEquirectangularMap;    // Input
+@property (nonatomic, strong) id<MTLTexture> environmentEquirectangularMap;    // Input
 @property (readonly) id<MTLTexture> irradianceEquirectangularMap;   // Irradiance
 @property (readonly) id<MTLTexture> specularEquirectangularMap;     // Specular
 @property (readonly) id<MTLTexture> integrationLookupTexture;       // LUT
-- (void)buildIrradianceTexture;
-- (void)buildSpecularLightingTexture;
+
+- (void)renderIrradianceMap:(id<MTLCommandBuffer>)buffer;
+- (void)renderSpecularLightingMap:(id<MTLCommandBuffer>)buffer;
+
 @end
 
 NS_ASSUME_NONNULL_END

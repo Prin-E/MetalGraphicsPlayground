@@ -10,6 +10,7 @@
 #import "../Common/Shaders/SharedStructures.h"
 #import "../Common/MGPGBuffer.h"
 #import "../Common/MGPMesh.h"
+#import "../Common/MGPImageBasedLighting.h"
 #import "../Common/MetalMath.h"
 #import "../Common/MGPCommonVertices.h"
 
@@ -62,6 +63,9 @@ const float kLightIntensityVariation = 3.0;
     
     // g-buffer
     MGPGBuffer *_gBuffer;
+    
+    // image-based lighting
+    MGPImageBasedLighting *_IBL;
     
     // render pass, pipeline states
     MTLRenderPipelineDescriptor *_baseRenderPipelineDescriptorGBuffer;
@@ -194,6 +198,11 @@ const float kLightIntensityVariation = 3.0;
     
     _baseRenderPipelineDescriptorGBuffer = [[_gBuffer renderPipelineDescriptor] copy];
     
+    // IBL
+    _IBL = [[MGPImageBasedLighting alloc] initWithDevice: self.device
+                                                 library: self.defaultLibrary
+                                                   queue: self.queue];
+    
     // vertex descriptor
     _baseVertexDescriptor = [[MTLVertexDescriptor alloc] init];
     _baseVertexDescriptor.attributes[attrib_pos].format = MTLVertexFormatFloat3;
@@ -283,8 +292,8 @@ const float kLightIntensityVariation = 3.0;
     renderPipelineDescriptorPresent.colorAttachments[0].destinationRGBBlendFactor = MTLBlendFactorOneMinusSourceAlpha;
     renderPipelineDescriptorPresent.colorAttachments[0].sourceAlphaBlendFactor = MTLBlendFactorOne;
     renderPipelineDescriptorPresent.colorAttachments[0].sourceAlphaBlendFactor = MTLBlendFactorOne;
-    renderPipelineDescriptorPresent.vertexFunction = [self.defaultLibrary newFunctionWithName: @"present_vert"];
-    renderPipelineDescriptorPresent.fragmentFunction = [self.defaultLibrary newFunctionWithName: @"present_frag"];
+    renderPipelineDescriptorPresent.vertexFunction = [self.defaultLibrary newFunctionWithName: @"screen_vert"];
+    renderPipelineDescriptorPresent.fragmentFunction = [self.defaultLibrary newFunctionWithName: @"screen_frag"];
     _renderPipelinePresent = [self.device newRenderPipelineStateWithDescriptor: renderPipelineDescriptorPresent
                                                                          error: nil];
     
@@ -315,7 +324,7 @@ const float kLightIntensityVariation = 3.0;
     _depthStencil = [self.device newDepthStencilStateWithDescriptor: depthStencilDescriptor];
     
     // textures
-    NSString *skyboxImagePath = [[NSBundle mainBundle] pathForResource:@"bush_restaurant_1k"
+    NSString *skyboxImagePath = [[NSBundle mainBundle] pathForResource:@"Tropical_Beach_3k"
                                                                 ofType:@"hdr"];
     int skyboxWidth, skyboxHeight, skyboxComps;
     float* skyboxImageData = stbi_loadf(skyboxImagePath.UTF8String, &skyboxWidth, &skyboxHeight, &skyboxComps, 4);
@@ -331,6 +340,7 @@ const float kLightIntensityVariation = 3.0;
                                   mipmapLevel:0
                                     withBytes:skyboxImageData
                                   bytesPerRow:16*skyboxWidth];
+    _IBL.environmentEquirectangularMap = _equirectangularMapTexture;
     stbi_image_free(skyboxImageData);
 }
 
@@ -473,6 +483,13 @@ const float kLightIntensityVariation = 3.0;
     id<MTLRenderCommandEncoder> skyboxPassEncoder = [commandBuffer renderCommandEncoderWithDescriptor: _renderPassSkybox];
     [self renderSkybox:skyboxPassEncoder];
     
+    // Irradiance
+    static bool a = false;
+    if(!a) {
+        a = true;
+        [_IBL renderIrradianceMap: commandBuffer];
+    }
+    
     // G-buffer pass
     id<MTLRenderCommandEncoder> gBufferPassEncoder = [commandBuffer renderCommandEncoderWithDescriptor: _gBuffer.renderPassDescriptor];
     [self renderGBuffer:gBufferPassEncoder];
@@ -592,12 +609,15 @@ const float kLightIntensityVariation = 3.0;
     [encoder setVertexBuffer: _commonVertexBuffer
                       offset: 0
                      atIndex: 0];
+    [encoder setFragmentBuffer: _cameraPropsBuffer
+                        offset: _currentBufferIndex * sizeof(camera_props_t)
+                       atIndex: 1];
     [encoder setFragmentBuffer: _lightPropsBuffer
                         offset: _currentBufferIndex * sizeof(light_t) * kNumLight
-                       atIndex: 1];
+                       atIndex: 2];
     [encoder setFragmentBuffer: _lightGlobalBuffer
                         offset: _currentBufferIndex * sizeof(light_global_t)
-                       atIndex: 2];
+                       atIndex: 3];
     [encoder setFragmentTexture: _gBuffer.albedo
                         atIndex: attachment_albedo];
     [encoder setFragmentTexture: _gBuffer.normal
@@ -606,6 +626,8 @@ const float kLightIntensityVariation = 3.0;
                         atIndex: attachment_pos];
     [encoder setFragmentTexture: _gBuffer.shading
                         atIndex: attachment_shading];
+    [encoder setFragmentTexture: _IBL.irradianceEquirectangularMap
+                        atIndex: attachment_irradiance];
     [encoder drawPrimitives: MTLPrimitiveTypeTriangle
                 vertexStart: 0
                 vertexCount: 6];
