@@ -16,8 +16,7 @@ NS_ASSUME_NONNULL_BEGIN
 @interface MGPSubmesh : NSObject
 
 @property (readonly) MTKSubmesh *metalKitSubmesh;
-@property (readonly, nonnull) NSArray<id<MTLTexture>> *textures;
-
+@property (readonly, nonnull) NSArray *textures;
 
 @end
 
@@ -34,8 +33,15 @@ NS_ASSUME_NONNULL_BEGIN
                                            device: (id<MTLDevice>)device
                                             error: (NSError **)error;
 
-+ (id<MTLBuffer> _Nonnull)newQuadVerticesBuffer: (id<MTLDevice>)device;
-+ (id<MTLBuffer> _Nonnull)newSkyboxVerticesBuffer: (id<MTLDevice>)device;
+
+- (instancetype)initWithModelIOMesh: (MDLMesh *)mdlMesh
+            modelIOVertexDescriptor: (nonnull MDLVertexDescriptor *)descriptor
+                      textureLoader: (MTKTextureLoader *)textureLoader
+                             device: (id<MTLDevice>)device
+                              error: (NSError **)error;
+
++ (id<MTLBuffer>)createQuadVerticesBuffer: (id<MTLDevice>)device;
++ (id<MTLBuffer>)createSkyboxVerticesBuffer: (id<MTLDevice>)device;
 
 @property (readonly) MTKMesh *metalKitMesh;
 @property (readonly, nonnull) NSArray<MGPSubmesh *> *submeshes;

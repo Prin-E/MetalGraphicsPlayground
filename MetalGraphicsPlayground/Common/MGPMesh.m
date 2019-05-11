@@ -27,21 +27,25 @@
         _metalKitSubmesh = mtkSubmesh;
         
         _textures = [[NSMutableArray alloc] initWithCapacity: tex_total];
-        for(NSInteger i = 0; i < tex_total; i++)
-            [_textures addObject: NSNull.null];
         
-        _textures[tex_albedo] = [MGPSubmesh createMetalTextureFromMaterial: mdlSubmesh.material
-                                                   modelIOMaterialSemantic: MDLMaterialSemanticBaseColor
-                                                     metalKitTextureLoader: textureLoader];
-        _textures[tex_normal] = [MGPSubmesh createMetalTextureFromMaterial: mdlSubmesh.material
-                                                   modelIOMaterialSemantic: MDLMaterialSemanticTangentSpaceNormal
-                                                     metalKitTextureLoader: textureLoader];
-        _textures[tex_roughness] = [MGPSubmesh createMetalTextureFromMaterial: mdlSubmesh.material
-                                                      modelIOMaterialSemantic: MDLMaterialSemanticRoughness
-                                                        metalKitTextureLoader: textureLoader];
-        _textures[tex_metalic] = [MGPSubmesh createMetalTextureFromMaterial: mdlSubmesh.material
-                                                    modelIOMaterialSemantic: MDLMaterialSemanticMetallic
-                                                      metalKitTextureLoader: textureLoader];
+        MDLMaterialSemantic meterialSemantics[] = {
+            MDLMaterialSemanticBaseColor,
+            MDLMaterialSemanticTangentSpaceNormal,
+            MDLMaterialSemanticRoughness,
+            MDLMaterialSemanticMetallic
+        };
+        
+        for(NSInteger i = 0; i < tex_total; i++) {
+            id<MTLTexture> texture = [MGPSubmesh createMetalTextureFromMaterial: mdlSubmesh.material
+                                                        modelIOMaterialSemantic: meterialSemantics[i]
+                                                          metalKitTextureLoader: textureLoader];
+            if(texture != nil) {
+                [_textures addObject: texture];
+            }
+            else {
+                [_textures addObject: NSNull.null];
+            }
+        }
     }
     return self;
 }
@@ -124,9 +128,10 @@
         }
     }
     
+    /*
     [NSException raise:@"No appropriate material property from which to create texture"
                 format:@"Requested material property semantic: %lu", materialSemantic];
-    
+    */
     // If we're here, this model doesn't have any textures
     return nil;
 }
@@ -148,9 +153,10 @@
                               error: (NSError **)error {
     self = [super init];
     if(self) {
+        /*
         [mdlMesh addNormalsWithAttributeNamed:MDLVertexAttributeNormal
-                              creaseThreshold:0.2];
-        
+                              creaseThreshold:0.05];
+        */
         [mdlMesh addTangentBasisForTextureCoordinateAttributeNamed: MDLVertexAttributeTextureCoordinate
                                               normalAttributeNamed: MDLVertexAttributeNormal
                                              tangentAttributeNamed: MDLVertexAttributeTangent];
@@ -236,7 +242,7 @@
     return list;
 }
 
-+ (id<MTLBuffer>)newQuadVerticesBuffer: (id<MTLDevice>)device {
++ (id<MTLBuffer>)createQuadVerticesBuffer: (id<MTLDevice>)device {
     // 0x100 = 256
     NSUInteger bufferLength = (sizeof(QuadVertices)+0xFF)&(~0xFF);
     id<MTLBuffer> buffer = [device newBufferWithLength: bufferLength
@@ -246,13 +252,13 @@
     return buffer;
 }
 
-+ (id<MTLBuffer>)newSkyboxVerticesBuffer: (id<MTLDevice>)device {
++ (id<MTLBuffer>)createSkyboxVerticesBuffer: (id<MTLDevice>)device {
     // 0x100 = 256
-    NSUInteger bufferLength = (sizeof(QuadVertices)+0xFF)&(~0xFF);
+    NSUInteger bufferLength = (sizeof(SkyboxVertices)+0xFF)&(~0xFF);
     id<MTLBuffer> buffer = [device newBufferWithLength: bufferLength
                                                options: MTLResourceStorageModeManaged];
-    memcpy(buffer.contents, QuadVertices, sizeof(QuadVertices));
-    [buffer didModifyRange: NSMakeRange(0, sizeof(QuadVertices))];
+    memcpy(buffer.contents, SkyboxVertices, sizeof(SkyboxVertices));
+    [buffer didModifyRange: NSMakeRange(0, sizeof(SkyboxVertices))];
     return buffer;
 }
 

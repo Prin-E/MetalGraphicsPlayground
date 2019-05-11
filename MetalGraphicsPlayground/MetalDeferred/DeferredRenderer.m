@@ -65,10 +65,11 @@ const float kLightIntensityVariation = 3.0;
     MGPGBuffer *_gBuffer;
     
     // image-based lighting
-    MGPImageBasedLighting *_IBL;
+    NSMutableArray<MGPImageBasedLighting *> *_IBLs;
+    NSInteger _currentIBLIndex, _renderingIBLIndex;
+    BOOL _renderIrradiance;
     
     // render pass, pipeline states
-    MTLRenderPipelineDescriptor *_baseRenderPipelineDescriptorGBuffer;
     id<MTLRenderPipelineState> _renderPipelineSkybox;
     id<MTLRenderPipelineState> _renderPipelineGBuffer;
     id<MTLRenderPipelineState> _renderPipelineLighting;
@@ -80,12 +81,10 @@ const float kLightIntensityVariation = 3.0;
     id<MTLDepthStencilState> _depthStencil;
     
     // textures
-    id<MTLTexture> _equirectangularMapTexture;
     id<MTLTexture> _skyboxDepthTexture;
     
     // Meshes
     NSArray<MGPMesh *> *_meshes;
-    MTLVertexDescriptor *_baseVertexDescriptor;
     MTKMesh *_sphereMesh;
 }
 
@@ -122,6 +121,26 @@ const float kLightIntensityVariation = 3.0;
     if(theEvent.keyCode == 14) {
         // a
         _moveFlags[5] = true;
+    }
+    if(theEvent.keyCode == 18) {
+        // 1
+        _currentIBLIndex = 0;
+    }
+    if(theEvent.keyCode == 19) {
+        // 2
+        _currentIBLIndex = 1;
+    }
+    if(theEvent.keyCode == 20) {
+        // 3
+        _currentIBLIndex = 2;
+    }
+    if(theEvent.keyCode == 21) {
+        // 4
+        _currentIBLIndex = 3;
+    }
+    if(theEvent.keyCode == 23) {
+        // 5
+        _currentIBLIndex = 4;
     }
 }
 
@@ -184,11 +203,11 @@ const float kLightIntensityVariation = 3.0;
 }
 
 - (void)initAssets {
-    // vertex buffer
+    // vertex buffer (mesh)
     _commonVertexBuffer = [self.device newBufferWithLength:1024
                                                    options:MTLResourceStorageModeManaged];
     memcpy(_commonVertexBuffer.contents, QuadVertices, sizeof(QuadVertices));
-    memcpy(_commonVertexBuffer.contents + 256, EquirectangularMapVertices, sizeof(EquirectangularMapVertices));
+    memcpy(_commonVertexBuffer.contents + 256, SkyboxVertices, sizeof(SkyboxVertices));
     [_commonVertexBuffer didModifyRange: NSMakeRange(0, 1024)];
     
     // G-buffer
@@ -196,35 +215,36 @@ const float kLightIntensityVariation = 3.0;
                                           library:self.defaultLibrary
                                              size:CGSizeMake(512,512)];
     
-    _baseRenderPipelineDescriptorGBuffer = [[_gBuffer renderPipelineDescriptor] copy];
-    
     // IBL
-    _IBL = [[MGPImageBasedLighting alloc] initWithDevice: self.device
-                                                 library: self.defaultLibrary
-                                                   queue: self.queue];
+    _IBLs = [NSMutableArray array];
+    NSArray<NSString*> *skyboxNames = @[@"bush_restaurant_1k", @"Tropical_Beach_3k", @"Factory_Catwalk_2k",
+                                        @"Milkyway_small", @"WinterForest_Ref"];
+    for(NSInteger i = 0; i < skyboxNames.count; i++) {
+        NSString *skyboxImagePath = [[NSBundle mainBundle] pathForResource:skyboxNames[i]
+                                                                    ofType:@"hdr"];
+        int skyboxWidth, skyboxHeight, skyboxComps;
+        float* skyboxImageData = stbi_loadf(skyboxImagePath.UTF8String, &skyboxWidth, &skyboxHeight, &skyboxComps, 4);
+        
+        MTLTextureDescriptor *skyboxTextureDescriptor = [MTLTextureDescriptor texture2DDescriptorWithPixelFormat:MTLPixelFormatRGBA32Float
+                                                                                                           width:skyboxWidth
+                                                                                                          height:skyboxHeight
+                                                                                                       mipmapped:NO];
+        skyboxTextureDescriptor.usage = MTLTextureUsageShaderRead;
+        id<MTLTexture> skyboxTexture = [self.device newTextureWithDescriptor: skyboxTextureDescriptor];
+        [skyboxTexture replaceRegion:MTLRegionMake2D(0, 0, skyboxWidth, skyboxHeight)
+                                      mipmapLevel:0
+                                        withBytes:skyboxImageData
+                                      bytesPerRow:16*skyboxWidth];
+        stbi_image_free(skyboxImageData);
+        
+        MGPImageBasedLighting *IBL = [[MGPImageBasedLighting alloc] initWithDevice: self.device
+                                                                           library: self.defaultLibrary
+                                                                equirectangularMap: skyboxTexture];
+        [_IBLs addObject: IBL];
+    }
     
     // vertex descriptor
-    _baseVertexDescriptor = [[MTLVertexDescriptor alloc] init];
-    _baseVertexDescriptor.attributes[attrib_pos].format = MTLVertexFormatFloat3;
-    _baseVertexDescriptor.attributes[attrib_pos].offset = 0;
-    _baseVertexDescriptor.attributes[attrib_pos].bufferIndex = 0;
-    _baseVertexDescriptor.attributes[attrib_uv].format = MTLVertexFormatFloat2;
-    _baseVertexDescriptor.attributes[attrib_uv].offset = 12;
-    _baseVertexDescriptor.attributes[attrib_uv].bufferIndex = 0;
-    _baseVertexDescriptor.attributes[attrib_normal].format = MTLVertexFormatFloat3;
-    _baseVertexDescriptor.attributes[attrib_normal].offset = 20;
-    _baseVertexDescriptor.attributes[attrib_normal].bufferIndex = 0;
-    _baseVertexDescriptor.attributes[attrib_tangent].format = MTLVertexFormatFloat3;
-    _baseVertexDescriptor.attributes[attrib_tangent].offset = 32;
-    _baseVertexDescriptor.attributes[attrib_tangent].bufferIndex = 0;
-    _baseVertexDescriptor.attributes[attrib_bitangent].format = MTLVertexFormatFloat3;
-    _baseVertexDescriptor.attributes[attrib_bitangent].offset = 44;
-    _baseVertexDescriptor.attributes[attrib_bitangent].bufferIndex = 0;
-    _baseVertexDescriptor.layouts[0].stride = 56;
-    _baseVertexDescriptor.layouts[0].stepRate = 1;
-    _baseVertexDescriptor.layouts[0].stepFunction = MTLStepFunctionPerVertex;
-    
-    MDLVertexDescriptor *mdlVertexDescriptor = MTKModelIOVertexDescriptorFromMetal(_baseVertexDescriptor);
+    MDLVertexDescriptor *mdlVertexDescriptor = MTKModelIOVertexDescriptorFromMetal(_gBuffer.baseVertexDescriptor);
     mdlVertexDescriptor.attributes[attrib_pos].name = MDLVertexAttributePosition;
     mdlVertexDescriptor.attributes[attrib_uv].name = MDLVertexAttributeTextureCoordinate;
     mdlVertexDescriptor.attributes[attrib_normal].name = MDLVertexAttributeNormal;
@@ -232,12 +252,13 @@ const float kLightIntensityVariation = 3.0;
     mdlVertexDescriptor.attributes[attrib_bitangent].name = MDLVertexAttributeBitangent;
     
     // meshes
+#if !TEST
     _meshes = [MGPMesh loadMeshesFromURL: [[NSBundle mainBundle] URLForResource: @"firetruck"
                                                                   withExtension: @"obj"]
                  modelIOVertexDescriptor: mdlVertexDescriptor
                                   device: self.device
                                    error: nil];
-    
+#else
     MDLMesh *mdlMesh = [MDLMesh newEllipsoidWithRadii: vector3(10.0f, 10.0f, 10.0f)
                                        radialSegments: 32
                                      verticalSegments: 32
@@ -246,44 +267,27 @@ const float kLightIntensityVariation = 3.0;
                                            hemisphere: NO
                                             allocator: [[MTKMeshBufferAllocator alloc] initWithDevice: self.device]];
     mdlMesh.vertexDescriptor = mdlVertexDescriptor;
-    _sphereMesh = [[MTKMesh alloc] initWithMesh:mdlMesh
-                                         device:self.device
-                                          error:nil];
+    MGPMesh *mesh = [[MGPMesh alloc] initWithModelIOMesh: mdlMesh
+                                 modelIOVertexDescriptor: mdlVertexDescriptor
+                                           textureLoader: [[MTKTextureLoader alloc] initWithDevice: self.device]
+                                                  device: self.device
+                                                   error: nil];
+    _meshes = @[ mesh ];
+#endif
     
     // build render pipeline
     MTLFunctionConstantValues *constantValues = [[MTLFunctionConstantValues alloc] init];
-    // TODO
-#if !TEST
-    BOOL hasAlbedoMap = YES;
-    BOOL hasNormalMap = YES;
-    BOOL hasRoughnessMap = YES;
-    BOOL hasMetalicMap = YES;
-#else
-    BOOL hasAlbedoMap = NO;
-    BOOL hasNormalMap = NO;
-    BOOL hasRoughnessMap = NO;
-    BOOL hasMetalicMap = NO;
-#endif
-    
+    BOOL hasAlbedoMap = _meshes[0].submeshes[0].textures[tex_albedo] != NSNull.null;
+    BOOL hasNormalMap = _meshes[0].submeshes[0].textures[tex_normal] != NSNull.null;
+    BOOL hasRoughnessMap = _meshes[0].submeshes[0].textures[tex_roughness] != NSNull.null;
+    BOOL hasMetalicMap = _meshes[0].submeshes[0].textures[tex_metalic] != NSNull.null;
     [constantValues setConstantValue: &hasAlbedoMap type: MTLDataTypeBool atIndex: fcv_albedo];
     [constantValues setConstantValue: &hasNormalMap type: MTLDataTypeBool atIndex: fcv_normal];
     [constantValues setConstantValue: &hasRoughnessMap type: MTLDataTypeBool atIndex: fcv_roughness];
     [constantValues setConstantValue: &hasMetalicMap type: MTLDataTypeBool atIndex: fcv_metalic];
     
-    _baseRenderPipelineDescriptorGBuffer.vertexDescriptor = _baseVertexDescriptor;
-    _baseRenderPipelineDescriptorGBuffer.vertexFunction = [self.defaultLibrary newFunctionWithName: @"gbuffer_vert"
-                                                                                    constantValues: constantValues
-                                                                                             error: nil];
-    _baseRenderPipelineDescriptorGBuffer.fragmentFunction = [self.defaultLibrary newFunctionWithName: @"gbuffer_frag"
-                                                                                      constantValues: constantValues
-                                                                                               error: nil];
-    
-    _renderPipelineGBuffer = [self.device newRenderPipelineStateWithDescriptor: _baseRenderPipelineDescriptorGBuffer
-                                                                         error: nil];
-    
-    MTLRenderPipelineDescriptor *renderPipelineDescriptorLighting = [_gBuffer lightingPipelineDescriptor];
-    _renderPipelineLighting = [self.device newRenderPipelineStateWithDescriptor: renderPipelineDescriptorLighting
-                                                                          error: nil];
+    _renderPipelineGBuffer = [_gBuffer renderPipelineStateWithConstants: constantValues error: nil];
+    _renderPipelineLighting = [_gBuffer lightingPipelineStateWithError: nil];
     
     MTLRenderPipelineDescriptor *renderPipelineDescriptorPresent = [[MTLRenderPipelineDescriptor alloc] init];
     renderPipelineDescriptorPresent.colorAttachments[0].pixelFormat = MTLPixelFormatBGRA8Unorm_sRGB;
@@ -322,26 +326,6 @@ const float kLightIntensityVariation = 3.0;
     depthStencilDescriptor.depthWriteEnabled = YES;
     depthStencilDescriptor.depthCompareFunction = MTLCompareFunctionLess;
     _depthStencil = [self.device newDepthStencilStateWithDescriptor: depthStencilDescriptor];
-    
-    // textures
-    NSString *skyboxImagePath = [[NSBundle mainBundle] pathForResource:@"Tropical_Beach_3k"
-                                                                ofType:@"hdr"];
-    int skyboxWidth, skyboxHeight, skyboxComps;
-    float* skyboxImageData = stbi_loadf(skyboxImagePath.UTF8String, &skyboxWidth, &skyboxHeight, &skyboxComps, 4);
-    
-    
-    MTLTextureDescriptor *skyboxTextureDescriptor = [MTLTextureDescriptor texture2DDescriptorWithPixelFormat:MTLPixelFormatRGBA32Float
-                                                                                                       width:skyboxWidth
-                                                                                                      height:skyboxHeight
-                                                                                                   mipmapped:NO];
-    skyboxTextureDescriptor.usage = MTLTextureUsageShaderRead;
-    _equirectangularMapTexture = [self.device newTextureWithDescriptor: skyboxTextureDescriptor];
-    [_equirectangularMapTexture replaceRegion:MTLRegionMake2D(0, 0, skyboxWidth, skyboxHeight)
-                                  mipmapLevel:0
-                                    withBytes:skyboxImageData
-                                  bytesPerRow:16*skyboxWidth];
-    _IBL.environmentEquirectangularMap = _equirectangularMapTexture;
-    stbi_image_free(skyboxImageData);
 }
 
 - (void)_initSkyboxDepthTexture {
@@ -473,6 +457,35 @@ const float kLightIntensityVariation = 3.0;
 - (void)render {
     [self beginFrame];
     
+    if(_IBLs[_currentIBLIndex].isIrradianceMapRenderingRequired) {
+        [self performPrefilterPass];
+    }
+    else {
+        _renderingIBLIndex = _currentIBLIndex;
+    }
+    
+    [self performRenderingPassWithCompletionHandler:^{
+        [self endFrame];
+    }];
+    
+    _currentBufferIndex = (_currentBufferIndex + 1) % kMaxBuffersInFlight;
+}
+
+- (void)performPrefilterPass {
+    if(_IBLs[_currentIBLIndex].isAnyRenderingRequired) {
+        id<MTLCommandBuffer> commandBuffer = [self.queue commandBuffer];
+        commandBuffer.label = @"Prefilter";
+        
+        [_IBLs[_currentIBLIndex] render: commandBuffer];
+        
+        [commandBuffer addCompletedHandler:^(id<MTLCommandBuffer> buffer) {
+            self->_renderingIBLIndex = self->_currentIBLIndex;
+        }];
+        [commandBuffer commit];
+    }
+}
+
+- (void)performRenderingPassWithCompletionHandler: (void(^)(void))handler {
     // begin
     id<MTLCommandBuffer> commandBuffer = [self.queue commandBuffer];
     commandBuffer.label = @"Render";
@@ -482,13 +495,6 @@ const float kLightIntensityVariation = 3.0;
     _renderPassSkybox.depthAttachment.texture = _skyboxDepthTexture;
     id<MTLRenderCommandEncoder> skyboxPassEncoder = [commandBuffer renderCommandEncoderWithDescriptor: _renderPassSkybox];
     [self renderSkybox:skyboxPassEncoder];
-    
-    // Irradiance
-    static bool a = false;
-    if(!a) {
-        a = true;
-        [_IBL renderIrradianceMap: commandBuffer];
-    }
     
     // G-buffer pass
     id<MTLRenderCommandEncoder> gBufferPassEncoder = [commandBuffer renderCommandEncoderWithDescriptor: _gBuffer.renderPassDescriptor];
@@ -506,11 +512,10 @@ const float kLightIntensityVariation = 3.0;
     // present
     [commandBuffer presentDrawable: self.view.currentDrawable];
     [commandBuffer addCompletedHandler:^(id<MTLCommandBuffer> buffer) {
-        [self endFrame];
+        if(handler != nil)
+            handler();
     }];
     [commandBuffer commit];
-    
-    _currentBufferIndex = (_currentBufferIndex + 1) % kMaxBuffersInFlight;
 }
 
 - (void)renderSkybox:(id<MTLRenderCommandEncoder>)encoder {
@@ -525,7 +530,7 @@ const float kLightIntensityVariation = 3.0;
     [encoder setVertexBuffer: _cameraPropsBuffer
                       offset: _currentBufferIndex * sizeof(camera_props_t)
                      atIndex: 1];
-    [encoder setFragmentTexture: _equirectangularMapTexture
+    [encoder setFragmentTexture: _IBLs[_renderingIBLIndex].environmentMap
                         atIndex: 0];
     [encoder drawPrimitives: MTLPrimitiveTypeTriangle
                 vertexStart: 0
@@ -539,7 +544,6 @@ const float kLightIntensityVariation = 3.0;
     [encoder setDepthStencilState: _depthStencil];
     [encoder setCullMode: MTLCullModeBack];
     
-#if !TEST
     for(MGPMesh *mesh in _meshes) {
         for(MGPSubmesh *submesh in mesh.submeshes) {
             [encoder setVertexBuffer: mesh.metalKitMesh.vertexBuffers[0].buffer
@@ -552,10 +556,18 @@ const float kLightIntensityVariation = 3.0;
                               offset: _currentBufferIndex * sizeof(instance_props_t) * kNumInstance
                              atIndex: 2];
             
-            [encoder setFragmentTexture: submesh.textures[tex_albedo] atIndex: tex_albedo];
-            [encoder setFragmentTexture: submesh.textures[tex_normal] atIndex: tex_normal];
-            [encoder setFragmentTexture: submesh.textures[tex_roughness] atIndex: tex_roughness];
-            [encoder setFragmentTexture: submesh.textures[tex_metalic] atIndex: tex_metalic];
+            if(submesh.textures[tex_albedo] != NSNull.null) {
+                [encoder setFragmentTexture: submesh.textures[tex_albedo] atIndex: tex_albedo];
+            }
+            if(submesh.textures[tex_normal] != NSNull.null) {
+                [encoder setFragmentTexture: submesh.textures[tex_normal] atIndex: tex_normal];
+            }
+            if(submesh.textures[tex_roughness] != NSNull.null) {
+                [encoder setFragmentTexture: submesh.textures[tex_roughness] atIndex: tex_roughness];
+            }
+            if(submesh.textures[tex_metalic] != NSNull.null) {
+                [encoder setFragmentTexture: submesh.textures[tex_metalic] atIndex: tex_metalic];
+            }
             [encoder setFragmentBuffer: _cameraPropsBuffer
                                 offset: _currentBufferIndex * sizeof(camera_props_t)
                                atIndex: 1];
@@ -571,33 +583,6 @@ const float kLightIntensityVariation = 3.0;
                              instanceCount: kNumInstance];
         }
     }
-#else
-    for(MTKSubmesh* submesh in _sphereMesh.submeshes) {
-        [encoder setVertexBuffer: _sphereMesh.vertexBuffers[0].buffer
-                          offset: 0
-                         atIndex: 0];
-        [encoder setVertexBuffer: _cameraPropsBuffer
-                          offset: _currentBufferIndex * sizeof(camera_props_t)
-                         atIndex: 1];
-        [encoder setVertexBuffer: _instancePropsBuffer
-                          offset: _currentBufferIndex * sizeof(instance_props_t) * kNumInstance
-                         atIndex: 2];
-        
-        [encoder setFragmentBuffer: _cameraPropsBuffer
-                            offset: _currentBufferIndex * sizeof(camera_props_t)
-                           atIndex: 1];
-        [encoder setFragmentBuffer: _instancePropsBuffer
-                            offset: _currentBufferIndex * sizeof(instance_props_t) * kNumInstance
-                           atIndex: 2];
-        
-        [encoder drawIndexedPrimitives: submesh.primitiveType
-                            indexCount: submesh.indexCount
-                             indexType: submesh.indexType
-                           indexBuffer: submesh.indexBuffer.buffer
-                     indexBufferOffset: submesh.indexBuffer.offset
-                         instanceCount: kNumInstance];
-    }
-#endif
     
     [encoder endEncoding];
 }
@@ -626,7 +611,7 @@ const float kLightIntensityVariation = 3.0;
                         atIndex: attachment_pos];
     [encoder setFragmentTexture: _gBuffer.shading
                         atIndex: attachment_shading];
-    [encoder setFragmentTexture: _IBL.irradianceEquirectangularMap
+    [encoder setFragmentTexture: _IBLs[_renderingIBLIndex].irradianceMap
                         atIndex: attachment_irradiance];
     [encoder drawPrimitives: MTLPrimitiveTypeTriangle
                 vertexStart: 0

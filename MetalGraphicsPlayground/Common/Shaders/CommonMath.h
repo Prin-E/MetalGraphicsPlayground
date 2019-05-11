@@ -16,11 +16,7 @@ inline float sqr(float f0) {
 // ===============================================================================================
 // http://holger.dammertz.org/stuff/notes_HammersleyOnHemisphere.html
 // ===============================================================================================
-inline float2 hammersley(uint i, uint N)
-{
-    // 2.3283064365386963e-10 = 0.5 / 0x10000000
-    float ri = reverse_bits(i) * 2.3283064365386963e-10;
-    return float2(float(i) / float(N), ri);
-}
+float2 hammersley(uint i, uint N);
+float2 sample_spherical(float3 dir);
 
 #endif /* CommonMath_h */

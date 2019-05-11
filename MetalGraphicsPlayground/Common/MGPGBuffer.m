@@ -15,10 +15,14 @@
     id<MTLDevice> _device;
     id<MTLLibrary> _library;
     CGSize _size;
+    MTLVertexDescriptor *_baseVertexDescriptor;
     MTLRenderPassDescriptor *_renderPassDescriptor;
     MTLRenderPassDescriptor *_lightingPassDescriptor;
     MTLRenderPipelineDescriptor *_renderPipelineDescriptor;
     MTLRenderPipelineDescriptor *_lightingPipelineDescriptor;
+    
+    NSMutableDictionary<MTLFunctionConstantValues *, id<MTLRenderPipelineState>> *_renderPipelineDict;
+    id<MTLRenderPipelineState> _lightingPipelineState;
 }
 
 #pragma mark - Initialization
@@ -40,7 +44,10 @@
     _device = device;
     _library = library;
     _size = newSize;
+    _renderPipelineDict = [NSMutableDictionary dictionaryWithCapacity: 24];
+    
     [self _makeGBufferTextures];
+    [self _makeBaseVertexDescriptor];
     [self _makeRenderPipelineDescriptor];
     [self _makeLightingPipelineDescriptor];
     [self _makeRenderPassDescriptor];
@@ -86,6 +93,28 @@
     _lighting.label = @"Lighting Output";
 }
 
+- (void)_makeBaseVertexDescriptor {
+    _baseVertexDescriptor = [[MTLVertexDescriptor alloc] init];
+    _baseVertexDescriptor.attributes[attrib_pos].format = MTLVertexFormatFloat3;
+    _baseVertexDescriptor.attributes[attrib_pos].offset = 0;
+    _baseVertexDescriptor.attributes[attrib_pos].bufferIndex = 0;
+    _baseVertexDescriptor.attributes[attrib_uv].format = MTLVertexFormatFloat2;
+    _baseVertexDescriptor.attributes[attrib_uv].offset = 12;
+    _baseVertexDescriptor.attributes[attrib_uv].bufferIndex = 0;
+    _baseVertexDescriptor.attributes[attrib_normal].format = MTLVertexFormatFloat3;
+    _baseVertexDescriptor.attributes[attrib_normal].offset = 20;
+    _baseVertexDescriptor.attributes[attrib_normal].bufferIndex = 0;
+    _baseVertexDescriptor.attributes[attrib_tangent].format = MTLVertexFormatFloat3;
+    _baseVertexDescriptor.attributes[attrib_tangent].offset = 32;
+    _baseVertexDescriptor.attributes[attrib_tangent].bufferIndex = 0;
+    _baseVertexDescriptor.attributes[attrib_bitangent].format = MTLVertexFormatFloat3;
+    _baseVertexDescriptor.attributes[attrib_bitangent].offset = 44;
+    _baseVertexDescriptor.attributes[attrib_bitangent].bufferIndex = 0;
+    _baseVertexDescriptor.layouts[0].stride = 56;
+    _baseVertexDescriptor.layouts[0].stepRate = 1;
+    _baseVertexDescriptor.layouts[0].stepFunction = MTLStepFunctionPerVertex;
+}
+
 - (void)_makeRenderPipelineDescriptor {
     MTLRenderPipelineDescriptor *desc = [[MTLRenderPipelineDescriptor alloc] init];
     desc.label = @"G-buffer";
@@ -99,6 +128,10 @@
     // depth attachment
     desc.depthAttachmentPixelFormat = _depth.pixelFormat;
     
+    // vertex descriptor
+    desc.vertexDescriptor = _baseVertexDescriptor;
+    
+    // stages
     desc.vertexFunction = [_library newFunctionWithName:@"gbuffer_vert"];
     desc.fragmentFunction = [_library newFunctionWithName:@"gbuffer_frag"];
     
@@ -162,16 +195,16 @@
 }
 
 #pragma mark - Properties
+- (MTLVertexDescriptor *)baseVertexDescriptor {
+    return _baseVertexDescriptor;
+}
+
 - (MTLRenderPassDescriptor *)renderPassDescriptor {
     return _renderPassDescriptor;
 }
 
 - (MTLRenderPassDescriptor *)lightingPassDescriptor {
     return _lightingPassDescriptor;
-}
-
-- (MTLRenderPipelineDescriptor *)renderPipelineDescriptor {
-    return _renderPipelineDescriptor;
 }
 
 - (CGSize)size {
@@ -188,6 +221,41 @@
         [self _makeRenderPassDescriptor];
         [self _makeLightingPassDescriptor];
     }
+}
+
+#pragma mark - Render pipeline states
+- (id<MTLRenderPipelineState>)renderPipelineStateWithConstants:(MTLFunctionConstantValues *)constantValues
+                                                         error:(NSError **)error {
+    if(error != nil) {
+        *error = nil;
+    }
+    if(constantValues == nil) {
+        constantValues = [[MTLFunctionConstantValues alloc] init];
+    }
+    
+    id<MTLRenderPipelineState> renderPipelineState = [_renderPipelineDict objectForKey: constantValues];
+    if(renderPipelineState == nil) {
+        _renderPipelineDescriptor.vertexFunction = [_library newFunctionWithName: @"gbuffer_vert"
+                                                                  constantValues: constantValues
+                                                                           error: error];
+        _renderPipelineDescriptor.fragmentFunction = [_library newFunctionWithName: @"gbuffer_frag"
+                                                                    constantValues: constantValues
+                                                                             error: error];
+        renderPipelineState = [_device newRenderPipelineStateWithDescriptor: _renderPipelineDescriptor
+                                                                      error: error];
+    }
+    return renderPipelineState;
+}
+
+- (id<MTLRenderPipelineState>)lightingPipelineStateWithError: (NSError **)error {
+    if(error != nil) {
+        *error = nil;
+    }
+    if(_lightingPipelineState == nil) {
+        _lightingPipelineState = [_device newRenderPipelineStateWithDescriptor: _lightingPipelineDescriptor
+                                                                         error: error];
+    }
+    return _lightingPipelineState;
 }
 
 @end

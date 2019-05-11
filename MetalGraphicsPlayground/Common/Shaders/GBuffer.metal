@@ -130,18 +130,6 @@ vertex LightingFragment lighting_vert(constant LightingVertex *in [[buffer(0)]],
     return out;
 }
 
-float2 get_equirectangular_uv(float3 viewVec) {
-    float pi = acos(viewVec.y);
-    float theta = atan2(viewVec.z,abs(viewVec.x));
-    
-    float2 uv;
-    uv.x = 0.75 + -theta * PI_DIV * 0.5;
-    if(viewVec.x < 0.0)
-        uv.x = (0.5 - uv.x) - 0.5;
-    uv.y = pi * PI_DIV;
-    return uv;
-}
-
 fragment half4 lighting_frag(LightingFragment in [[stage_in]],
                              constant camera_props_t &cameraProps [[buffer(1)]],
                              constant light_t *lightProps [[buffer(2)]],
@@ -150,7 +138,7 @@ fragment half4 lighting_frag(LightingFragment in [[stage_in]],
                              texture2d<half> normal [[texture(attachment_normal)]],
                              texture2d<float> pos [[texture(attachment_pos)]],
                              texture2d<half> shading [[texture(attachment_shading)]],
-                             texture2d<half> irradiance [[texture(attachment_irradiance)]]) {
+                             texturecube<half> irradiance [[texture(attachment_irradiance)]]) {
     float3 out_color = float3(0);
     
     // shared values
@@ -172,10 +160,10 @@ fragment half4 lighting_frag(LightingFragment in [[stage_in]],
     shading_params.n_v = n_v;
     
     // irradiance
-    float3 irradiance_color = float3(irradiance.sample(linear, get_equirectangular_uv(n_w)).xyz);
+    float3 irradiance_color = float3(irradiance.sample(linear, n_w).xyz);
     float3 irradiance_f = fresnel(mix(0.04, shading_params.albedo, shading_params.metalic), n_v);
     float3 irradiance_d = (float3(1.0) - irradiance_f) * (1.0 - shading_params.metalic);
-    out_color += irradiance_d * irradiance_color;
+    out_color += irradiance_d * irradiance_color * albedo_c;
     
     // direct lights
     const uint num_light = lightGlobal.num_light;

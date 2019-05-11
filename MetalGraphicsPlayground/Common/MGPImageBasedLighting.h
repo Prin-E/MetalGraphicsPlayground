@@ -14,13 +14,23 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (instancetype)initWithDevice:(id<MTLDevice>)device
                        library:(id<MTLLibrary>)library
-                         queue:(id<MTLCommandQueue>)queue;
+            equirectangularMap:(id<MTLTexture>)equirectangularMap;
 
-@property (nonatomic, strong) id<MTLTexture> environmentEquirectangularMap;    // Input
-@property (readonly) id<MTLTexture> irradianceEquirectangularMap;   // Irradiance
-@property (readonly) id<MTLTexture> specularEquirectangularMap;     // Specular
-@property (readonly) id<MTLTexture> integrationLookupTexture;       // LUT
+// cubemaps
+@property (readonly) id<MTLTexture> environmentMap;
+@property (readonly) id<MTLTexture> irradianceMap;
+@property (readonly) id<MTLTexture> prefilteredSpecularMap;
 
+// LUT
+@property (readonly) id<MTLTexture> integrationLookupTexture;
+
+- (BOOL)isAnyRenderingRequired;
+- (BOOL)isEnvironmentMapRenderingRequired;
+- (BOOL)isIrradianceMapRenderingRequired;
+- (BOOL)isSpecularMapRenderingRequired;
+
+- (void)render:(id<MTLCommandBuffer>)buffer;
+- (void)renderEnvironmentMap:(id<MTLCommandBuffer>)buffer;
 - (void)renderIrradianceMap:(id<MTLCommandBuffer>)buffer;
 - (void)renderSpecularLightingMap:(id<MTLCommandBuffer>)buffer;
 

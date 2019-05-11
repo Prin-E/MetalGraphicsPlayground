@@ -24,11 +24,12 @@ NS_ASSUME_NONNULL_BEGIN
 // depth
 @property (readonly) id<MTLTexture> depth;
 
-// render pass, pipeline
+// base vertex descriptor
+@property (readonly) MTLVertexDescriptor *baseVertexDescriptor;
+
+// render pass
 @property (readonly) MTLRenderPassDescriptor *renderPassDescriptor;
 @property (readonly) MTLRenderPassDescriptor *lightingPassDescriptor;
-@property (readonly) MTLRenderPipelineDescriptor *renderPipelineDescriptor;
-@property (readonly) MTLRenderPipelineDescriptor *lightingPipelineDescriptor;
 
 // resolution
 @property (nonatomic, readonly) CGSize size;
@@ -36,7 +37,13 @@ NS_ASSUME_NONNULL_BEGIN
 - (instancetype)initWithDevice:(id<MTLDevice>)device
                        library:(id<MTLLibrary>)library
                           size:(CGSize)newSize;
+
 - (void)resize:(CGSize)newSize;
+
+// render pipeline
+- (id<MTLRenderPipelineState>)renderPipelineStateWithConstants: (MTLFunctionConstantValues *)constantValues
+                                                         error: (NSError **)error;
+- (id<MTLRenderPipelineState>)lightingPipelineStateWithError: (NSError **)error;
 
 @end
 
