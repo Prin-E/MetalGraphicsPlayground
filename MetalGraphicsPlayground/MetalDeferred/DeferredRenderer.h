@@ -16,6 +16,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property (readwrite) float roughness, metalic;
 @property (readwrite) unsigned int numLights;
+@property (readwrite) BOOL showsTestObjects;
 
 @end
 

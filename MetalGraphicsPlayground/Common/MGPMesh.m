@@ -69,7 +69,7 @@
             NSDictionary *textureLoaderOptions =
             @{
               MTKTextureLoaderOptionTextureUsage       : @(MTLTextureUsageShaderRead),
-              MTKTextureLoaderOptionTextureStorageMode : @(MTLStorageModePrivate)
+              MTKTextureLoaderOptionTextureStorageMode : @(MTLStorageModePrivate),
               };
             
             // First will interpret the string as a file path and attempt to load it with
@@ -151,12 +151,14 @@
             modelIOVertexDescriptor: (nonnull MDLVertexDescriptor *)descriptor
                       textureLoader: (MTKTextureLoader *)textureLoader
                              device: (id<MTLDevice>)device
+                   calculateNormals: (BOOL)calculateNormals
                               error: (NSError **)error {
     self = [super init];
     if(self) {
-        [mdlMesh addNormalsWithAttributeNamed:MDLVertexAttributeNormal
-                              creaseThreshold:0.2];
-        
+        if(calculateNormals) {
+            [mdlMesh addNormalsWithAttributeNamed:MDLVertexAttributeNormal
+                                  creaseThreshold:0.2];
+        }
         [mdlMesh addTangentBasisForTextureCoordinateAttributeNamed: MDLVertexAttributeTextureCoordinate
                                               normalAttributeNamed: MDLVertexAttributeNormal
                                              tangentAttributeNamed: MDLVertexAttributeTangent];
@@ -226,6 +228,7 @@
                                      modelIOVertexDescriptor: descriptor
                                                textureLoader: textureLoader
                                                       device: device
+                                            calculateNormals: YES
                                                        error: error];
         
         [list addObject: mesh];

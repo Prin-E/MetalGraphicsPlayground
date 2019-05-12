@@ -14,6 +14,7 @@
 @property (weak) IBOutlet MGPView *view;
 @property (readwrite) float roughness, metalic;
 @property (readwrite) unsigned int numLights;
+@property (readwrite) BOOL showsTestObjects;
 
 @end
 

@@ -27,7 +27,6 @@
     self.numLights = 1;
 }
 
-
 - (void)applicationWillTerminate:(NSNotification *)aNotification {
     // Insert code here to tear down your application
 }
@@ -56,5 +55,12 @@
     renderer.numLights = numLights;
 }
 
+- (BOOL)showsTestObjects {
+    return renderer.showsTestObjects;
+}
+
+- (void)setShowsTestObjects:(BOOL)showsTestObjects {
+    renderer.showsTestObjects = showsTestObjects;
+}
 
 @end

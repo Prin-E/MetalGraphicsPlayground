@@ -783,6 +783,17 @@
                             <binding destination="Voe-Tx-rLC" name="value" keyPath="numLights" id="ewP-wn-uGN"/>
                         </connections>
                     </textField>
+                    <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="PaD-0R-pgz">
+                        <rect key="frame" x="302" y="76" width="160" height="18"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxY="YES"/>
+                        <buttonCell key="cell" type="check" title="Shows Sphere Meshes" bezelStyle="regularSquare" imagePosition="left" state="on" inset="2" id="9sA-j1-UAF">
+                            <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
+                            <font key="font" metaFont="system"/>
+                        </buttonCell>
+                        <connections>
+                            <binding destination="Voe-Tx-rLC" name="value" keyPath="showsTestObjects" id="VsZ-Ie-DjC"/>
+                        </connections>
+                    </button>
                 </subviews>
             </view>
         </window>

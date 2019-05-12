@@ -21,7 +21,7 @@
 #define LERP(x,y,t) ((x)*(1.0-(t))+(y)*(t))
 #endif
 
-#define TEST 0
+#define TEST 1
 
 const size_t kMaxBuffersInFlight = 3;
 const size_t kNumInstance = 8;
@@ -72,6 +72,7 @@ const float kLightIntensityVariation = 3.0;
     // render pass, pipeline states
     id<MTLRenderPipelineState> _renderPipelineSkybox;
     id<MTLRenderPipelineState> _renderPipelineGBuffer;
+    id<MTLRenderPipelineState> _renderPipelineGBufferTest;
     id<MTLRenderPipelineState> _renderPipelineLighting;
     id<MTLRenderPipelineState> _renderPipelinePresent;
     MTLRenderPassDescriptor *_renderPassSkybox;
@@ -85,7 +86,7 @@ const float kLightIntensityVariation = 3.0;
     
     // Meshes
     NSArray<MGPMesh *> *_meshes;
-    MTKMesh *_sphereMesh;
+    NSArray<MGPMesh *> *_testObjects;
 }
 
 - (void)setView:(MGPView *)view {
@@ -252,13 +253,12 @@ const float kLightIntensityVariation = 3.0;
     mdlVertexDescriptor.attributes[attrib_bitangent].name = MDLVertexAttributeBitangent;
     
     // meshes
-#if !TEST
     _meshes = [MGPMesh loadMeshesFromURL: [[NSBundle mainBundle] URLForResource: @"firetruck"
                                                                   withExtension: @"obj"]
                  modelIOVertexDescriptor: mdlVertexDescriptor
                                   device: self.device
                                    error: nil];
-#else
+    
     MDLMesh *mdlMesh = [MDLMesh newEllipsoidWithRadii: vector3(10.0f, 10.0f, 10.0f)
                                        radialSegments: 32
                                      verticalSegments: 32
@@ -271,9 +271,10 @@ const float kLightIntensityVariation = 3.0;
                                  modelIOVertexDescriptor: mdlVertexDescriptor
                                            textureLoader: [[MTKTextureLoader alloc] initWithDevice: self.device]
                                                   device: self.device
+                                        calculateNormals: NO
                                                    error: nil];
-    _meshes = @[ mesh ];
-#endif
+    
+    _testObjects = @[ mesh ];
     
     // build render pipeline
     MTLFunctionConstantValues *constantValues = [[MTLFunctionConstantValues alloc] init];
@@ -287,8 +288,20 @@ const float kLightIntensityVariation = 3.0;
     [constantValues setConstantValue: &hasRoughnessMap type: MTLDataTypeBool atIndex: fcv_roughness];
     [constantValues setConstantValue: &hasMetalicMap type: MTLDataTypeBool atIndex: fcv_metalic];
     [constantValues setConstantValue: &hasOcculusionMap type: MTLDataTypeBool atIndex: fcv_occlusion];
-    
     _renderPipelineGBuffer = [_gBuffer renderPipelineStateWithConstants: constantValues error: nil];
+    
+    hasAlbedoMap = _testObjects[0].submeshes[0].textures[tex_albedo] != NSNull.null;
+    hasNormalMap = _testObjects[0].submeshes[0].textures[tex_normal] != NSNull.null;
+    hasRoughnessMap = _testObjects[0].submeshes[0].textures[tex_roughness] != NSNull.null;
+    hasMetalicMap = _testObjects[0].submeshes[0].textures[tex_metalic] != NSNull.null;
+    hasOcculusionMap = _testObjects[0].submeshes[0].textures[tex_occlusion] != NSNull.null;
+    [constantValues setConstantValue: &hasAlbedoMap type: MTLDataTypeBool atIndex: fcv_albedo];
+    [constantValues setConstantValue: &hasNormalMap type: MTLDataTypeBool atIndex: fcv_normal];
+    [constantValues setConstantValue: &hasRoughnessMap type: MTLDataTypeBool atIndex: fcv_roughness];
+    [constantValues setConstantValue: &hasMetalicMap type: MTLDataTypeBool atIndex: fcv_metalic];
+    [constantValues setConstantValue: &hasOcculusionMap type: MTLDataTypeBool atIndex: fcv_occlusion];
+    _renderPipelineGBufferTest = [_gBuffer renderPipelineStateWithConstants: constantValues error: nil];
+    
     _renderPipelineLighting = [_gBuffer lightingPipelineStateWithError: nil];
     
     MTLRenderPipelineDescriptor *renderPipelineDescriptorPresent = [[MTLRenderPipelineDescriptor alloc] init];
@@ -382,8 +395,9 @@ const float kLightIntensityVariation = 3.0;
     // Update camera properties
     camera_props[_currentBufferIndex].view = _cameraInverseMatrix;
     camera_props[_currentBufferIndex].projection = matrix_from_perspective_fov_aspectLH(DEG_TO_RAD(60.0f), _gBuffer.size.width / _gBuffer.size.height, 0.5f, 300.0f);
-    camera_props[_currentBufferIndex].viewInverse = _cameraMatrix;
+    camera_props[_currentBufferIndex].viewProjection = matrix_multiply(camera_props[_currentBufferIndex].projection, camera_props[_currentBufferIndex].view);
     camera_props[_currentBufferIndex].rotation = _cameraRotationInverseMatrix;
+    camera_props[_currentBufferIndex].position = _cameraPos;
     
     // Update per-instance properties
     static const simd_float3 instance_pos[] = {
@@ -410,7 +424,6 @@ const float kLightIntensityVariation = 3.0;
     for(NSInteger i = 0; i < kNumInstance; i++) {
         instance_props_t *p = &instance_props[_currentBufferIndex * kNumInstance + i];
         p->model = matrix_multiply(matrix_from_translation(instance_pos[i].x, instance_pos[i].y, instance_pos[i].z), matrix_from_rotation(_animationTime, 0, 1, 0));
-        p->modelView = matrix_multiply(camera_props[_currentBufferIndex].view, p->model);
         p->material.albedo = instance_albedo[i];
         p->material.roughness = self.roughness;
         p->material.metalic = self.metalic;
@@ -437,7 +450,6 @@ const float kLightIntensityVariation = 3.0;
         l->intensity = light_intensities[i];
         simd_float3 rot_dir = simd_cross(vector3(light_dirs[i].x, light_dirs[i].y, light_dirs[i].z), vector3(0.0f, 1.0f, 0.0f));
         simd_float4 dir = matrix_multiply(matrix_from_rotation(_animationTime * 3.0f, rot_dir.x, rot_dir.y, rot_dir.z), light_dirs[i]);
-        dir = matrix_multiply(dir, _cameraRotationMatrix);
         l->direction = vector3(dir.x, dir.y, dir.z);
     }
     
@@ -455,9 +467,9 @@ const float kLightIntensityVariation = 3.0;
                                                       sizeof(instance_props_t) * kNumInstance)];
     
     memcpy(_lightPropsBuffer.contents + _currentBufferIndex * sizeof(light_t) * kNumLight,
-           &light_props[_currentBufferIndex * kNumLight], sizeof(light_t) * kNumLight);
+           &light_props[_currentBufferIndex * kNumLight], sizeof(light_t) * _numLights);
     [_lightPropsBuffer didModifyRange: NSMakeRange(_currentBufferIndex * sizeof(light_t) * kNumLight,
-                                                   sizeof(light_t) * kNumLight)];
+                                                   sizeof(light_t) * _numLights)];
     
     memcpy(_lightGlobalBuffer.contents + _currentBufferIndex * sizeof(light_global_t), &light_globals[_currentBufferIndex], sizeof(light_global_t));
     [_lightGlobalBuffer didModifyRange: NSMakeRange(_currentBufferIndex * sizeof(light_global_t),
@@ -551,12 +563,20 @@ const float kLightIntensityVariation = 3.0;
 }
 
 - (void)renderGBuffer:(id<MTLRenderCommandEncoder>)encoder {
+    NSArray<MGPMesh *> *meshes = _meshes;
+    
     encoder.label = @"G-buffer";
-    [encoder setRenderPipelineState: _renderPipelineGBuffer];
+    if(_showsTestObjects) {
+        [encoder setRenderPipelineState: _renderPipelineGBufferTest];
+        meshes = _testObjects;
+    }
+    else {
+        [encoder setRenderPipelineState: _renderPipelineGBuffer];
+    }
     [encoder setDepthStencilState: _depthStencil];
     [encoder setCullMode: MTLCullModeBack];
     
-    for(MGPMesh *mesh in _meshes) {
+    for(MGPMesh *mesh in meshes) {
         for(MGPSubmesh *submesh in mesh.submeshes) {
             [encoder setVertexBuffer: mesh.metalKitMesh.vertexBuffers[0].buffer
                               offset: 0

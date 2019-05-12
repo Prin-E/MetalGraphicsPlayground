@@ -38,6 +38,7 @@ NS_ASSUME_NONNULL_BEGIN
             modelIOVertexDescriptor: (nonnull MDLVertexDescriptor *)descriptor
                       textureLoader: (MTKTextureLoader *)textureLoader
                              device: (id<MTLDevice>)device
+                   calculateNormals: (BOOL)calculateNormals
                               error: (NSError **)error;
 
 + (id<MTLBuffer>)createQuadVerticesBuffer: (id<MTLDevice>)device;

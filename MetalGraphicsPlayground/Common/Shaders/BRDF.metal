@@ -40,7 +40,7 @@ float3 calculate_brdf(shading_t shading) {
     float3 f_s = fresnel(mix(0.04, shading.albedo, shading.metalic), shading.h_v);
     
     // diffuse, specular
-    float3 c_d = PI_DIV;
+    float c_d = PI_DIV;
     float3 c_s = g_s * d_s * f_s / max(0.00001, 4.0 * shading.n_l * shading.n_v);
     
     // output

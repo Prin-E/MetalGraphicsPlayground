@@ -31,7 +31,7 @@ typedef struct {
 // g-buffer fragment input data
 typedef struct {
     float4 clipPos      [[position]];
-    float4 viewPos;
+    float4 worldPos;
     float2 uv;
     float3 normal;
     float3 tangent;
@@ -75,12 +75,12 @@ vertex GBufferFragment gbuffer_vert(GBufferVertex in [[stage_in]],
                                     uint iid [[instance_id]]) {
     GBufferFragment out;
     float4 v = float4(in.pos, 1.0);
-    float4x4 modelView = instanceProps[iid].modelView;
-    out.viewPos = modelView * v;
-    out.clipPos = cameraProps.projection * out.viewPos;
-    out.normal = (modelView * float4(in.normal, 0.0)).xyz;
-    out.tangent = (modelView * float4(in.tangent, 0.0)).xyz;
-    out.bitangent = (modelView * float4(in.bitangent, 0.0)).xyz;
+    float4x4 model = instanceProps[iid].model;
+    out.worldPos = model * v;
+    out.clipPos = cameraProps.viewProjection * out.worldPos;
+    out.normal = (model * float4(in.normal, 0.0)).xyz;
+    out.tangent = (model * float4(in.tangent, 0.0)).xyz;
+    out.bitangent = (model * float4(in.bitangent, 0.0)).xyz;
     out.uv = in.uv;
     out.iid = iid;
     return out;
@@ -113,7 +113,7 @@ fragment GBufferOutput gbuffer_frag(GBufferFragment in [[stage_in]],
     else {
         out.normal = half4(half3((normalize(in.normal) + 1.0) * 0.5), 1.0);
     }
-    out.pos = in.viewPos;
+    out.pos = in.worldPos;
     out.shading = half4(material.roughness, material.metalic, 1, 0);
     if(has_roughness_map) {
         out.shading.x = roughnessMap.sample(linear, in.uv).r;
@@ -155,11 +155,10 @@ fragment half4 lighting_frag(LightingFragment in [[stage_in]],
     if(n_c.w == 0.0)
         return half4(0, 0, 0, 0);
     float3 n = (n_c.xyz - 0.5) * 2.0 * n_c.w;
-    float3 v = -normalize(pos.sample(linear, in.uv).xyz);
+    float3 v = normalize(cameraProps.position - pos.sample(linear, in.uv).xyz);
     float3 albedo_c = float4(albedo.sample(linear, in.uv)).xyz;
     half4 shading_values = shading.sample(linear, in.uv);
     float n_v = max(0.001, saturate(dot(n, v)));
-    float3 nw = (cameraProps.viewInverse * float4(n, 0.0)).xyz;
     
     // make shading parameters
     shading_t shading_params;
@@ -169,14 +168,14 @@ fragment half4 lighting_frag(LightingFragment in [[stage_in]],
     shading_params.n_v = n_v;
     
     // irradiance
-    float3 irradiance_color = float3(irradiance.sample(linear, nw).xyz);
+    float3 irradiance_color = float3(irradiance.sample(linear, n).xyz);
     float3 k_s = fresnel(mix(0.04, shading_params.albedo, shading_params.metalic), n_v);
     float3 k_d = (float3(1.0) - k_s) * (1.0 - shading_params.metalic);
     out_color += k_d * irradiance_color * albedo_c * shading_values.z;
     
     // prefiltered specular
-    float mip_index = shading_params.roughness * 6;
-    float3 prefiltered_color = float3(prefilteredSpecular.sample(linear, nw, level(mip_index)).xyz);
+    float mip_index = shading_params.roughness * prefilteredSpecular.get_num_mip_levels();
+    float3 prefiltered_color = float3(prefilteredSpecular.sample(linear, n, level(mip_index)).xyz);
     float3 environment_brdf = float3(brdfLookup.sample(linear_clamp_to_edge, float2(shading_params.roughness, n_v)).xyz);
     out_color += k_s * prefiltered_color * (albedo_c * environment_brdf.x + environment_brdf.y);
     
@@ -184,7 +183,7 @@ fragment half4 lighting_frag(LightingFragment in [[stage_in]],
     const uint num_light = lightGlobal.num_light;
     for(uint light_index = 0; light_index < num_light; light_index++) {
         light_t light = lightProps[light_index];
-        float3 light_dir = -normalize(light.direction);
+        float3 light_dir = normalize(light.direction);
         float3 light_color = light.color;
         float light_intensity = light.intensity;
         
