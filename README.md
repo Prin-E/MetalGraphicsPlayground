@@ -52,10 +52,10 @@ Requires Xcode 9 or later.
 
 * Instancing
 
-## MetalDeferred (under construction)
+## MetalDeferred
 
-<img src="./Screenshots/MetalDeferred.png" alt="MetalDeferred" width="592" height="494">
+<img src="./Screenshots/MetalDeferred.png" alt="MetalDeferred" width="605" height="533">
 
 * Deferred Rendering
 * Instancing
-* PBR Lighting (under construction)
+* PBR Lighting and Image based Lighting
