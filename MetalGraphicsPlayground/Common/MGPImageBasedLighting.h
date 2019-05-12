@@ -22,17 +22,19 @@ NS_ASSUME_NONNULL_BEGIN
 @property (readonly) id<MTLTexture> prefilteredSpecularMap;
 
 // LUT
-@property (readonly) id<MTLTexture> integrationLookupTexture;
+@property (readonly) id<MTLTexture> BRDFLookupTexture;
 
 - (BOOL)isAnyRenderingRequired;
 - (BOOL)isEnvironmentMapRenderingRequired;
 - (BOOL)isIrradianceMapRenderingRequired;
 - (BOOL)isSpecularMapRenderingRequired;
+- (BOOL)isLookupTextureRenderingRequired;
 
 - (void)render:(id<MTLCommandBuffer>)buffer;
 - (void)renderEnvironmentMap:(id<MTLCommandBuffer>)buffer;
 - (void)renderIrradianceMap:(id<MTLCommandBuffer>)buffer;
 - (void)renderSpecularLightingMap:(id<MTLCommandBuffer>)buffer;
+- (void)renderLookupTexture:(id<MTLCommandBuffer>)buffer;
 
 @end
 

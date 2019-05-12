@@ -21,7 +21,7 @@
 #define LERP(x,y,t) ((x)*(1.0-(t))+(y)*(t))
 #endif
 
-#define TEST 1
+#define TEST 0
 
 const size_t kMaxBuffersInFlight = 3;
 const size_t kNumInstance = 8;
@@ -281,10 +281,12 @@ const float kLightIntensityVariation = 3.0;
     BOOL hasNormalMap = _meshes[0].submeshes[0].textures[tex_normal] != NSNull.null;
     BOOL hasRoughnessMap = _meshes[0].submeshes[0].textures[tex_roughness] != NSNull.null;
     BOOL hasMetalicMap = _meshes[0].submeshes[0].textures[tex_metalic] != NSNull.null;
+    BOOL hasOcculusionMap = _meshes[0].submeshes[0].textures[tex_occlusion] != NSNull.null;
     [constantValues setConstantValue: &hasAlbedoMap type: MTLDataTypeBool atIndex: fcv_albedo];
     [constantValues setConstantValue: &hasNormalMap type: MTLDataTypeBool atIndex: fcv_normal];
     [constantValues setConstantValue: &hasRoughnessMap type: MTLDataTypeBool atIndex: fcv_roughness];
     [constantValues setConstantValue: &hasMetalicMap type: MTLDataTypeBool atIndex: fcv_metalic];
+    [constantValues setConstantValue: &hasOcculusionMap type: MTLDataTypeBool atIndex: fcv_occlusion];
     
     _renderPipelineGBuffer = [_gBuffer renderPipelineStateWithConstants: constantValues error: nil];
     _renderPipelineLighting = [_gBuffer lightingPipelineStateWithError: nil];
@@ -394,10 +396,22 @@ const float kLightIntensityVariation = 3.0;
         { -60, 0, 0 },
         { 0, 0, 60 }
     };
+    static simd_float3 instance_albedo[kNumInstance];
+    static BOOL init_instance_albedo = NO;
+    if(!init_instance_albedo) {
+        init_instance_albedo = YES;
+        for(int i = 0; i < kNumInstance; i++) {
+            instance_albedo[i] = vector3(0.5f + rand() / (float)RAND_MAX * 0.5f,
+                                         0.5f + rand() / (float)RAND_MAX * 0.5f,
+                                         0.5f + rand() / (float)RAND_MAX * 0.5f);
+        }
+    }
+    
     for(NSInteger i = 0; i < kNumInstance; i++) {
         instance_props_t *p = &instance_props[_currentBufferIndex * kNumInstance + i];
         p->model = matrix_multiply(matrix_from_translation(instance_pos[i].x, instance_pos[i].y, instance_pos[i].z), matrix_from_rotation(_animationTime, 0, 1, 0));
         p->modelView = matrix_multiply(camera_props[_currentBufferIndex].view, p->model);
+        p->material.albedo = instance_albedo[i];
         p->material.roughness = self.roughness;
         p->material.metalic = self.metalic;
     }
@@ -457,7 +471,7 @@ const float kLightIntensityVariation = 3.0;
 - (void)render {
     [self beginFrame];
     
-    if(_IBLs[_currentIBLIndex].isIrradianceMapRenderingRequired) {
+    if(_IBLs[_currentIBLIndex].isAnyRenderingRequired) {
         [self performPrefilterPass];
     }
     else {
@@ -472,17 +486,15 @@ const float kLightIntensityVariation = 3.0;
 }
 
 - (void)performPrefilterPass {
-    if(_IBLs[_currentIBLIndex].isAnyRenderingRequired) {
-        id<MTLCommandBuffer> commandBuffer = [self.queue commandBuffer];
-        commandBuffer.label = @"Prefilter";
-        
-        [_IBLs[_currentIBLIndex] render: commandBuffer];
-        
-        [commandBuffer addCompletedHandler:^(id<MTLCommandBuffer> buffer) {
-            self->_renderingIBLIndex = self->_currentIBLIndex;
-        }];
-        [commandBuffer commit];
-    }
+    id<MTLCommandBuffer> commandBuffer = [self.queue commandBuffer];
+    commandBuffer.label = @"Prefilter";
+    
+    [_IBLs[_currentIBLIndex] render: commandBuffer];
+    
+    [commandBuffer addCompletedHandler:^(id<MTLCommandBuffer> buffer) {
+        self->_renderingIBLIndex = self->_currentIBLIndex;
+    }];
+    [commandBuffer commit];
 }
 
 - (void)performRenderingPassWithCompletionHandler: (void(^)(void))handler {
@@ -556,17 +568,10 @@ const float kLightIntensityVariation = 3.0;
                               offset: _currentBufferIndex * sizeof(instance_props_t) * kNumInstance
                              atIndex: 2];
             
-            if(submesh.textures[tex_albedo] != NSNull.null) {
-                [encoder setFragmentTexture: submesh.textures[tex_albedo] atIndex: tex_albedo];
-            }
-            if(submesh.textures[tex_normal] != NSNull.null) {
-                [encoder setFragmentTexture: submesh.textures[tex_normal] atIndex: tex_normal];
-            }
-            if(submesh.textures[tex_roughness] != NSNull.null) {
-                [encoder setFragmentTexture: submesh.textures[tex_roughness] atIndex: tex_roughness];
-            }
-            if(submesh.textures[tex_metalic] != NSNull.null) {
-                [encoder setFragmentTexture: submesh.textures[tex_metalic] atIndex: tex_metalic];
+            for(int i = 0; i < tex_total; i++) {
+                if(submesh.textures[i] != NSNull.null) {
+                    [encoder setFragmentTexture: submesh.textures[i] atIndex: i];
+                }
             }
             [encoder setFragmentBuffer: _cameraPropsBuffer
                                 offset: _currentBufferIndex * sizeof(camera_props_t)
@@ -613,6 +618,10 @@ const float kLightIntensityVariation = 3.0;
                         atIndex: attachment_shading];
     [encoder setFragmentTexture: _IBLs[_renderingIBLIndex].irradianceMap
                         atIndex: attachment_irradiance];
+    [encoder setFragmentTexture: _IBLs[_renderingIBLIndex].prefilteredSpecularMap
+                        atIndex: attachment_prefiltered_specular];
+    [encoder setFragmentTexture: _IBLs[_renderingIBLIndex].BRDFLookupTexture
+                        atIndex: attachment_brdf_lookup];
     [encoder drawPrimitives: MTLPrimitiveTypeTriangle
                 vertexStart: 0
                 vertexCount: 6];

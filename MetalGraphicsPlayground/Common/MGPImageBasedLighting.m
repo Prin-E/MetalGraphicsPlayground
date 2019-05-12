@@ -9,25 +9,30 @@
 #import "MGPImageBasedLighting.h"
 #import "MGPMesh.h"
 #import "MetalMath.h"
+#import "../Common/Shaders/SharedStructures.h"
 
 @implementation MGPImageBasedLighting {
     id<MTLDevice> _device;
     id<MTLLibrary> _library;
     id<MTLBuffer> _quadVerticesBuffer;
     id<MTLBuffer> _skyboxVerticesBuffer;
+    id<MTLBuffer> _prefilteredSpeuclarOptionBuffer;
     
     id<MTLTexture> _equirectangularMap;
     
     id<MTLRenderPipelineState> _renderPipelineEnvironmentMap;
     id<MTLRenderPipelineState> _renderPipelineIrradianceMap;
     id<MTLRenderPipelineState> _renderPipelineSpecularMap;
+    id<MTLRenderPipelineState> _renderPipelineLookupTexture;
     MTLRenderPassDescriptor *_renderPassEnvironmentMap;
     MTLRenderPassDescriptor *_renderPassIrradianceMap;
     MTLRenderPassDescriptor *_renderPassSpecularMap;
+    MTLRenderPassDescriptor *_renderPassLookupTexture;
     
     BOOL _isEnvironmentMapRenderingRequired;
     BOOL _isIrradianceMapRenderingRequired;
     BOOL _isSpecularMapRenderingRequired;
+    BOOL _isLookupTextureRenderingRequired;
 }
 
 - (instancetype)initWithDevice:(id<MTLDevice>)device
@@ -51,6 +56,15 @@
 - (void)_initBuffers {
     _quadVerticesBuffer = [MGPMesh createQuadVerticesBuffer: _device];
     _skyboxVerticesBuffer = [MGPMesh createSkyboxVerticesBuffer: _device];
+    
+    const prefiltered_specular_option_t options[] = {
+        { 0 }, { 0.2 }, { 0.4 }, { 0.6 }, { 0.8 }, { 1.0 }
+    };
+    _prefilteredSpeuclarOptionBuffer = [_device newBufferWithLength:sizeof(options)
+                                                            options:MTLResourceStorageModeManaged];
+    memcpy(_prefilteredSpeuclarOptionBuffer.contents, options, sizeof(options));
+    [_prefilteredSpeuclarOptionBuffer didModifyRange: NSMakeRange(0, sizeof(options))];
+    
 }
 
 - (void)_makeEmptyTextures {
@@ -62,18 +76,27 @@
     
     // irradiance, specular map doesn't require large texture size!
     desc.width = desc.height = 512;
+    desc.mipmapLevelCount = 6;
     _environmentMap = [_device newTextureWithDescriptor: desc];
     _environmentMap.label = @"Environment Map";
     desc.width = desc.height = 32;
+    desc.mipmapLevelCount = 1;
     _irradianceMap = [_device newTextureWithDescriptor: desc];
     _irradianceMap.label = @"Irradiance Map";
     desc.width = desc.height = 256;
+    desc.mipmapLevelCount = 6;
     _prefilteredSpecularMap = [_device newTextureWithDescriptor: desc];
     _prefilteredSpecularMap.label = @"Prefiltered Specular Map";
+    desc.width = desc.height = 256;
+    desc.mipmapLevelCount = 1;
+    desc.textureType = MTLTextureType2D;
+    _BRDFLookupTexture = [_device newTextureWithDescriptor: desc];
+    _BRDFLookupTexture.label = @"BRDF Lookup";
     
     _isEnvironmentMapRenderingRequired = YES;
     _isIrradianceMapRenderingRequired = YES;
     _isSpecularMapRenderingRequired = YES;
+    _isLookupTextureRenderingRequired = YES;
 }
 
 - (void)_makeRenderPipelines {
@@ -87,7 +110,11 @@
     
     _renderPipelineSpecularMap = [self _makeRenderPipelineForTexture: _prefilteredSpecularMap
                                                   vertexFunctionName: @"environment_vert"
-                                                fragmentFunctionName: @"irradiance_frag"];
+                                                fragmentFunctionName: @"prefiltered_specular_frag"];
+    
+    _renderPipelineLookupTexture = [self _makeRenderPipelineForTexture: _BRDFLookupTexture
+                                                    vertexFunctionName: @"screen_vert"
+                                                  fragmentFunctionName: @"brdf_lookup_frag"];
 }
 
 - (void)_makeRenderPass {
@@ -108,6 +135,11 @@
     // Specular Map
     renderPass.colorAttachments[0].texture = _prefilteredSpecularMap;
     _renderPassSpecularMap = [renderPass copy];
+    
+    // Lookup Texture
+    renderPass.colorAttachments[0].texture = _BRDFLookupTexture;
+    renderPass.renderTargetArrayLength = 0;
+    _renderPassLookupTexture = [renderPass copy];
 }
 
 - (id<MTLRenderPipelineState>)_makeRenderPipelineForTexture: (id<MTLTexture>)texture
@@ -131,16 +163,9 @@
     return renderPipeline;
 }
 
-- (void)setEquirectangularMap:(id<MTLTexture>)environmentEquirectangularMap {
-    _equirectangularMap = environmentEquirectangularMap;
-    [self _makeEmptyTextures];
-    _isEnvironmentMapRenderingRequired = YES;
-    _isIrradianceMapRenderingRequired = YES;
-    _isSpecularMapRenderingRequired = YES;
-}
-
 - (BOOL)isAnyRenderingRequired {
-    return _isEnvironmentMapRenderingRequired || _isIrradianceMapRenderingRequired || _isSpecularMapRenderingRequired;
+    return _isEnvironmentMapRenderingRequired || _isIrradianceMapRenderingRequired ||
+    _isSpecularMapRenderingRequired || _isLookupTextureRenderingRequired;
 }
 
 - (BOOL)isEnvironmentMapRenderingRequired {
@@ -155,6 +180,10 @@
     return _isSpecularMapRenderingRequired;
 }
 
+- (BOOL)isLookupTextureRenderingRequired {
+    return _isLookupTextureRenderingRequired;
+}
+
 - (void)render:(id<MTLCommandBuffer>)buffer {
     if(_isEnvironmentMapRenderingRequired)
         [self renderEnvironmentMap:buffer];
@@ -162,6 +191,8 @@
         [self renderIrradianceMap:buffer];
     if(_isSpecularMapRenderingRequired)
         [self renderSpecularLightingMap:buffer];
+    if(_isLookupTextureRenderingRequired)
+        [self renderLookupTexture:buffer];
     
     if(!self.isAnyRenderingRequired) {
         _equirectangularMap = nil;
@@ -186,6 +217,10 @@
             vertexCount: 6
           instanceCount: 6];
     [enc endEncoding];
+    
+    id<MTLBlitCommandEncoder> blit = [buffer blitCommandEncoder];
+    [blit generateMipmapsForTexture: _environmentMap];
+    [blit endEncoding];
     
     _isEnvironmentMapRenderingRequired = NO;
 }
@@ -213,8 +248,47 @@
 }
 
 - (void)renderSpecularLightingMap:(id<MTLCommandBuffer>)buffer {
-    // TODO
+    for(int level = 0; level < 6; level++) {
+        _renderPassSpecularMap.colorAttachments[0].level = level;
+        id<MTLRenderCommandEncoder> enc = [buffer renderCommandEncoderWithDescriptor: _renderPassSpecularMap];
+        enc.label = [NSString stringWithFormat: @"Prefiltered Specular Map (level = %d)", level];
+        [enc setRenderPipelineState: _renderPipelineSpecularMap];
+        [enc setCullMode: MTLCullModeBack];
+        [enc setVertexBuffer: _quadVerticesBuffer
+                      offset: 0
+                     atIndex: 0];
+        [enc setVertexBuffer: _skyboxVerticesBuffer
+                      offset: 0
+                     atIndex: 1];
+        [enc setFragmentTexture: _environmentMap
+                        atIndex: 0];
+        [enc setFragmentBuffer: _prefilteredSpeuclarOptionBuffer
+                        offset: sizeof(prefiltered_specular_option_t) * level
+                       atIndex: 1];
+        [enc drawPrimitives: MTLPrimitiveTypeTriangle
+                vertexStart: 0
+                vertexCount: 6
+              instanceCount: 6];
+        [enc endEncoding];
+    }
+    
     _isSpecularMapRenderingRequired = NO;
+}
+
+- (void)renderLookupTexture:(id<MTLCommandBuffer>)buffer {
+    id<MTLRenderCommandEncoder> enc = [buffer renderCommandEncoderWithDescriptor: _renderPassLookupTexture];
+    enc.label = @"BRDF Lookup";
+    [enc setRenderPipelineState: _renderPipelineLookupTexture];
+    [enc setCullMode: MTLCullModeBack];
+    [enc setVertexBuffer: _quadVerticesBuffer
+                  offset: 0
+                 atIndex: 0];
+    [enc drawPrimitives: MTLPrimitiveTypeTriangle
+            vertexStart: 0
+            vertexCount: 6];
+    [enc endEncoding];
+    
+    _isLookupTextureRenderingRequired = NO;
 }
 
 @end

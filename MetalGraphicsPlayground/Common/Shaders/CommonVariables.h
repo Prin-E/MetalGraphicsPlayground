@@ -27,5 +27,10 @@ constexpr sampler nearest(mip_filter::nearest,
                           min_filter::nearest,
                           coord::normalized,
                           address::repeat);
+constexpr sampler linear_clamp_to_edge(mip_filter::linear,
+                                       mag_filter::linear,
+                                       min_filter::linear,
+                                       coord::normalized,
+                                       address::clamp_to_edge);
 
 #endif /* ShaderCommonVariables_h */

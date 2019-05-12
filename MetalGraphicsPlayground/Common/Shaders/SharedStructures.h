@@ -19,6 +19,7 @@ typedef struct __attribute__((__aligned__(256))) {
 } camera_props_t;
 
 typedef struct {
+    vector_float3 albedo;
     float roughness;
     float metalic;
 } material_t;
@@ -40,19 +41,26 @@ typedef struct __attribute__((__aligned__(256))) {
     unsigned int num_light;
 } light_global_t;
 
+typedef struct __attribute__((__aligned__(256))) {
+    float roughness;
+} prefiltered_specular_option_t;
+
 typedef enum {
     attachment_albedo,
     attachment_normal,
     attachment_pos,
     attachment_shading,
-    attachment_irradiance
+    attachment_irradiance,
+    attachment_prefiltered_specular,
+    attachment_brdf_lookup
 } attachment_index;
 
 typedef enum {
     fcv_albedo,
     fcv_normal,
     fcv_roughness,
-    fcv_metalic
+    fcv_metalic,
+    fcv_occlusion
 } function_constant_values;
 
 // vertex attribute
@@ -70,6 +78,7 @@ typedef enum {
     tex_normal,
     tex_roughness,
     tex_metalic,
+    tex_occlusion,
     tex_total
 } texture_index;
 

@@ -17,6 +17,7 @@ constant bool has_albedo_map [[function_constant(fcv_albedo)]];
 constant bool has_normal_map [[function_constant(fcv_normal)]];
 constant bool has_roughness_map [[function_constant(fcv_roughness)]];
 constant bool has_metalic_map [[function_constant(fcv_metalic)]];
+constant bool has_occlusion_map [[function_constant(fcv_occlusion)]];
 
 // g-buffer vertex input data
 typedef struct {
@@ -90,15 +91,18 @@ fragment GBufferOutput gbuffer_frag(GBufferFragment in [[stage_in]],
                                   constant instance_props_t *instanceProps [[buffer(2)]],
                                   texture2d<half> albedoMap [[texture(tex_albedo), function_constant(has_albedo_map)]],
                                   texture2d<half> normalMap [[texture(tex_normal), function_constant(has_normal_map)]],
-                                  texture2d<float> roughnessMap [[texture(tex_roughness), function_constant(has_roughness_map)]],
-                                  texture2d<half> metalicMap [[texture(tex_metalic), function_constant(has_metalic_map)]]
+                                    texture2d<float> roughnessMap [[texture(tex_roughness), function_constant(has_roughness_map)]],
+                                    texture2d<half> metalicMap [[texture(tex_metalic), function_constant(has_metalic_map)]],
+                                    texture2d<half> occlusionMap [[texture(tex_occlusion), function_constant(has_occlusion_map)]]
                                   ) {
     GBufferOutput out;
+    material_t material = instanceProps[in.iid].material;
+    
     if(has_albedo_map) {
         out.albedo = albedoMap.sample(linear, in.uv);
     }
     else {
-        out.albedo = half(1.0);
+        out.albedo = half4(half3(material.albedo), 1.0);
     }
     if(has_normal_map) {
         half4 nc = normalMap.sample(nearest, in.uv);
@@ -110,12 +114,15 @@ fragment GBufferOutput gbuffer_frag(GBufferFragment in [[stage_in]],
         out.normal = half4(half3((normalize(in.normal) + 1.0) * 0.5), 1.0);
     }
     out.pos = in.viewPos;
-    out.shading = half4(instanceProps[in.iid].material.roughness,instanceProps[in.iid].material.metalic,0,0);
+    out.shading = half4(material.roughness, material.metalic, 1, 0);
     if(has_roughness_map) {
         out.shading.x = roughnessMap.sample(linear, in.uv).r;
     }
     if(has_metalic_map) {
         out.shading.y = metalicMap.sample(linear, in.uv).r;
+    }
+    if(has_occlusion_map) {
+        out.shading.z = occlusionMap.sample(linear, in.uv).r;
     }
     return out;
 }
@@ -138,7 +145,9 @@ fragment half4 lighting_frag(LightingFragment in [[stage_in]],
                              texture2d<half> normal [[texture(attachment_normal)]],
                              texture2d<float> pos [[texture(attachment_pos)]],
                              texture2d<half> shading [[texture(attachment_shading)]],
-                             texturecube<half> irradiance [[texture(attachment_irradiance)]]) {
+                             texturecube<half> irradiance [[texture(attachment_irradiance)]],
+                             texturecube<half> prefilteredSpecular [[texture(attachment_prefiltered_specular)]],
+                             texture2d<half> brdfLookup [[texture(attachment_brdf_lookup)]]) {
     float3 out_color = float3(0);
     
     // shared values
@@ -150,7 +159,7 @@ fragment half4 lighting_frag(LightingFragment in [[stage_in]],
     float3 albedo_c = float4(albedo.sample(linear, in.uv)).xyz;
     half4 shading_values = shading.sample(linear, in.uv);
     float n_v = max(0.001, saturate(dot(n, v)));
-    float3 n_w = (cameraProps.viewInverse * float4(n, 0.0)).xyz;
+    float3 nw = (cameraProps.viewInverse * float4(n, 0.0)).xyz;
     
     // make shading parameters
     shading_t shading_params;
@@ -160,10 +169,16 @@ fragment half4 lighting_frag(LightingFragment in [[stage_in]],
     shading_params.n_v = n_v;
     
     // irradiance
-    float3 irradiance_color = float3(irradiance.sample(linear, n_w).xyz);
-    float3 irradiance_f = fresnel(mix(0.04, shading_params.albedo, shading_params.metalic), n_v);
-    float3 irradiance_d = (float3(1.0) - irradiance_f) * (1.0 - shading_params.metalic);
-    out_color += irradiance_d * irradiance_color * albedo_c;
+    float3 irradiance_color = float3(irradiance.sample(linear, nw).xyz);
+    float3 k_s = fresnel(mix(0.04, shading_params.albedo, shading_params.metalic), n_v);
+    float3 k_d = (float3(1.0) - k_s) * (1.0 - shading_params.metalic);
+    out_color += k_d * irradiance_color * albedo_c * shading_values.z;
+    
+    // prefiltered specular
+    float mip_index = shading_params.roughness * 6;
+    float3 prefiltered_color = float3(prefilteredSpecular.sample(linear, nw, level(mip_index)).xyz);
+    float3 environment_brdf = float3(brdfLookup.sample(linear_clamp_to_edge, float2(shading_params.roughness, n_v)).xyz);
+    out_color += k_s * prefiltered_color * (albedo_c * environment_brdf.x + environment_brdf.y);
     
     // direct lights
     const uint num_light = lightGlobal.num_light;
@@ -183,7 +198,7 @@ fragment half4 lighting_frag(LightingFragment in [[stage_in]],
         shading_params.n_h = n_h;
         shading_params.h_v = h_v;
         
-        out_color += calculate_brdf(shading_params);
+        out_color += calculate_brdf(shading_params) * shading_values.z;
     }
     
     return half4(half3(out_color), 1.0);

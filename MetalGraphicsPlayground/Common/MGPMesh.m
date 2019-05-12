@@ -32,7 +32,8 @@
             MDLMaterialSemanticBaseColor,
             MDLMaterialSemanticTangentSpaceNormal,
             MDLMaterialSemanticRoughness,
-            MDLMaterialSemanticMetallic
+            MDLMaterialSemanticMetallic,
+            MDLMaterialSemanticAmbientOcclusion
         };
         
         for(NSInteger i = 0; i < tex_total; i++) {
@@ -153,10 +154,9 @@
                               error: (NSError **)error {
     self = [super init];
     if(self) {
-        /*
         [mdlMesh addNormalsWithAttributeNamed:MDLVertexAttributeNormal
-                              creaseThreshold:0.05];
-        */
+                              creaseThreshold:0.2];
+        
         [mdlMesh addTangentBasisForTextureCoordinateAttributeNamed: MDLVertexAttributeTextureCoordinate
                                               normalAttributeNamed: MDLVertexAttributeNormal
                                              tangentAttributeNamed: MDLVertexAttributeTangent];
