@@ -12,7 +12,7 @@
 @interface AppDelegate : NSObject <NSApplicationDelegate>
 
 @property (weak) IBOutlet MGPView *view;
-@property (readwrite) float roughness, metalic;
+@property (readwrite) float roughness, metalic, anisotropy;
 @property (readwrite) unsigned int numLights;
 @property (readwrite) BOOL showsTestObjects;
 

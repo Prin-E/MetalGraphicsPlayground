@@ -14,7 +14,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface DeferredRenderer : MGPRenderer <MGPViewDelegate>
 
-@property (readwrite) float roughness, metalic;
+@property (readwrite) float roughness, metalic, anisotropy;
 @property (readwrite) unsigned int numLights;
 @property (readwrite) BOOL showsTestObjects;
 

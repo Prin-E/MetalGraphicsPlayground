@@ -23,6 +23,7 @@ typedef struct {
     vector_float3 albedo;
     float roughness;
     float metalic;
+    float anisotropy;
 } material_t;
 
 typedef struct __attribute__((__aligned__(256))) {
@@ -51,6 +52,7 @@ typedef enum {
     attachment_normal,
     attachment_pos,
     attachment_shading,
+    attachment_tangent,
     attachment_irradiance,
     attachment_prefiltered_specular,
     attachment_brdf_lookup

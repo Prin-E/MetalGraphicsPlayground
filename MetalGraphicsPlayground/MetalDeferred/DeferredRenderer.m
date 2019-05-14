@@ -259,6 +259,7 @@ const float kLightIntensityVariation = 3.0;
                                   device: self.device
                                    error: nil];
     
+    MTKTextureLoader *textureLoader = [[MTKTextureLoader alloc] initWithDevice: self.device];
     MDLMesh *mdlMesh = [MDLMesh newEllipsoidWithRadii: vector3(10.0f, 10.0f, 10.0f)
                                        radialSegments: 32
                                      verticalSegments: 32
@@ -273,6 +274,28 @@ const float kLightIntensityVariation = 3.0;
                                                   device: self.device
                                         calculateNormals: NO
                                                    error: nil];
+    
+    NSDictionary *textureLoaderOptions = @{
+                                           MTKTextureLoaderOptionTextureUsage       : @(MTLTextureUsageShaderRead),
+                                           MTKTextureLoaderOptionSRGB       : @(NO),
+                                           MTKTextureLoaderOptionTextureStorageMode : @(MTLStorageModePrivate),
+                                           };
+    
+    mesh.submeshes[0].textures[tex_albedo] = [textureLoader newTextureWithContentsOfURL: [[NSBundle mainBundle] URLForResource: @"albedo" withExtension: @"png"]
+                                                                                options: textureLoaderOptions
+                                                                                  error: nil];
+    mesh.submeshes[0].textures[tex_normal] = [textureLoader newTextureWithContentsOfURL: [[NSBundle mainBundle] URLForResource: @"normal" withExtension: @"png"]
+                                                                                options: textureLoaderOptions
+                                                                                  error: nil];
+    mesh.submeshes[0].textures[tex_roughness] = [textureLoader newTextureWithContentsOfURL: [[NSBundle mainBundle] URLForResource: @"roughness" withExtension: @"png"]
+                                                                                options: textureLoaderOptions
+                                                                                  error: nil];
+    mesh.submeshes[0].textures[tex_metalic] = [textureLoader newTextureWithContentsOfURL: [[NSBundle mainBundle] URLForResource: @"metallic" withExtension: @"png"]
+                                                                                 options: textureLoaderOptions
+                                                                                   error: nil];
+    mesh.submeshes[0].textures[tex_occlusion] = [textureLoader newTextureWithContentsOfURL: [[NSBundle mainBundle] URLForResource: @"ao" withExtension: @"png"]
+                                                                                 options: textureLoaderOptions
+                                                                                   error: nil];
     
     _testObjects = @[ mesh ];
     
@@ -427,6 +450,7 @@ const float kLightIntensityVariation = 3.0;
         p->material.albedo = instance_albedo[i];
         p->material.roughness = self.roughness;
         p->material.metalic = self.metalic;
+        p->material.anisotropy = self.anisotropy;
     }
     
     // Update lights
@@ -636,6 +660,8 @@ const float kLightIntensityVariation = 3.0;
                         atIndex: attachment_pos];
     [encoder setFragmentTexture: _gBuffer.shading
                         atIndex: attachment_shading];
+    [encoder setFragmentTexture: _gBuffer.tangent
+                        atIndex: attachment_tangent];
     [encoder setFragmentTexture: _IBLs[_renderingIBLIndex].irradianceMap
                         atIndex: attachment_irradiance];
     [encoder setFragmentTexture: _IBLs[_renderingIBLIndex].prefilteredSpecularMap

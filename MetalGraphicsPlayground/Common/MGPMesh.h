@@ -16,7 +16,7 @@ NS_ASSUME_NONNULL_BEGIN
 @interface MGPSubmesh : NSObject
 
 @property (readonly) MTKSubmesh *metalKitSubmesh;
-@property (readonly, nonnull) NSArray *textures;
+@property (readonly, nonnull) NSMutableArray *textures;
 
 @end
 

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="14490.70" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES" customObjectInstantitationMethod="direct">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="14490.70" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" customObjectInstantitationMethod="direct">
     <dependencies>
         <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="14490.70"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
@@ -689,20 +689,20 @@
                 <rect key="frame" x="0.0" y="0.0" width="480" height="360"/>
                 <autoresizingMask key="autoresizingMask"/>
                 <subviews>
-                    <customView fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Qdl-Mi-W3j" customClass="MGPView">
-                        <rect key="frame" x="0.0" y="100" width="480" height="260"/>
+                    <customView id="Qdl-Mi-W3j" customClass="MGPView">
+                        <rect key="frame" x="0.0" y="132" width="480" height="228"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                     </customView>
-                    <slider verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="awA-K3-4kL">
-                        <rect key="frame" x="94" y="74" width="96" height="19"/>
+                    <slider verticalHuggingPriority="750" id="awA-K3-4kL">
+                        <rect key="frame" x="94" y="106" width="96" height="19"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                         <sliderCell key="cell" continuous="YES" state="on" alignment="left" maxValue="1" doubleValue="0.5" tickMarkPosition="above" sliderType="linear" id="h6W-4Q-moe"/>
                         <connections>
                             <binding destination="Voe-Tx-rLC" name="value" keyPath="roughness" id="KN3-D7-0CH"/>
                         </connections>
                     </slider>
-                    <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="M44-LK-w4a">
-                        <rect key="frame" x="18" y="75" width="72" height="17"/>
+                    <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" id="M44-LK-w4a">
+                        <rect key="frame" x="18" y="107" width="72" height="17"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                         <textFieldCell key="cell" lineBreakMode="clipping" title="Roughness" id="IpN-Jc-qvv">
                             <font key="font" metaFont="system"/>
@@ -710,16 +710,16 @@
                             <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
                     </textField>
-                    <slider verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Rlf-nB-mkU">
-                        <rect key="frame" x="94" y="50" width="96" height="19"/>
+                    <slider verticalHuggingPriority="750" id="Rlf-nB-mkU">
+                        <rect key="frame" x="94" y="82" width="96" height="19"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                         <sliderCell key="cell" continuous="YES" state="on" alignment="left" maxValue="1" doubleValue="0.5" tickMarkPosition="above" sliderType="linear" id="R6T-g5-Jjl"/>
                         <connections>
                             <binding destination="Voe-Tx-rLC" name="value" keyPath="metalic" id="VZP-rh-3R0"/>
                         </connections>
                     </slider>
-                    <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="YcL-bX-dvR">
-                        <rect key="frame" x="18" y="51" width="48" height="17"/>
+                    <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" id="YcL-bX-dvR">
+                        <rect key="frame" x="18" y="83" width="48" height="17"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                         <textFieldCell key="cell" lineBreakMode="clipping" title="Metalic" id="Bcu-hr-cna">
                             <font key="font" metaFont="system"/>
@@ -727,8 +727,8 @@
                             <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
                     </textField>
-                    <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="YFt-cM-Vrh">
-                        <rect key="frame" x="194" y="75" width="40" height="17"/>
+                    <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" id="YFt-cM-Vrh">
+                        <rect key="frame" x="194" y="107" width="40" height="17"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                         <textFieldCell key="cell" lineBreakMode="clipping" title="0.10" id="KbB-rT-LZ8">
                             <numberFormatter key="formatter" formatterBehavior="custom10_4" positiveFormat="0.00" negativeFormat="0.00" localizesFormat="NO" numberStyle="decimal" usesGroupingSeparator="NO" groupingSize="0" minimumIntegerDigits="1" maximumIntegerDigits="2000000000" minimumFractionDigits="2" maximumFractionDigits="2" id="SEe-08-29r"/>
@@ -740,8 +740,8 @@
                             <binding destination="Voe-Tx-rLC" name="value" keyPath="roughness" id="m64-LY-QCW"/>
                         </connections>
                     </textField>
-                    <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="raO-Kh-iMc">
-                        <rect key="frame" x="194" y="51" width="40" height="17"/>
+                    <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" id="raO-Kh-iMc">
+                        <rect key="frame" x="194" y="83" width="40" height="17"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                         <textFieldCell key="cell" lineBreakMode="clipping" title="0.10" id="5MI-Or-vYC">
                             <numberFormatter key="formatter" formatterBehavior="custom10_4" positiveFormat="0.00" negativeFormat="0.00" localizesFormat="NO" numberStyle="decimal" usesGroupingSeparator="NO" groupingSize="0" minimumIntegerDigits="1" maximumIntegerDigits="2000000000" minimumFractionDigits="2" maximumFractionDigits="2" id="Ixh-tv-bhf"/>
@@ -753,16 +753,16 @@
                             <binding destination="Voe-Tx-rLC" name="value" keyPath="metalic" id="XDN-cD-cN6"/>
                         </connections>
                     </textField>
-                    <slider verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="3Hz-OT-fDC">
-                        <rect key="frame" x="94" y="23" width="224" height="19"/>
+                    <slider verticalHuggingPriority="750" id="3Hz-OT-fDC">
+                        <rect key="frame" x="94" y="18" width="224" height="19"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                         <sliderCell key="cell" continuous="YES" state="on" alignment="left" maxValue="64" doubleValue="4" tickMarkPosition="above" allowsTickMarkValuesOnly="YES" sliderType="linear" id="IGK-w9-yhO"/>
                         <connections>
                             <binding destination="Voe-Tx-rLC" name="value" keyPath="numLights" id="v4f-kL-1eS"/>
                         </connections>
                     </slider>
-                    <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="fqB-vb-xEF">
-                        <rect key="frame" x="18" y="27" width="74" height="17"/>
+                    <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" id="fqB-vb-xEF">
+                        <rect key="frame" x="18" y="22" width="74" height="17"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                         <textFieldCell key="cell" lineBreakMode="clipping" title="Num.Lights" id="9Hh-W8-pXq">
                             <font key="font" metaFont="system"/>
@@ -770,8 +770,8 @@
                             <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
                     </textField>
-                    <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="KMI-ug-NqL">
-                        <rect key="frame" x="322" y="27" width="40" height="17"/>
+                    <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" id="KMI-ug-NqL">
+                        <rect key="frame" x="322" y="19" width="40" height="17"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                         <textFieldCell key="cell" lineBreakMode="clipping" title="1" id="TyP-93-HKX">
                             <numberFormatter key="formatter" formatterBehavior="custom10_4" positiveFormat="#,##0" negativeFormat="#,##0" localizesFormat="NO" numberStyle="decimal" allowsFloats="NO" minimumIntegerDigits="1" maximumIntegerDigits="2000000000" id="rwM-XI-jv3"/>
@@ -783,8 +783,8 @@
                             <binding destination="Voe-Tx-rLC" name="value" keyPath="numLights" id="ewP-wn-uGN"/>
                         </connections>
                     </textField>
-                    <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="PaD-0R-pgz">
-                        <rect key="frame" x="302" y="76" width="160" height="18"/>
+                    <button verticalHuggingPriority="750" id="PaD-0R-pgz">
+                        <rect key="frame" x="302" y="108" width="160" height="18"/>
                         <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxY="YES"/>
                         <buttonCell key="cell" type="check" title="Shows Sphere Meshes" bezelStyle="regularSquare" imagePosition="left" state="on" inset="2" id="9sA-j1-UAF">
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
@@ -794,6 +794,36 @@
                             <binding destination="Voe-Tx-rLC" name="value" keyPath="showsTestObjects" id="VsZ-Ie-DjC"/>
                         </connections>
                     </button>
+                    <slider verticalHuggingPriority="750" id="Woc-br-XFZ">
+                        <rect key="frame" x="94" y="58" width="96" height="19"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                        <sliderCell key="cell" continuous="YES" state="on" alignment="left" minValue="-1" maxValue="1" doubleValue="0.5" tickMarkPosition="above" sliderType="linear" id="MjN-4O-l7Z"/>
+                        <connections>
+                            <binding destination="Voe-Tx-rLC" name="value" keyPath="anisotropy" id="RX8-i4-zfL"/>
+                        </connections>
+                    </slider>
+                    <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" id="Gxx-TW-7bU">
+                        <rect key="frame" x="18" y="59" width="70" height="17"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                        <textFieldCell key="cell" lineBreakMode="clipping" title="Anisotropy" id="BH0-k4-ZF1">
+                            <font key="font" metaFont="system"/>
+                            <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                            <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                        </textFieldCell>
+                    </textField>
+                    <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" id="zUf-ud-jqR">
+                        <rect key="frame" x="194" y="59" width="40" height="17"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                        <textFieldCell key="cell" lineBreakMode="clipping" title="0.10" id="SK1-I0-tkO">
+                            <numberFormatter key="formatter" formatterBehavior="custom10_4" positiveFormat="0.00" negativeFormat="0.00" localizesFormat="NO" numberStyle="decimal" usesGroupingSeparator="NO" groupingSize="0" minimumIntegerDigits="1" maximumIntegerDigits="2000000000" minimumFractionDigits="2" maximumFractionDigits="2" id="4cx-FD-ltm"/>
+                            <font key="font" metaFont="system"/>
+                            <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                            <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                        </textFieldCell>
+                        <connections>
+                            <binding destination="Voe-Tx-rLC" name="value" keyPath="anisotropy" id="I6R-U9-eRC"/>
+                        </connections>
+                    </textField>
                 </subviews>
             </view>
         </window>

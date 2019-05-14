@@ -45,6 +45,7 @@ typedef struct {
     half4 normal    [[color(attachment_normal)]];
     float4 pos      [[color(attachment_pos)]];
     half4 shading   [[color(attachment_shading)]];
+    half4 tangent   [[color(attachment_tangent)]];
 } GBufferOutput;
 
 // lighting vertex input data
@@ -109,12 +110,16 @@ fragment GBufferOutput gbuffer_frag(GBufferFragment in [[stage_in]],
         nc = nc * 2.0 - 1.0;
         float3 n = normalize(in.normal * nc.z + in.tangent * nc.x + in.bitangent * nc.y);
         out.normal = half4(half3((n + 1.0) * 0.5), 1.0);
+        float3 b = cross(normalize(in.tangent), n);
+        float3 t = cross(n, b);
+        out.tangent = half4(half3((t + 1.0) * 0.5), 1.0);
     }
     else {
         out.normal = half4(half3((normalize(in.normal) + 1.0) * 0.5), 1.0);
+        out.tangent = half4(half3((normalize(in.tangent) + 1.0) * 0.5), 1.0);
     }
     out.pos = in.worldPos;
-    out.shading = half4(material.roughness, material.metalic, 1, 0);
+    out.shading = half4(material.roughness, material.metalic, 1, material.anisotropy * 0.5 + 0.5);
     if(has_roughness_map) {
         out.shading.x = roughnessMap.sample(linear, in.uv).r;
     }
@@ -145,6 +150,7 @@ fragment half4 lighting_frag(LightingFragment in [[stage_in]],
                              texture2d<half> normal [[texture(attachment_normal)]],
                              texture2d<float> pos [[texture(attachment_pos)]],
                              texture2d<half> shading [[texture(attachment_shading)]],
+                             texture2d<half> tangent [[texture(attachment_tangent)]],
                              texturecube<half> irradiance [[texture(attachment_irradiance)]],
                              texturecube<half> prefilteredSpecular [[texture(attachment_prefiltered_specular)]],
                              texture2d<half> brdfLookup [[texture(attachment_brdf_lookup)]]) {
@@ -155,17 +161,25 @@ fragment half4 lighting_frag(LightingFragment in [[stage_in]],
     if(n_c.w == 0.0)
         return half4(0, 0, 0, 0);
     float3 n = (n_c.xyz - 0.5) * 2.0 * n_c.w;
+    float4 t_c = float4(tangent.sample(linear, in.uv));
+    float3 t = (t_c.xyz - 0.5) * 2.0 * t_c.w;
+    float3 b = cross(t, n);
     float3 v = normalize(cameraProps.position - pos.sample(linear, in.uv).xyz);
     float3 albedo_c = float4(albedo.sample(linear, in.uv)).xyz;
     half4 shading_values = shading.sample(linear, in.uv);
     float n_v = max(0.001, saturate(dot(n, v)));
+    float t_v = max(0.001, saturate(dot(t, v)));
+    float b_v = max(0.001, saturate(dot(b, v)));
     
     // make shading parameters
     shading_t shading_params;
     shading_params.albedo = albedo_c;
     shading_params.roughness = shading_values.x;
     shading_params.metalic = shading_values.y;
+    shading_params.anisotropy = shading_values.w * 2.0 - 1.0;
     shading_params.n_v = n_v;
+    shading_params.t_v = t_v;
+    shading_params.b_v = b_v;
     
     // irradiance
     float3 irradiance_color = float3(irradiance.sample(linear, n).xyz);
@@ -191,11 +205,19 @@ fragment half4 lighting_frag(LightingFragment in [[stage_in]],
         float n_l = max(0.001, saturate(dot(n, light_dir)));
         float n_h = max(0.001, saturate(dot(n, h)));
         float h_v = max(0.001, saturate(dot(h, v)));
+        float t_h = max(0.001, saturate(dot(t, h)));
+        float b_h = max(0.001, saturate(dot(b, h)));
+        float t_l = max(0.001, saturate(dot(t, light_dir)));
+        float b_l = max(0.001, saturate(dot(b, light_dir)));
         
         shading_params.light = light_color * light_intensity;
         shading_params.n_l = n_l;
         shading_params.n_h = n_h;
         shading_params.h_v = h_v;
+        shading_params.t_h = t_h;
+        shading_params.b_h = b_h;
+        shading_params.t_l = t_l;
+        shading_params.b_l = b_l;
         
         out_color += calculate_brdf(shading_params) * shading_values.z;
     }

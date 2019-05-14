@@ -75,6 +75,11 @@
 		9564D3EB1C1F17CC00C6E316 /* posy.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 9564D3E51C1F17CC00C6E316 /* posy.jpg */; };
 		9564D3EC1C1F17CC00C6E316 /* posz.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 9564D3E61C1F17CC00C6E316 /* posz.jpg */; };
 		95699DF81C46A1EF000C0C6F /* lego.obj in Resources */ = {isa = PBXBuildFile; fileRef = 95699DF71C46A1EF000C0C6F /* lego.obj */; };
+		956AB4E12289C6A2009B5362 /* roughness.png in Resources */ = {isa = PBXBuildFile; fileRef = 956AB4DD2289C6A0009B5362 /* roughness.png */; };
+		956AB4E22289C6A2009B5362 /* normal.png in Resources */ = {isa = PBXBuildFile; fileRef = 956AB4DE2289C6A1009B5362 /* normal.png */; };
+		956AB4E32289C6A2009B5362 /* albedo.png in Resources */ = {isa = PBXBuildFile; fileRef = 956AB4DF2289C6A1009B5362 /* albedo.png */; };
+		956AB4E62289C92C009B5362 /* metallic.png in Resources */ = {isa = PBXBuildFile; fileRef = 956AB4E52289C92B009B5362 /* metallic.png */; };
+		956AB4E82289C98D009B5362 /* ao.png in Resources */ = {isa = PBXBuildFile; fileRef = 956AB4E72289C98D009B5362 /* ao.png */; };
 		95765E3F227D7EEA0053D66D /* MGPMesh.m in Sources */ = {isa = PBXBuildFile; fileRef = 95F0D28A227D4DF600DEEC3B /* MGPMesh.m */; };
 		95765E40227D81060053D66D /* MetalMath.c in Sources */ = {isa = PBXBuildFile; fileRef = 958A9C361D16E08200021744 /* MetalMath.c */; };
 		957C604C1E48EFA700132359 /* bun_zipper_res3.obj in Resources */ = {isa = PBXBuildFile; fileRef = 957C604B1E48EFA700132359 /* bun_zipper_res3.obj */; };
@@ -208,6 +213,11 @@
 		9564D3E51C1F17CC00C6E316 /* posy.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = posy.jpg; sourceTree = "<group>"; };
 		9564D3E61C1F17CC00C6E316 /* posz.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = posz.jpg; sourceTree = "<group>"; };
 		95699DF71C46A1EF000C0C6F /* lego.obj */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = lego.obj; sourceTree = "<group>"; };
+		956AB4DD2289C6A0009B5362 /* roughness.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = roughness.png; sourceTree = "<group>"; };
+		956AB4DE2289C6A1009B5362 /* normal.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = normal.png; sourceTree = "<group>"; };
+		956AB4DF2289C6A1009B5362 /* albedo.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = albedo.png; sourceTree = "<group>"; };
+		956AB4E52289C92B009B5362 /* metallic.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = metallic.png; sourceTree = "<group>"; };
+		956AB4E72289C98D009B5362 /* ao.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = ao.png; sourceTree = "<group>"; };
 		957C604B1E48EFA700132359 /* bun_zipper_res3.obj */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = bun_zipper_res3.obj; sourceTree = "<group>"; };
 		957E3C021E4B658300C10FB2 /* BRDF.metal */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.metal; path = BRDF.metal; sourceTree = "<group>"; };
 		957E3C041E4B671A00C10FB2 /* BRDF.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BRDF.h; sourceTree = "<group>"; };
@@ -672,6 +682,11 @@
 		95F5E0922276255600445BB0 /* MetalDeferred */ = {
 			isa = PBXGroup;
 			children = (
+				956AB4E72289C98D009B5362 /* ao.png */,
+				956AB4E52289C92B009B5362 /* metallic.png */,
+				956AB4DF2289C6A1009B5362 /* albedo.png */,
+				956AB4DE2289C6A1009B5362 /* normal.png */,
+				956AB4DD2289C6A0009B5362 /* roughness.png */,
 				95A4D92D22840A41004653B6 /* bush_restaurant_1k.hdr */,
 				95EFEC4E228586B70012E55D /* Tropical_Beach_3k.hdr */,
 				95BED3132285E099006E5C2F /* Factory_Catwalk_2k.hdr */,
@@ -890,7 +905,7 @@
 			isa = PBXProject;
 			attributes = {
 				DefaultBuildSystemTypeForWorkspace = Latest;
-				LastUpgradeCheck = 0940;
+				LastUpgradeCheck = 1020;
 				ORGANIZATIONNAME = Prin_E;
 				TargetAttributes = {
 					95209FCD1BADA87F00F8B5AF = {
@@ -940,10 +955,9 @@
 			};
 			buildConfigurationList = 953EAB761B9B5AFC0024994F /* Build configuration list for PBXProject "MetalGraphicsPlayground" */;
 			compatibilityVersion = "Xcode 3.2";
-			developmentRegion = English;
+			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
-				English,
 				en,
 				Base,
 			);
@@ -1060,15 +1074,20 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				956AB4E12289C6A2009B5362 /* roughness.png in Resources */,
 				959A344A227B33560034AA82 /* firetruck.mtl in Resources */,
 				959A344B227B33560034AA82 /* firetruck.obj in Resources */,
 				95F5E0972276255900445BB0 /* Assets.xcassets in Resources */,
+				956AB4E62289C92C009B5362 /* metallic.png in Resources */,
 				95A4D92E22840A41004653B6 /* bush_restaurant_1k.hdr in Resources */,
 				95EFEC4F228586B70012E55D /* Tropical_Beach_3k.hdr in Resources */,
 				95BED3162285E0A7006E5C2F /* Milkyway_small.hdr in Resources */,
 				95F5E09A2276255900445BB0 /* MainMenu.xib in Resources */,
+				956AB4E82289C98D009B5362 /* ao.png in Resources */,
+				956AB4E32289C6A2009B5362 /* albedo.png in Resources */,
 				95BED31A2285E176006E5C2F /* WinterForest_Ref.hdr in Resources */,
 				95BED3142285E09A006E5C2F /* Factory_Catwalk_2k.hdr in Resources */,
+				956AB4E22289C6A2009B5362 /* normal.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1346,6 +1365,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
 				CLANG_CXX_LIBRARY = "libc++";
 				CLANG_ENABLE_MODULES = YES;
@@ -1398,6 +1418,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
 				CLANG_CXX_LIBRARY = "libc++";
 				CLANG_ENABLE_MODULES = YES;

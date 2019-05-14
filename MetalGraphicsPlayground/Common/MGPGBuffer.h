@@ -17,6 +17,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (readonly) id<MTLTexture> normal;     // view-space (XYZ+A(0.0:empty-space))
 @property (readonly) id<MTLTexture> pos;        // view-space (XYZ)
 @property (readonly) id<MTLTexture> shading;    // R:roughness,G:metalic,BA:TODO
+@property (readonly) id<MTLTexture> tangent;    // view-space (XYZ+A(0.0:empty-space))
 
 // lighting-output
 @property (readonly) id<MTLTexture> lighting;

@@ -47,6 +47,14 @@
     renderer.metalic = metalic;
 }
 
+- (float)anisotropy {
+    return renderer.anisotropy;
+}
+
+- (void)setAnisotropy:(float)anisotropy {
+    renderer.anisotropy = anisotropy;
+}
+
 - (unsigned int)numLights {
     return renderer.numLights;
 }

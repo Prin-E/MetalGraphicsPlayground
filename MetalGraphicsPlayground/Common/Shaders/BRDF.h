@@ -17,16 +17,25 @@ typedef struct {
     float3 light;
     float roughness;
     float metalic;
+    float anisotropy;
     float n_l;
     float n_v;
     float n_h;
     float h_v;
+    float t_h;
+    float t_v;
+    float t_l;
+    float b_h;
+    float b_v;
+    float b_l;
+    
 } shading_t;
 
 float fresnel(float f0, float h_v);
 float3 fresnel(float3 f0, float h_v);
 float geometry_smith(float n_l, float n_v, float a);
 float distribution_ggx(float n_h, float a);
+float distribution_ggx_anisotropic(float n_h, float a, float anistoropy);
 
 float3 calculate_brdf(shading_t shading);
 
