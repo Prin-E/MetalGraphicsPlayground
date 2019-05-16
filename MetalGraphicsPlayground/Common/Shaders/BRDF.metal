@@ -58,7 +58,7 @@ float3 calculate_brdf(shading_t shading) {
     float g_s = geometry_smith(shading.n_l, shading.n_v, sqr(a+1) * 0.125);
     float d_s = distribution_ggx(shading.n_h, a);
     //float g_s = geometry_smith_anisotropic(a_t, a_b, shading.t_v, shading.b_v, shading.t_l, shading.b_l, shading.n_v, shading.n_l);
-    //float d_s = distribution_ggx_anisotropic(a, a, shading.n_h, shading.t_h, shading.b_h);
+    //float d_s = distribution_ggx_anisotropic(a_t, a_b, shading.n_h, shading.t_h, shading.b_h);
     float3 f_s = fresnel(mix(0.04, shading.albedo, shading.metalic), shading.h_v);
     
     // diffuse, specular

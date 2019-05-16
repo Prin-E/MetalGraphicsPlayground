@@ -281,6 +281,7 @@ const float kLightIntensityVariation = 3.0;
                                            MTKTextureLoaderOptionTextureStorageMode : @(MTLStorageModePrivate),
                                            };
     
+    /*
     mesh.submeshes[0].textures[tex_albedo] = [textureLoader newTextureWithContentsOfURL: [[NSBundle mainBundle] URLForResource: @"albedo" withExtension: @"png"]
                                                                                 options: textureLoaderOptions
                                                                                   error: nil];
@@ -296,7 +297,7 @@ const float kLightIntensityVariation = 3.0;
     mesh.submeshes[0].textures[tex_occlusion] = [textureLoader newTextureWithContentsOfURL: [[NSBundle mainBundle] URLForResource: @"ao" withExtension: @"png"]
                                                                                  options: textureLoaderOptions
                                                                                    error: nil];
-    
+    */
     _testObjects = @[ mesh ];
     
     // build render pipeline
