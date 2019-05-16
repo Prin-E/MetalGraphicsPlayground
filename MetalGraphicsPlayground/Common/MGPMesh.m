@@ -162,11 +162,10 @@
         [mdlMesh addTangentBasisForTextureCoordinateAttributeNamed: MDLVertexAttributeTextureCoordinate
                                               normalAttributeNamed: MDLVertexAttributeNormal
                                              tangentAttributeNamed: MDLVertexAttributeTangent];
-        /*
         [mdlMesh addTangentBasisForTextureCoordinateAttributeNamed: MDLVertexAttributeTextureCoordinate
                                              tangentAttributeNamed: MDLVertexAttributeTangent
                                            bitangentAttributeNamed: MDLVertexAttributeBitangent];
-        */
+        
         mdlMesh.vertexDescriptor = descriptor;
         
         MTKMesh *mtkMesh = [[MTKMesh alloc] initWithMesh: mdlMesh

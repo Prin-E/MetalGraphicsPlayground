@@ -13,6 +13,10 @@ inline float sqr(float f0) {
     return f0 * f0;
 }
 
+inline float cube(float f0) {
+    return f0 * f0 * f0;
+}
+
 // ===============================================================================================
 // http://holger.dammertz.org/stuff/notes_HammersleyOnHemisphere.html
 // ===============================================================================================

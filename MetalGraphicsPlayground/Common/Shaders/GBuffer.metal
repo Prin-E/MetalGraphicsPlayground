@@ -106,7 +106,7 @@ fragment GBufferOutput gbuffer_frag(GBufferFragment in [[stage_in]],
         out.albedo = half4(half3(material.albedo), 1.0);
     }
     if(has_normal_map) {
-        half4 nc = normalMap.sample(nearest, in.uv);
+        half4 nc = normalMap.sample(linear, in.uv);
         nc = nc * 2.0 - 1.0;
         float3 n = normalize(in.normal * nc.z + in.tangent * nc.x + in.bitangent * nc.y);
         out.normal = half4(half3((n + 1.0) * 0.5), 1.0);
@@ -160,9 +160,9 @@ fragment half4 lighting_frag(LightingFragment in [[stage_in]],
     float4 n_c = float4(normal.sample(linear, in.uv));
     if(n_c.w == 0.0)
         return half4(0, 0, 0, 0);
-    float3 n = (n_c.xyz - 0.5) * 2.0 * n_c.w;
+    float3 n = normalize((n_c.xyz - 0.5) * 2.0);
     float4 t_c = float4(tangent.sample(linear, in.uv));
-    float3 t = (t_c.xyz - 0.5) * 2.0 * t_c.w;
+    float3 t = normalize((t_c.xyz - 0.5) * 2.0);
     float3 b = cross(t, n);
     float3 v = normalize(cameraProps.position - pos.sample(linear, in.uv).xyz);
     float3 albedo_c = float4(albedo.sample(linear, in.uv)).xyz;
@@ -202,11 +202,11 @@ fragment half4 lighting_frag(LightingFragment in [[stage_in]],
         float light_intensity = light.intensity;
         
         float3 h = normalize(light_dir + v);
-        float n_l = max(0.001, saturate(dot(n, light_dir)));
-        float n_h = max(0.001, saturate(dot(n, h)));
         float h_v = max(0.001, saturate(dot(h, v)));
-        float t_h = max(0.001, saturate(dot(t, h)));
-        float b_h = max(0.001, saturate(dot(b, h)));
+        float n_h = dot(n, h);
+        float t_h = dot(t, h);
+        float b_h = dot(b, h);
+        float n_l = max(0.001, saturate(dot(n, light_dir)));
         float t_l = max(0.001, saturate(dot(t, light_dir)));
         float b_l = max(0.001, saturate(dot(b, light_dir)));
         
