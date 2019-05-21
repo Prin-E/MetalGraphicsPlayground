@@ -18,6 +18,7 @@ constant bool has_normal_map [[function_constant(fcv_normal)]];
 constant bool has_roughness_map [[function_constant(fcv_roughness)]];
 constant bool has_metalic_map [[function_constant(fcv_metalic)]];
 constant bool has_occlusion_map [[function_constant(fcv_occlusion)]];
+constant bool has_anisotropic_map [[function_constant(fcv_anisotropic)]];
 
 // g-buffer vertex input data
 typedef struct {
@@ -94,7 +95,8 @@ fragment GBufferOutput gbuffer_frag(GBufferFragment in [[stage_in]],
                                   texture2d<half> normalMap [[texture(tex_normal), function_constant(has_normal_map)]],
                                     texture2d<float> roughnessMap [[texture(tex_roughness), function_constant(has_roughness_map)]],
                                     texture2d<half> metalicMap [[texture(tex_metalic), function_constant(has_metalic_map)]],
-                                    texture2d<half> occlusionMap [[texture(tex_occlusion), function_constant(has_occlusion_map)]]
+                                    texture2d<half> occlusionMap [[texture(tex_occlusion), function_constant(has_occlusion_map)]],
+                                    texture2d<half> anisotropicMap [[texture(tex_anisotropic), function_constant(has_anisotropic_map)]]
                                   ) {
     GBufferOutput out;
     material_t material = instanceProps[in.iid].material;
@@ -110,13 +112,26 @@ fragment GBufferOutput gbuffer_frag(GBufferFragment in [[stage_in]],
         nc = nc * 2.0 - 1.0;
         float3 n = normalize(in.normal * nc.z + in.tangent * nc.x + in.bitangent * nc.y);
         out.normal = half4(half3((n + 1.0) * 0.5), 1.0);
-        float3 b = cross(normalize(in.tangent), n);
-        float3 t = cross(n, b);
-        out.tangent = half4(half3((t + 1.0) * 0.5), 1.0);
     }
     else {
         out.normal = half4(half3((normalize(in.normal) + 1.0) * 0.5), 1.0);
-        out.tangent = half4(half3((normalize(in.tangent) + 1.0) * 0.5), 1.0);
+    }
+    if(has_anisotropic_map) {
+        half4 tc = anisotropicMap.sample(linear, in.uv);
+        tc = tc * 2.0 - 1.0;
+        float3 t = normalize(float3(tc.xyz));
+        out.tangent = half4(half3((t + 1.0) * 0.5), 1.0);
+    }
+    else {
+        if(has_normal_map) {
+            float3 n = normalize(float3(in.normal * 2.0 - 1.0));
+            float3 b = cross(normalize(in.tangent), n);
+            float3 t = cross(n, b);
+            out.tangent = half4(half3((t + 1.0) * 0.5), 1.0);
+        }
+        else {
+            out.tangent = half4(half3((normalize(in.tangent) + 1.0) * 0.5), 1.0);
+        }
     }
     out.pos = in.worldPos;
     out.shading = half4(material.roughness, material.metalic, 1, material.anisotropy * 0.5 + 0.5);

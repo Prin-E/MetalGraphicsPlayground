@@ -63,7 +63,8 @@ typedef enum {
     fcv_normal,
     fcv_roughness,
     fcv_metalic,
-    fcv_occlusion
+    fcv_occlusion,
+    fcv_anisotropic
 } function_constant_values;
 
 // vertex attribute
@@ -82,6 +83,7 @@ typedef enum {
     tex_roughness,
     tex_metalic,
     tex_occlusion,
+    tex_anisotropic,
     tex_total
 } texture_index;
 

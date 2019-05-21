@@ -260,6 +260,7 @@ const float kLightIntensityVariation = 3.0;
                                    error: nil];
     
     MTKTextureLoader *textureLoader = [[MTKTextureLoader alloc] initWithDevice: self.device];
+    /*
     MDLMesh *mdlMesh = [MDLMesh newEllipsoidWithRadii: vector3(10.0f, 10.0f, 10.0f)
                                        radialSegments: 32
                                      verticalSegments: 32
@@ -267,6 +268,7 @@ const float kLightIntensityVariation = 3.0;
                                         inwardNormals: NO
                                            hemisphere: NO
                                             allocator: [[MTKMeshBufferAllocator alloc] initWithDevice: self.device]];
+     
     mdlMesh.vertexDescriptor = mdlVertexDescriptor;
     MGPMesh *mesh = [[MGPMesh alloc] initWithModelIOMesh: mdlMesh
                                  modelIOVertexDescriptor: mdlVertexDescriptor
@@ -274,6 +276,13 @@ const float kLightIntensityVariation = 3.0;
                                                   device: self.device
                                         calculateNormals: NO
                                                    error: nil];
+     */
+    
+    MGPMesh *mesh = [[MGPMesh loadMeshesFromURL: [[NSBundle mainBundle] URLForResource: @"teapot"
+                                                                         withExtension: @"obj"]
+                        modelIOVertexDescriptor: mdlVertexDescriptor
+                                         device: self.device
+                                          error: nil] objectAtIndex: 0];
     
     NSDictionary *textureLoaderOptions = @{
                                            MTKTextureLoaderOptionTextureUsage       : @(MTLTextureUsageShaderRead),
@@ -294,8 +303,13 @@ const float kLightIntensityVariation = 3.0;
                                                                                  options: textureLoaderOptions
                                                                                    error: nil];
     mesh.submeshes[0].textures[tex_occlusion] = [textureLoader newTextureWithContentsOfURL: [[NSBundle mainBundle] URLForResource: @"ao" withExtension: @"png"]
-                                                                                 options: textureLoaderOptions
-                                                                                   error: nil];
+                                                                                   options: textureLoaderOptions
+                                                                                     error: nil];
+     /*
+    mesh.submeshes[0].textures[tex_anisotropic] = [textureLoader newTextureWithContentsOfURL: [[NSBundle mainBundle] URLForResource: @"AnisoDirection1" withExtension: @"jpg"]
+                                                                                   options: textureLoaderOptions
+                                                                                     error: nil];
+      */
     _testObjects = @[ mesh ];
     
     // build render pipeline
@@ -305,11 +319,13 @@ const float kLightIntensityVariation = 3.0;
     BOOL hasRoughnessMap = _meshes[0].submeshes[0].textures[tex_roughness] != NSNull.null;
     BOOL hasMetalicMap = _meshes[0].submeshes[0].textures[tex_metalic] != NSNull.null;
     BOOL hasOcculusionMap = _meshes[0].submeshes[0].textures[tex_occlusion] != NSNull.null;
+    BOOL hasAnisotropicMap = _meshes[0].submeshes[0].textures[tex_anisotropic] != NSNull.null;
     [constantValues setConstantValue: &hasAlbedoMap type: MTLDataTypeBool atIndex: fcv_albedo];
     [constantValues setConstantValue: &hasNormalMap type: MTLDataTypeBool atIndex: fcv_normal];
     [constantValues setConstantValue: &hasRoughnessMap type: MTLDataTypeBool atIndex: fcv_roughness];
     [constantValues setConstantValue: &hasMetalicMap type: MTLDataTypeBool atIndex: fcv_metalic];
     [constantValues setConstantValue: &hasOcculusionMap type: MTLDataTypeBool atIndex: fcv_occlusion];
+    [constantValues setConstantValue: &hasAnisotropicMap type: MTLDataTypeBool atIndex: fcv_anisotropic];
     _renderPipelineGBuffer = [_gBuffer renderPipelineStateWithConstants: constantValues error: nil];
     
     hasAlbedoMap = _testObjects[0].submeshes[0].textures[tex_albedo] != NSNull.null;
@@ -317,11 +333,13 @@ const float kLightIntensityVariation = 3.0;
     hasRoughnessMap = _testObjects[0].submeshes[0].textures[tex_roughness] != NSNull.null;
     hasMetalicMap = _testObjects[0].submeshes[0].textures[tex_metalic] != NSNull.null;
     hasOcculusionMap = _testObjects[0].submeshes[0].textures[tex_occlusion] != NSNull.null;
+    hasAnisotropicMap = _testObjects[0].submeshes[0].textures[tex_anisotropic] != NSNull.null;
     [constantValues setConstantValue: &hasAlbedoMap type: MTLDataTypeBool atIndex: fcv_albedo];
     [constantValues setConstantValue: &hasNormalMap type: MTLDataTypeBool atIndex: fcv_normal];
     [constantValues setConstantValue: &hasRoughnessMap type: MTLDataTypeBool atIndex: fcv_roughness];
     [constantValues setConstantValue: &hasMetalicMap type: MTLDataTypeBool atIndex: fcv_metalic];
     [constantValues setConstantValue: &hasOcculusionMap type: MTLDataTypeBool atIndex: fcv_occlusion];
+    [constantValues setConstantValue: &hasAnisotropicMap type: MTLDataTypeBool atIndex: fcv_anisotropic];
     _renderPipelineGBufferTest = [_gBuffer renderPipelineStateWithConstants: constantValues error: nil];
     
     _renderPipelineLighting = [_gBuffer lightingPipelineStateWithError: nil];

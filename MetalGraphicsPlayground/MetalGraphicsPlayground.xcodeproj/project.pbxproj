@@ -108,6 +108,8 @@
 		95A4D92E22840A41004653B6 /* bush_restaurant_1k.hdr in Resources */ = {isa = PBXBuildFile; fileRef = 95A4D92D22840A41004653B6 /* bush_restaurant_1k.hdr */; };
 		95A4D93022840E5B004653B6 /* Skybox.metal in Sources */ = {isa = PBXBuildFile; fileRef = 95A4D92F22840E5B004653B6 /* Skybox.metal */; };
 		95A4D93522846F99004653B6 /* CommonStages.metal in Sources */ = {isa = PBXBuildFile; fileRef = 95A4D93422846F99004653B6 /* CommonStages.metal */; };
+		95B39E05228E4DDA003358D9 /* AnisoDirection1.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 95B39E04228E4DD9003358D9 /* AnisoDirection1.jpg */; };
+		95B39E07228E51EC003358D9 /* teapot.obj in Resources */ = {isa = PBXBuildFile; fileRef = 95B39E06228E51EC003358D9 /* teapot.obj */; };
 		95BED3142285E09A006E5C2F /* Factory_Catwalk_2k.hdr in Resources */ = {isa = PBXBuildFile; fileRef = 95BED3132285E099006E5C2F /* Factory_Catwalk_2k.hdr */; };
 		95BED3162285E0A7006E5C2F /* Milkyway_small.hdr in Resources */ = {isa = PBXBuildFile; fileRef = 95BED3152285E0A6006E5C2F /* Milkyway_small.hdr */; };
 		95BED31A2285E176006E5C2F /* WinterForest_Ref.hdr in Resources */ = {isa = PBXBuildFile; fileRef = 95BED3192285E176006E5C2F /* WinterForest_Ref.hdr */; };
@@ -257,6 +259,8 @@
 		95A4D93422846F99004653B6 /* CommonStages.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = CommonStages.metal; sourceTree = "<group>"; };
 		95A4D9362284708B004653B6 /* CommonVariables.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CommonVariables.h; sourceTree = "<group>"; };
 		95A4D93722847214004653B6 /* CommonMath.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CommonMath.h; sourceTree = "<group>"; };
+		95B39E04228E4DD9003358D9 /* AnisoDirection1.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = AnisoDirection1.jpg; sourceTree = "<group>"; };
+		95B39E06228E51EC003358D9 /* teapot.obj */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = teapot.obj; sourceTree = "<group>"; };
 		95B9508B22808F5400E45D08 /* BRDF.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BRDF.h; sourceTree = "<group>"; };
 		95BED3132285E099006E5C2F /* Factory_Catwalk_2k.hdr */ = {isa = PBXFileReference; lastKnownFileType = file; path = Factory_Catwalk_2k.hdr; sourceTree = "<group>"; };
 		95BED3152285E0A6006E5C2F /* Milkyway_small.hdr */ = {isa = PBXFileReference; lastKnownFileType = file; path = Milkyway_small.hdr; sourceTree = "<group>"; };
@@ -682,6 +686,8 @@
 		95F5E0922276255600445BB0 /* MetalDeferred */ = {
 			isa = PBXGroup;
 			children = (
+				95B39E06228E51EC003358D9 /* teapot.obj */,
+				95B39E04228E4DD9003358D9 /* AnisoDirection1.jpg */,
 				956AB4E72289C98D009B5362 /* ao.png */,
 				956AB4E52289C92B009B5362 /* metallic.png */,
 				956AB4DF2289C6A1009B5362 /* albedo.png */,
@@ -1074,6 +1080,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				95B39E07228E51EC003358D9 /* teapot.obj in Resources */,
 				956AB4E12289C6A2009B5362 /* roughness.png in Resources */,
 				959A344A227B33560034AA82 /* firetruck.mtl in Resources */,
 				959A344B227B33560034AA82 /* firetruck.obj in Resources */,
@@ -1084,6 +1091,7 @@
 				95BED3162285E0A7006E5C2F /* Milkyway_small.hdr in Resources */,
 				95F5E09A2276255900445BB0 /* MainMenu.xib in Resources */,
 				956AB4E82289C98D009B5362 /* ao.png in Resources */,
+				95B39E05228E4DDA003358D9 /* AnisoDirection1.jpg in Resources */,
 				956AB4E32289C6A2009B5362 /* albedo.png in Resources */,
 				95BED31A2285E176006E5C2F /* WinterForest_Ref.hdr in Resources */,
 				95BED3142285E09A006E5C2F /* Factory_Catwalk_2k.hdr in Resources */,

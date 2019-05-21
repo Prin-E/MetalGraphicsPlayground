@@ -33,7 +33,8 @@
             MDLMaterialSemanticTangentSpaceNormal,
             MDLMaterialSemanticRoughness,
             MDLMaterialSemanticMetallic,
-            MDLMaterialSemanticAmbientOcclusion
+            MDLMaterialSemanticAmbientOcclusion,
+            MDLMaterialSemanticAnisotropic
         };
         
         for(NSInteger i = 0; i < tex_total; i++) {
