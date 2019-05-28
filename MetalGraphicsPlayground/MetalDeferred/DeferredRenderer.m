@@ -260,7 +260,7 @@ const float kLightIntensityVariation = 3.0;
                                    error: nil];
     
     MTKTextureLoader *textureLoader = [[MTKTextureLoader alloc] initWithDevice: self.device];
-    /*
+    
     MDLMesh *mdlMesh = [MDLMesh newEllipsoidWithRadii: vector3(10.0f, 10.0f, 10.0f)
                                        radialSegments: 32
                                      verticalSegments: 32
@@ -276,13 +276,6 @@ const float kLightIntensityVariation = 3.0;
                                                   device: self.device
                                         calculateNormals: NO
                                                    error: nil];
-     */
-    
-    MGPMesh *mesh = [[MGPMesh loadMeshesFromURL: [[NSBundle mainBundle] URLForResource: @"teapot"
-                                                                         withExtension: @"obj"]
-                        modelIOVertexDescriptor: mdlVertexDescriptor
-                                         device: self.device
-                                          error: nil] objectAtIndex: 0];
     
     NSDictionary *textureLoaderOptions = @{
                                            MTKTextureLoaderOptionTextureUsage       : @(MTLTextureUsageShaderRead),

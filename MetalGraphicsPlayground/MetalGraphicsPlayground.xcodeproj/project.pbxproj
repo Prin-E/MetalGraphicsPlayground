@@ -125,6 +125,12 @@
 		95F5E0972276255900445BB0 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 95F5E0962276255900445BB0 /* Assets.xcassets */; };
 		95F5E09A2276255900445BB0 /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 95F5E0982276255900445BB0 /* MainMenu.xib */; };
 		95F5E09D2276255900445BB0 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 95F5E09C2276255900445BB0 /* main.m */; };
+		95FBFD47229465EB002BA1E0 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 95FBFD46229465EB002BA1E0 /* AppDelegate.m */; };
+		95FBFD49229465ED002BA1E0 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 95FBFD48229465ED002BA1E0 /* Assets.xcassets */; };
+		95FBFD4C229465ED002BA1E0 /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 95FBFD4A229465ED002BA1E0 /* MainMenu.xib */; };
+		95FBFD4F229465ED002BA1E0 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 95FBFD4E229465ED002BA1E0 /* main.m */; };
+		95FBFD56229466DC002BA1E0 /* MGPCamera.m in Sources */ = {isa = PBXBuildFile; fileRef = 95FBFD55229466DC002BA1E0 /* MGPCamera.m */; };
+		95FBFD57229466DC002BA1E0 /* MGPCamera.m in Sources */ = {isa = PBXBuildFile; fileRef = 95FBFD55229466DC002BA1E0 /* MGPCamera.m */; };
 		95FF569F21DA453D00A52B3C /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 95FF569E21DA453D00A52B3C /* AppDelegate.m */; };
 		95FF56A121DA454000A52B3C /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 95FF56A021DA454000A52B3C /* Assets.xcassets */; };
 		95FF56A421DA454000A52B3C /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 95FF56A221DA454000A52B3C /* MainMenu.xib */; };
@@ -284,6 +290,16 @@
 		95F5E09B2276255900445BB0 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		95F5E09C2276255900445BB0 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		95F5E09E2276255900445BB0 /* MetalDeferred.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = MetalDeferred.entitlements; sourceTree = "<group>"; };
+		95FBFD43229465EB002BA1E0 /* MetalPostProcessing.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MetalPostProcessing.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		95FBFD45229465EB002BA1E0 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
+		95FBFD46229465EB002BA1E0 /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
+		95FBFD48229465ED002BA1E0 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		95FBFD4B229465ED002BA1E0 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/MainMenu.xib; sourceTree = "<group>"; };
+		95FBFD4D229465ED002BA1E0 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		95FBFD4E229465ED002BA1E0 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
+		95FBFD50229465ED002BA1E0 /* MetalPostProcessing.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = MetalPostProcessing.entitlements; sourceTree = "<group>"; };
+		95FBFD54229466DC002BA1E0 /* MGPCamera.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MGPCamera.h; sourceTree = "<group>"; };
+		95FBFD55229466DC002BA1E0 /* MGPCamera.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MGPCamera.m; sourceTree = "<group>"; };
 		95FF569B21DA453D00A52B3C /* MetalCustomCALayer.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MetalCustomCALayer.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		95FF569D21DA453D00A52B3C /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		95FF569E21DA453D00A52B3C /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
@@ -378,6 +394,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		95FBFD40229465EB002BA1E0 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		95FF569821DA453D00A52B3C /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -450,6 +473,7 @@
 				955DA6AC1F0E74E100464E54 /* MetalInstancing */,
 				95FF569C21DA453D00A52B3C /* MetalCustomCALayer */,
 				95F5E0922276255600445BB0 /* MetalDeferred */,
+				95FBFD44229465EB002BA1E0 /* MetalPostProcessing */,
 				953EAB7C1B9B5AFC0024994F /* Products */,
 				957ED5591EF980F800F15B76 /* Frameworks */,
 			);
@@ -468,6 +492,7 @@
 				955DA6AB1F0E74E100464E54 /* MetalInstancing.app */,
 				95FF569B21DA453D00A52B3C /* MetalCustomCALayer.app */,
 				95F5E0912276255600445BB0 /* MetalDeferred.app */,
+				95FBFD43229465EB002BA1E0 /* MetalPostProcessing.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -653,6 +678,8 @@
 				95A4D9272283F1E0004653B6 /* MGPImageBasedLighting.h */,
 				95A4D9282283F1E0004653B6 /* MGPImageBasedLighting.m */,
 				95A4D92C228406FF004653B6 /* MGPCommonVertices.h */,
+				95FBFD54229466DC002BA1E0 /* MGPCamera.h */,
+				95FBFD55229466DC002BA1E0 /* MGPCamera.m */,
 			);
 			path = Common;
 			sourceTree = "<group>";
@@ -711,6 +738,20 @@
 				959A344D227B59750034AA82 /* DeferredRenderer.m */,
 			);
 			path = MetalDeferred;
+			sourceTree = "<group>";
+		};
+		95FBFD44229465EB002BA1E0 /* MetalPostProcessing */ = {
+			isa = PBXGroup;
+			children = (
+				95FBFD45229465EB002BA1E0 /* AppDelegate.h */,
+				95FBFD46229465EB002BA1E0 /* AppDelegate.m */,
+				95FBFD48229465ED002BA1E0 /* Assets.xcassets */,
+				95FBFD4A229465ED002BA1E0 /* MainMenu.xib */,
+				95FBFD4D229465ED002BA1E0 /* Info.plist */,
+				95FBFD4E229465ED002BA1E0 /* main.m */,
+				95FBFD50229465ED002BA1E0 /* MetalPostProcessing.entitlements */,
+			);
+			path = MetalPostProcessing;
 			sourceTree = "<group>";
 		};
 		95FF569C21DA453D00A52B3C /* MetalCustomCALayer */ = {
@@ -887,6 +928,23 @@
 			productReference = 95F5E0912276255600445BB0 /* MetalDeferred.app */;
 			productType = "com.apple.product-type.application";
 		};
+		95FBFD42229465EB002BA1E0 /* MetalPostProcessing */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 95FBFD53229465ED002BA1E0 /* Build configuration list for PBXNativeTarget "MetalPostProcessing" */;
+			buildPhases = (
+				95FBFD3F229465EB002BA1E0 /* Sources */,
+				95FBFD40229465EB002BA1E0 /* Frameworks */,
+				95FBFD41229465EB002BA1E0 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = MetalPostProcessing;
+			productName = MetalPostProcessing;
+			productReference = 95FBFD43229465EB002BA1E0 /* MetalPostProcessing.app */;
+			productType = "com.apple.product-type.application";
+		};
 		95FF569A21DA453D00A52B3C /* MetalCustomCALayer */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 95FF56AB21DA454000A52B3C /* Build configuration list for PBXNativeTarget "MetalCustomCALayer" */;
@@ -952,6 +1010,11 @@
 						DevelopmentTeam = EQPSU577A8;
 						ProvisioningStyle = Automatic;
 					};
+					95FBFD42229465EB002BA1E0 = {
+						CreatedOnToolsVersion = 10.2.1;
+						DevelopmentTeam = EQPSU577A8;
+						ProvisioningStyle = Automatic;
+					};
 					95FF569A21DA453D00A52B3C = {
 						CreatedOnToolsVersion = 10.1;
 						DevelopmentTeam = EQPSU577A8;
@@ -982,6 +1045,7 @@
 				955DA6AA1F0E74E100464E54 /* MetalInstancing */,
 				95FF569A21DA453D00A52B3C /* MetalCustomCALayer */,
 				95F5E0902276255600445BB0 /* MetalDeferred */,
+				95FBFD42229465EB002BA1E0 /* MetalPostProcessing */,
 			);
 		};
 /* End PBXProject section */
@@ -1099,6 +1163,15 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		95FBFD41229465EB002BA1E0 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				95FBFD49229465ED002BA1E0 /* Assets.xcassets in Resources */,
+				95FBFD4C229465ED002BA1E0 /* MainMenu.xib in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		95FF569921DA453D00A52B3C /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -1209,6 +1282,7 @@
 				959C8303227F424900C2C245 /* BRDF.metal in Sources */,
 				95A4D93022840E5B004653B6 /* Skybox.metal in Sources */,
 				95F4CB2D22799BFF00F51454 /* GBuffer.metal in Sources */,
+				95FBFD56229466DC002BA1E0 /* MGPCamera.m in Sources */,
 				95A4D93522846F99004653B6 /* CommonStages.metal in Sources */,
 				95BED31C2286746B006E5C2F /* CommonMath.metal in Sources */,
 				959C8301227F409E00C2C245 /* ImageBasedLighting.metal in Sources */,
@@ -1221,6 +1295,16 @@
 				95F4CB2A2279937200F51454 /* MGPGBuffer.m in Sources */,
 				959A344E227B59750034AA82 /* DeferredRenderer.m in Sources */,
 				958955CB227736F700414591 /* MGPRenderer.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		95FBFD3F229465EB002BA1E0 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				95FBFD4F229465ED002BA1E0 /* main.m in Sources */,
+				95FBFD57229466DC002BA1E0 /* MGPCamera.m in Sources */,
+				95FBFD47229465EB002BA1E0 /* AppDelegate.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1306,6 +1390,14 @@
 			isa = PBXVariantGroup;
 			children = (
 				95F5E0992276255900445BB0 /* Base */,
+			);
+			name = MainMenu.xib;
+			sourceTree = "<group>";
+		};
+		95FBFD4A229465ED002BA1E0 /* MainMenu.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				95FBFD4B229465ED002BA1E0 /* Base */,
 			);
 			name = MainMenu.xib;
 			sourceTree = "<group>";
@@ -1723,6 +1815,57 @@
 			};
 			name = Release;
 		};
+		95FBFD51229465ED002BA1E0 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CODE_SIGN_ENTITLEMENTS = MetalPostProcessing/MetalPostProcessing.entitlements;
+				CODE_SIGN_IDENTITY = "Mac Developer";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				DEVELOPMENT_TEAM = EQPSU577A8;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				INFOPLIST_FILE = MetalPostProcessing/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
+				MACOSX_DEPLOYMENT_TARGET = 10.14;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.Prin-E.test.MetalPostProcessing";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		95FBFD52229465ED002BA1E0 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CODE_SIGN_ENTITLEMENTS = MetalPostProcessing/MetalPostProcessing.entitlements;
+				CODE_SIGN_IDENTITY = "Mac Developer";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				DEVELOPMENT_TEAM = EQPSU577A8;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				INFOPLIST_FILE = MetalPostProcessing/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
+				MACOSX_DEPLOYMENT_TARGET = 10.14;
+				MTL_FAST_MATH = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.Prin-E.test.MetalPostProcessing";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
 		95FF56A921DA454000A52B3C /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -1863,6 +2006,15 @@
 			buildConfigurations = (
 				95F5E09F2276255900445BB0 /* Debug */,
 				95F5E0A02276255900445BB0 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		95FBFD53229465ED002BA1E0 /* Build configuration list for PBXNativeTarget "MetalPostProcessing" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				95FBFD51229465ED002BA1E0 /* Debug */,
+				95FBFD52229465ED002BA1E0 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
