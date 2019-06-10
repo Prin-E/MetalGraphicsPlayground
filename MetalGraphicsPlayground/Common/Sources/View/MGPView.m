@@ -13,7 +13,7 @@ const inline __attribute__((__always_inline__)) float lerp(float a, float b, flo
 }
 
 #import "MGPView.h"
-#import "MGPRenderer.h"
+#import "../Rendering/MGPRenderer.h"
 @import CoreVideo;
 @import QuartzCore;
 

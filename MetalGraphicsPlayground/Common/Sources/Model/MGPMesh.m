@@ -7,8 +7,8 @@
 //
 
 #import "MGPMesh.h"
-#import "MGPCommonVertices.h"
-#import "Shaders/SharedStructures.h"
+#import "../Utility/MGPCommonVertices.h"
+#import "../../Shaders/SharedStructures.h"
 
 @implementation MGPSubmesh {
     MTKSubmesh *_metalKitSubmesh;

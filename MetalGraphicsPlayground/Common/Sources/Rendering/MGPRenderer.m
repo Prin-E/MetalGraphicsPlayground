@@ -7,7 +7,6 @@
 //
 
 #import "MGPRenderer.h"
-#import "MGPView.h"
 
 @implementation MGPRenderer {
     dispatch_semaphore_t _semaphore;

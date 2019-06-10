@@ -121,6 +121,7 @@
 		95EFEC4122AE98640091C698 /* Milkyway_small.hdr in Resources */ = {isa = PBXBuildFile; fileRef = 95EFEC3822AE97BE0091C698 /* Milkyway_small.hdr */; };
 		95EFEC4222AE98640091C698 /* Tropical_Beach_3k.hdr in Resources */ = {isa = PBXBuildFile; fileRef = 95EFEC3922AE97C40091C698 /* Tropical_Beach_3k.hdr */; };
 		95EFEC4322AE98640091C698 /* WinterForest_Ref.hdr in Resources */ = {isa = PBXBuildFile; fileRef = 95EFEC3B22AE97CA0091C698 /* WinterForest_Ref.hdr */; };
+		95EFEC4A22AEA8F60091C698 /* MGPCamera.m in Sources */ = {isa = PBXBuildFile; fileRef = 95FBFD55229466DC002BA1E0 /* MGPCamera.m */; };
 		95F0D28B227D4DF600DEEC3B /* MGPMesh.m in Sources */ = {isa = PBXBuildFile; fileRef = 95F0D28A227D4DF600DEEC3B /* MGPMesh.m */; };
 		95F40BBF22AD75B600F747D2 /* sponza.mtl in Resources */ = {isa = PBXBuildFile; fileRef = 95F40BBD22AD75B600F747D2 /* sponza.mtl */; };
 		95F40BC022AD75B600F747D2 /* sponza.obj in Resources */ = {isa = PBXBuildFile; fileRef = 95F40BBE22AD75B600F747D2 /* sponza.obj */; };
@@ -686,23 +687,7 @@
 				95EFEC2922AE92850091C698 /* Assets */,
 				95A4D93122841A49004653B6 /* STB */,
 				95F4CB2B22799BED00F51454 /* Shaders */,
-				958A9C2C1D16D14F00021744 /* MetalView.h */,
-				958A9C2D1D16D14F00021744 /* MetalView.m */,
-				958A9C2F1D16D1C600021744 /* MetalMath.h */,
-				958A9C361D16E08200021744 /* MetalMath.c */,
-				958955C62277369B00414591 /* MGPView.h */,
-				958955C72277369B00414591 /* MGPView.m */,
-				958955C9227736F700414591 /* MGPRenderer.h */,
-				958955CA227736F700414591 /* MGPRenderer.m */,
-				95F4CB282279937200F51454 /* MGPGBuffer.h */,
-				95F4CB292279937200F51454 /* MGPGBuffer.m */,
-				95F0D289227D4DF600DEEC3B /* MGPMesh.h */,
-				95F0D28A227D4DF600DEEC3B /* MGPMesh.m */,
-				95A4D9272283F1E0004653B6 /* MGPImageBasedLighting.h */,
-				95A4D9282283F1E0004653B6 /* MGPImageBasedLighting.m */,
-				95A4D92C228406FF004653B6 /* MGPCommonVertices.h */,
-				95FBFD54229466DC002BA1E0 /* MGPCamera.h */,
-				95FBFD55229466DC002BA1E0 /* MGPCamera.m */,
+				95EFEC4422AEA87E0091C698 /* Sources */,
 			);
 			path = Common;
 			sourceTree = "<group>";
@@ -755,6 +740,62 @@
 				95EFEC3B22AE97CA0091C698 /* WinterForest_Ref.hdr */,
 			);
 			path = Sky;
+			sourceTree = "<group>";
+		};
+		95EFEC4422AEA87E0091C698 /* Sources */ = {
+			isa = PBXGroup;
+			children = (
+				95EFEC4922AEA8CD0091C698 /* Rendering */,
+				95EFEC4722AEA8BD0091C698 /* Model */,
+				95EFEC4622AEA89C0091C698 /* View */,
+				95EFEC4522AEA8960091C698 /* Utility */,
+				958A9C2C1D16D14F00021744 /* MetalView.h */,
+				958A9C2D1D16D14F00021744 /* MetalView.m */,
+			);
+			path = Sources;
+			sourceTree = "<group>";
+		};
+		95EFEC4522AEA8960091C698 /* Utility */ = {
+			isa = PBXGroup;
+			children = (
+				958A9C2F1D16D1C600021744 /* MetalMath.h */,
+				958A9C361D16E08200021744 /* MetalMath.c */,
+				95A4D92C228406FF004653B6 /* MGPCommonVertices.h */,
+			);
+			path = Utility;
+			sourceTree = "<group>";
+		};
+		95EFEC4622AEA89C0091C698 /* View */ = {
+			isa = PBXGroup;
+			children = (
+				958955C62277369B00414591 /* MGPView.h */,
+				958955C72277369B00414591 /* MGPView.m */,
+			);
+			path = View;
+			sourceTree = "<group>";
+		};
+		95EFEC4722AEA8BD0091C698 /* Model */ = {
+			isa = PBXGroup;
+			children = (
+				95FBFD54229466DC002BA1E0 /* MGPCamera.h */,
+				95FBFD55229466DC002BA1E0 /* MGPCamera.m */,
+				95F0D289227D4DF600DEEC3B /* MGPMesh.h */,
+				95F0D28A227D4DF600DEEC3B /* MGPMesh.m */,
+				95A4D9272283F1E0004653B6 /* MGPImageBasedLighting.h */,
+				95A4D9282283F1E0004653B6 /* MGPImageBasedLighting.m */,
+			);
+			path = Model;
+			sourceTree = "<group>";
+		};
+		95EFEC4922AEA8CD0091C698 /* Rendering */ = {
+			isa = PBXGroup;
+			children = (
+				958955C9227736F700414591 /* MGPRenderer.h */,
+				958955CA227736F700414591 /* MGPRenderer.m */,
+				95F4CB282279937200F51454 /* MGPGBuffer.h */,
+				95F4CB292279937200F51454 /* MGPGBuffer.m */,
+			);
+			path = Rendering;
 			sourceTree = "<group>";
 		};
 		95F4CB2B22799BED00F51454 /* Shaders */ = {
@@ -1273,6 +1314,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				950BEC641BA581B6006A4D3A /* MyView.m in Sources */,
+				95EFEC4A22AEA8F60091C698 /* MGPCamera.m in Sources */,
 				953EAB901B9B5E9B0024994F /* Shaders.metal in Sources */,
 				953EAB831B9B5AFC0024994F /* main.m in Sources */,
 				953EAB801B9B5AFC0024994F /* AppDelegate.m in Sources */,

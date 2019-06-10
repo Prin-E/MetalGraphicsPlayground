@@ -8,11 +8,11 @@
 
 #import "DeferredRenderer.h"
 #import "../Common/Shaders/SharedStructures.h"
-#import "../Common/MGPGBuffer.h"
-#import "../Common/MGPMesh.h"
-#import "../Common/MGPImageBasedLighting.h"
-#import "../Common/MetalMath.h"
-#import "../Common/MGPCommonVertices.h"
+#import "../Common/Sources/Rendering/MGPGBuffer.h"
+#import "../Common/Sources/Model/MGPMesh.h"
+#import "../Common/Sources/Model/MGPImageBasedLighting.h"
+#import "../Common/Sources/Utility/MetalMath.h"
+#import "../Common/Sources/Utility/MGPCommonVertices.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #import "../Common/STB/stb_image.h"

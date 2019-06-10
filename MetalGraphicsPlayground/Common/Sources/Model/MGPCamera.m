@@ -6,8 +6,8 @@
 //  Copyright © 2019 Prin_E. All rights reserved.
 //
 
-#import "MGPCamera.h"
-#import "MetalMath.h"
+#import "../Model/MGPCamera.h"
+#import "../Utility/MetalMath.h"
 
 @implementation MGPCamera {
     MGPProjectionState _projectionState;

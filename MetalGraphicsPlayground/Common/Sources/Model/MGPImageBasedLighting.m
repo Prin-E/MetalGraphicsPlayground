@@ -7,9 +7,9 @@
 //
 
 #import "MGPImageBasedLighting.h"
-#import "MGPMesh.h"
-#import "MetalMath.h"
-#import "../Common/Shaders/SharedStructures.h"
+#import "../Model/MGPMesh.h"
+#import "../Utility/MetalMath.h"
+#import "../../Shaders/SharedStructures.h"
 
 @implementation MGPImageBasedLighting {
     id<MTLDevice> _device;

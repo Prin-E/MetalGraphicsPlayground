@@ -7,7 +7,8 @@
 //
 
 @import Metal;
-#import "MGPView.h"
+
+#import "../View/MGPView.h"
 
 NS_ASSUME_NONNULL_BEGIN
 

@@ -7,7 +7,7 @@
 //
 
 #import "AppDelegate.h"
-#import "../Common/MGPView.h"
+#import "../Common/Sources/View/MGPView.h"
 #import "DeferredRenderer.h"
 
 @interface AppDelegate ()

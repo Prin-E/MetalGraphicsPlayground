@@ -7,9 +7,9 @@
 //
 
 #import "MGPGBuffer.h"
-#import "MGPView.h"
 #import "MGPRenderer.h"
-#import "Shaders/SharedStructures.h"
+#import "../View/MGPView.h"
+#import "../../Shaders/SharedStructures.h"
 
 @implementation MGPGBuffer {
     id<MTLDevice> _device;
