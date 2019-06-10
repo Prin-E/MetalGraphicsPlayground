@@ -7,16 +7,22 @@
 //
 
 #import "AppDelegate.h"
+#import "../Common/MGPView.h"
+#import "DeferredRenderer.h"
 
-@interface AppDelegate ()
+@interface AppDelegate () {
+    DeferredRenderer *renderer;
+}
 
 @property (weak) IBOutlet NSWindow *window;
+
 @end
 
 @implementation AppDelegate
 
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification {
-    // Insert code here to initialize your application
+    renderer = [[DeferredRenderer alloc] init];
+    _view.renderer = renderer;
 }
 
 

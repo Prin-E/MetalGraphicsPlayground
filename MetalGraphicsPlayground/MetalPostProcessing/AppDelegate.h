@@ -8,8 +8,10 @@
 
 #import <Cocoa/Cocoa.h>
 
+@class MGPView;
 @interface AppDelegate : NSObject <NSApplicationDelegate>
 
+@property (weak) IBOutlet MGPView *view;
 
 @end
 

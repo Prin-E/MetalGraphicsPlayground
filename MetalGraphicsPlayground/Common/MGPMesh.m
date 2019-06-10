@@ -78,7 +78,8 @@
             
             NSURL *url = property.URLValue;
             NSMutableString *URLString = nil;
-            if(property.type == MDLMaterialPropertyTypeURL) {
+            if(property.type == MDLMaterialPropertyTypeURL ||
+               [url checkResourceIsReachableAndReturnError: nil]) {
                 URLString = [[NSMutableString alloc] initWithString:[url absoluteString]];
             } else {
                 URLString = [[NSMutableString alloc] initWithString:@"file://"];
@@ -102,17 +103,21 @@
             // If we did not find a texture by interpreting the URL as a path, we'll interpret
             // string as an asset catalog name and attempt to load it with
             //  -[MTKTextureLoader newTextureWithName:scaleFactor:bundle:options::error:]
-            
+            NSError *error = nil;
             texture = [textureLoader newTextureWithName:property.stringValue
                                             scaleFactor:1.0
                                                  bundle:nil
                                                 options:textureLoaderOptions
-                                                  error:nil];
+                                                  error:&error];
             
             // If we found a texture with the string in our asset catalog...
             if(texture) {
                 // ...return it
                 return texture;
+            }
+            
+            if(error) {
+                NSLog(@"%@", error);
             }
             
             // If did not find the texture in by interpreting it as a file path or as an asset name
@@ -160,13 +165,15 @@
             [mdlMesh addNormalsWithAttributeNamed:MDLVertexAttributeNormal
                                   creaseThreshold:0.2];
         }
-        [mdlMesh addTangentBasisForTextureCoordinateAttributeNamed: MDLVertexAttributeTextureCoordinate
-                                              normalAttributeNamed: MDLVertexAttributeNormal
-                                             tangentAttributeNamed: MDLVertexAttributeTangent];
-        [mdlMesh addTangentBasisForTextureCoordinateAttributeNamed: MDLVertexAttributeTextureCoordinate
-                                             tangentAttributeNamed: MDLVertexAttributeTangent
-                                           bitangentAttributeNamed: MDLVertexAttributeBitangent];
         
+        if([mdlMesh vertexAttributeDataForAttributeNamed: MDLVertexAttributeTextureCoordinate]) {
+            [mdlMesh addTangentBasisForTextureCoordinateAttributeNamed: MDLVertexAttributeTextureCoordinate
+                                                  normalAttributeNamed: MDLVertexAttributeNormal
+                                                 tangentAttributeNamed: MDLVertexAttributeTangent];
+            [mdlMesh addTangentBasisForTextureCoordinateAttributeNamed: MDLVertexAttributeTextureCoordinate
+                                                 tangentAttributeNamed: MDLVertexAttributeTangent
+                                               bitangentAttributeNamed: MDLVertexAttributeBitangent];
+        }
         mdlMesh.vertexDescriptor = descriptor;
         
         MTKMesh *mtkMesh = [[MTKMesh alloc] initWithMesh: mdlMesh
