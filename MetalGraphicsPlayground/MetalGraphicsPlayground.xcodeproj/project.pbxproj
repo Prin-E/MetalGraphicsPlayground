@@ -724,6 +724,7 @@
 		95EFEC2C22AE92D10091C698 /* Textures */ = {
 			isa = PBXGroup;
 			children = (
+				95FBA5D922BC697600EC4417 /* Test */,
 				95EFEC3C22AE97CE0091C698 /* Sky */,
 			);
 			path = Textures;
@@ -835,8 +836,6 @@
 		95F5E0922276255600445BB0 /* MetalDeferred */ = {
 			isa = PBXGroup;
 			children = (
-				95FBA5D522BC573D00EC4417 /* test-dxt1.dds */,
-				95FBA5D722BC674600EC4417 /* test-dxt5.dds */,
 				95B39E04228E4DD9003358D9 /* AnisoDirection1.jpg */,
 				956AB4E72289C98D009B5362 /* ao.png */,
 				956AB4E52289C92B009B5362 /* metallic.png */,
@@ -854,6 +853,15 @@
 				959A344D227B59750034AA82 /* DeferredRenderer.m */,
 			);
 			path = MetalDeferred;
+			sourceTree = "<group>";
+		};
+		95FBA5D922BC697600EC4417 /* Test */ = {
+			isa = PBXGroup;
+			children = (
+				95FBA5D522BC573D00EC4417 /* test-dxt1.dds */,
+				95FBA5D722BC674600EC4417 /* test-dxt5.dds */,
+			);
+			path = Test;
 			sourceTree = "<group>";
 		};
 		95FBFD44229465EB002BA1E0 /* MetalPostProcessing */ = {
