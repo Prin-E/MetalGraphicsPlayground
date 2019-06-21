@@ -147,6 +147,8 @@
 		95F5E0972276255900445BB0 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 95F5E0962276255900445BB0 /* Assets.xcassets */; };
 		95F5E09A2276255900445BB0 /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 95F5E0982276255900445BB0 /* MainMenu.xib */; };
 		95F5E09D2276255900445BB0 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 95F5E09C2276255900445BB0 /* main.m */; };
+		95FBA5D622BC57FB00EC4417 /* test-dxt1.dds in Resources */ = {isa = PBXBuildFile; fileRef = 95FBA5D522BC573D00EC4417 /* test-dxt1.dds */; };
+		95FBA5D822BC674600EC4417 /* test-dxt5.dds in Resources */ = {isa = PBXBuildFile; fileRef = 95FBA5D722BC674600EC4417 /* test-dxt5.dds */; };
 		95FBFD47229465EB002BA1E0 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 95FBFD46229465EB002BA1E0 /* AppDelegate.m */; };
 		95FBFD49229465ED002BA1E0 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 95FBFD48229465ED002BA1E0 /* Assets.xcassets */; };
 		95FBFD4C229465ED002BA1E0 /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 95FBFD4A229465ED002BA1E0 /* MainMenu.xib */; };
@@ -321,6 +323,8 @@
 		95F5E09B2276255900445BB0 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		95F5E09C2276255900445BB0 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		95F5E09E2276255900445BB0 /* MetalDeferred.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = MetalDeferred.entitlements; sourceTree = "<group>"; };
+		95FBA5D522BC573D00EC4417 /* test-dxt1.dds */ = {isa = PBXFileReference; lastKnownFileType = file; path = "test-dxt1.dds"; sourceTree = "<group>"; };
+		95FBA5D722BC674600EC4417 /* test-dxt5.dds */ = {isa = PBXFileReference; lastKnownFileType = file; path = "test-dxt5.dds"; sourceTree = "<group>"; };
 		95FBFD43229465EB002BA1E0 /* MetalPostProcessing.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MetalPostProcessing.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		95FBFD45229465EB002BA1E0 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		95FBFD46229465EB002BA1E0 /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
@@ -831,6 +835,8 @@
 		95F5E0922276255600445BB0 /* MetalDeferred */ = {
 			isa = PBXGroup;
 			children = (
+				95FBA5D522BC573D00EC4417 /* test-dxt1.dds */,
+				95FBA5D722BC674600EC4417 /* test-dxt5.dds */,
 				95B39E04228E4DD9003358D9 /* AnisoDirection1.jpg */,
 				956AB4E72289C98D009B5362 /* ao.png */,
 				956AB4E52289C92B009B5362 /* metallic.png */,
@@ -1256,6 +1262,8 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				95FBA5D822BC674600EC4417 /* test-dxt5.dds in Resources */,
+				95FBA5D622BC57FB00EC4417 /* test-dxt1.dds in Resources */,
 				95EFEC3F22AE98640091C698 /* bush_restaurant_1k.hdr in Resources */,
 				95EFEC4022AE98640091C698 /* Factory_Catwalk_2k.hdr in Resources */,
 				95EFEC4122AE98640091C698 /* Milkyway_small.hdr in Resources */,

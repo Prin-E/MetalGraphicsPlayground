@@ -13,6 +13,7 @@
 #import "../Common/Sources/Model/MGPImageBasedLighting.h"
 #import "../Common/Sources/Utility/MetalMath.h"
 #import "../Common/Sources/Utility/MGPCommonVertices.h"
+#import "../Common/Sources/Utility/MGPTextureLoader.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #import "../Common/STB/stb_image.h"
@@ -303,6 +304,13 @@ const float kLightIntensityVariation = 3.0;
                                                                                    options: textureLoaderOptions
                                                                                      error: nil];
       */
+    
+    MGPTextureLoader *mgpTextureLoader = [[MGPTextureLoader alloc] initWithDevice: self.device];
+    mesh.submeshes[0].textures[tex_albedo] = [mgpTextureLoader newTextureFromURL: [[NSBundle mainBundle] URLForResource: @"test-dxt5" withExtension: @"dds"]
+                                                                           usage: MTLTextureUsageShaderRead
+                                                                     storageMode: MTLStorageModeManaged
+                                                                           error: nil];
+    
     _testObjects = @[ mesh ];
     
     // build render pipeline

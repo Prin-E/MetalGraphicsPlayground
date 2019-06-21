@@ -7,6 +7,7 @@
 //
 
 #import "MGPTextureLoader.h"
+#import "DDSTextureLoader.h"
 @import MetalKit;
 
 @implementation MGPTextureLoader {
@@ -79,8 +80,22 @@
                                  usage:(MTLTextureUsage)textureUsage
                            storageMode:(MTLStorageMode)storageMode
                                  error:(NSError * _Nullable __autoreleasing *)error {
-    // TODO
-    return nil;
+    
+    NSString *filePath = url.absoluteString;
+    filePath = [filePath stringByReplacingOccurrencesOfString: @"file://"
+                                                   withString: @""];
+    
+    id<MTLTexture> texture = nil;
+    DDS_ALPHA_MODE alphaMode = DDS_ALPHA_MODE_UNKNOWN;
+    CreateDDSTextureFromFile(self.device,
+                             filePath,
+                             0,
+                             textureUsage,
+                             storageMode,
+                             false,
+                             &texture,
+                             &alphaMode);
+    return texture;
 }
 
 @end

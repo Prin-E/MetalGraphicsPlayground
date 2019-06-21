@@ -15,33 +15,38 @@
 #include <stdint.h>
 #include <Metal/Metal.h>
 
-namespace DDS
+#ifdef __cplusplus
+extern "C" {
+#endif
+    
+typedef enum _DDS_ALPHA_MODE
 {
-    enum DDS_ALPHA_MODE
-    {
-        DDS_ALPHA_MODE_UNKNOWN       = 0,
-        DDS_ALPHA_MODE_STRAIGHT      = 1,
-        DDS_ALPHA_MODE_PREMULTIPLIED = 2,
-        DDS_ALPHA_MODE_OPAQUE        = 3,
-        DDS_ALPHA_MODE_CUSTOM        = 4,
-    };
-    
-    BOOL CreateDDSTextureFromMemory(id<MTLDevice> device,
-                                    const uint8_t* ddsData,
-                                    size_t ddsDataSize,
-                                    size_t maxsize,
-                                    MTLTextureUsage usage,
-                                    MTLStorageMode storageMode,
-                                    bool forceSRGB,
-                                    id<MTLTexture>* texture,
-                                    DDS_ALPHA_MODE* alphaMode = nullptr);
-    
-    BOOL CreateDDSTextureFromFile(id<MTLDevice> device,
-                                  const NSString* szFileName,
-                                  size_t maxsize,
-                                  MTLTextureUsage usage,
-                                  MTLStorageMode storageMode,
-                                  bool forceSRGB,
-                                  id<MTLTexture>* texture,
-                                  DDS_ALPHA_MODE* alphaMode = nullptr);
+    DDS_ALPHA_MODE_UNKNOWN       = 0,
+    DDS_ALPHA_MODE_STRAIGHT      = 1,
+    DDS_ALPHA_MODE_PREMULTIPLIED = 2,
+    DDS_ALPHA_MODE_OPAQUE        = 3,
+    DDS_ALPHA_MODE_CUSTOM        = 4,
+} DDS_ALPHA_MODE;
+
+BOOL CreateDDSTextureFromMemory(id<MTLDevice> device,
+                                const uint8_t* ddsData,
+                                size_t ddsDataSize,
+                                size_t maxsize,
+                                MTLTextureUsage usage,
+                                MTLStorageMode storageMode,
+                                bool forceSRGB,
+                                id<MTLTexture>* texture,
+                                DDS_ALPHA_MODE* alphaMode);
+
+BOOL CreateDDSTextureFromFile(id<MTLDevice> device,
+                              const NSString* szFileName,
+                              size_t maxsize,
+                              MTLTextureUsage usage,
+                              MTLStorageMode storageMode,
+                              bool forceSRGB,
+                              id<MTLTexture>* texture,
+                              DDS_ALPHA_MODE* alphaMode);
+
+#ifdef __cplusplus
 }
+#endif
