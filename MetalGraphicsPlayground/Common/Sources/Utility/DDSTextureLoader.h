@@ -19,6 +19,8 @@
 extern "C" {
 #endif
     
+extern NSString * const DDSTextureErrorDomain;
+    
 typedef enum _DDS_ALPHA_MODE
 {
     DDS_ALPHA_MODE_UNKNOWN       = 0,
@@ -36,7 +38,8 @@ BOOL CreateDDSTextureFromMemory(id<MTLDevice> device,
                                 MTLStorageMode storageMode,
                                 bool forceSRGB,
                                 id<MTLTexture>* texture,
-                                DDS_ALPHA_MODE* alphaMode);
+                                DDS_ALPHA_MODE* alphaMode,
+                                NSError** error);
 
 BOOL CreateDDSTextureFromFile(id<MTLDevice> device,
                               const NSString* szFileName,
@@ -45,7 +48,8 @@ BOOL CreateDDSTextureFromFile(id<MTLDevice> device,
                               MTLStorageMode storageMode,
                               bool forceSRGB,
                               id<MTLTexture>* texture,
-                              DDS_ALPHA_MODE* alphaMode);
+                              DDS_ALPHA_MODE* alphaMode,
+                              NSError** error);
 
 #ifdef __cplusplus
 }

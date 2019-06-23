@@ -93,7 +93,6 @@
 		958A9C211D16D0F600021744 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 958A9C201D16D0F600021744 /* main.m */; };
 		958A9C231D16D0F600021744 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 958A9C221D16D0F600021744 /* Assets.xcassets */; };
 		958A9C261D16D0F600021744 /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 958A9C241D16D0F600021744 /* MainMenu.xib */; };
-		958A9C2E1D16D14F00021744 /* MetalView.m in Sources */ = {isa = PBXBuildFile; fileRef = 958A9C2D1D16D14F00021744 /* MetalView.m */; };
 		958A9C311D16D36C00021744 /* Shaders.metal in Sources */ = {isa = PBXBuildFile; fileRef = 958A9C301D16D36C00021744 /* Shaders.metal */; };
 		958A9C331D16DA5C00021744 /* Metal.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 95273DD51B9BEB100015BB27 /* Metal.framework */; };
 		958A9C341D16DA5C00021744 /* MetalKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 95273DD71B9BEB180015BB27 /* MetalKit.framework */; };
@@ -105,6 +104,70 @@
 		959B51FD1B9F3C690059E40B /* PrinE2013.png in Resources */ = {isa = PBXBuildFile; fileRef = 959B51FC1B9F3C690059E40B /* PrinE2013.png */; };
 		959C8301227F409E00C2C245 /* ImageBasedLighting.metal in Sources */ = {isa = PBXBuildFile; fileRef = 959C8300227F409E00C2C245 /* ImageBasedLighting.metal */; };
 		959C8303227F424900C2C245 /* BRDF.metal in Sources */ = {isa = PBXBuildFile; fileRef = 959C8302227F424900C2C245 /* BRDF.metal */; };
+		959F3A4C22BFA6D300D1F4D4 /* MGPLight.m in Sources */ = {isa = PBXBuildFile; fileRef = 959F3A4B22BFA6D300D1F4D4 /* MGPLight.m */; };
+		959F3A4D22BFA6D300D1F4D4 /* MGPLight.m in Sources */ = {isa = PBXBuildFile; fileRef = 959F3A4B22BFA6D300D1F4D4 /* MGPLight.m */; };
+		959F3A8D22BFDA3200D1F4D4 /* sponza_fabric_blue_diff.dds in Resources */ = {isa = PBXBuildFile; fileRef = 959F3A4F22BFDA2500D1F4D4 /* sponza_fabric_blue_diff.dds */; };
+		959F3A8E22BFDA3200D1F4D4 /* sponza_column_b_diff.dds in Resources */ = {isa = PBXBuildFile; fileRef = 959F3A5022BFDA2500D1F4D4 /* sponza_column_b_diff.dds */; };
+		959F3A8F22BFDA3200D1F4D4 /* spnza_bricks_a_diff.dds in Resources */ = {isa = PBXBuildFile; fileRef = 959F3A5122BFDA2500D1F4D4 /* spnza_bricks_a_diff.dds */; };
+		959F3A9022BFDA3200D1F4D4 /* vase_round_spec.dds in Resources */ = {isa = PBXBuildFile; fileRef = 959F3A5222BFDA2500D1F4D4 /* vase_round_spec.dds */; };
+		959F3A9122BFDA3200D1F4D4 /* dummy.dds in Resources */ = {isa = PBXBuildFile; fileRef = 959F3A5322BFDA2600D1F4D4 /* dummy.dds */; };
+		959F3A9222BFDA3200D1F4D4 /* vase_plant.dds in Resources */ = {isa = PBXBuildFile; fileRef = 959F3A5422BFDA2600D1F4D4 /* vase_plant.dds */; };
+		959F3A9322BFDA3200D1F4D4 /* sponza_ceiling_a_spec.dds in Resources */ = {isa = PBXBuildFile; fileRef = 959F3A5522BFDA2600D1F4D4 /* sponza_ceiling_a_spec.dds */; };
+		959F3A9422BFDA3200D1F4D4 /* vase_spec.dds in Resources */ = {isa = PBXBuildFile; fileRef = 959F3A5622BFDA2600D1F4D4 /* vase_spec.dds */; };
+		959F3A9522BFDA3200D1F4D4 /* sponza_arch_spec.dds in Resources */ = {isa = PBXBuildFile; fileRef = 959F3A5722BFDA2600D1F4D4 /* sponza_arch_spec.dds */; };
+		959F3A9622BFDA3200D1F4D4 /* sponza_column_c_ddn.dds in Resources */ = {isa = PBXBuildFile; fileRef = 959F3A5822BFDA2700D1F4D4 /* sponza_column_c_ddn.dds */; };
+		959F3A9722BFDA3200D1F4D4 /* background.dds in Resources */ = {isa = PBXBuildFile; fileRef = 959F3A5922BFDA2700D1F4D4 /* background.dds */; };
+		959F3A9822BFDA3200D1F4D4 /* sponza_thorn_diff.dds in Resources */ = {isa = PBXBuildFile; fileRef = 959F3A5A22BFDA2700D1F4D4 /* sponza_thorn_diff.dds */; };
+		959F3A9922BFDA3200D1F4D4 /* sponza_column_c_spec.dds in Resources */ = {isa = PBXBuildFile; fileRef = 959F3A5B22BFDA2700D1F4D4 /* sponza_column_c_spec.dds */; };
+		959F3A9A22BFDA3200D1F4D4 /* sponza_curtain_diff.dds in Resources */ = {isa = PBXBuildFile; fileRef = 959F3A5C22BFDA2700D1F4D4 /* sponza_curtain_diff.dds */; };
+		959F3A9B22BFDA3200D1F4D4 /* sponza_column_a_ddn.dds in Resources */ = {isa = PBXBuildFile; fileRef = 959F3A5D22BFDA2800D1F4D4 /* sponza_column_a_ddn.dds */; };
+		959F3A9C22BFDA3200D1F4D4 /* sponza_ceiling_a_ddn.dds in Resources */ = {isa = PBXBuildFile; fileRef = 959F3A5E22BFDA2800D1F4D4 /* sponza_ceiling_a_ddn.dds */; };
+		959F3A9D22BFDA3200D1F4D4 /* sponza_ceiling_a_diff.dds in Resources */ = {isa = PBXBuildFile; fileRef = 959F3A5F22BFDA2800D1F4D4 /* sponza_ceiling_a_diff.dds */; };
+		959F3A9E22BFDA3200D1F4D4 /* spnza_bricks_a_spec.dds in Resources */ = {isa = PBXBuildFile; fileRef = 959F3A6022BFDA2800D1F4D4 /* spnza_bricks_a_spec.dds */; };
+		959F3A9F22BFDA3200D1F4D4 /* sponza_curtain_blue_diff.dds in Resources */ = {isa = PBXBuildFile; fileRef = 959F3A6122BFDA2800D1F4D4 /* sponza_curtain_blue_diff.dds */; };
+		959F3AA022BFDA3200D1F4D4 /* lion_ddn.dds in Resources */ = {isa = PBXBuildFile; fileRef = 959F3A6222BFDA2900D1F4D4 /* lion_ddn.dds */; };
+		959F3AA122BFDA3200D1F4D4 /* sponza_fabric_diff.dds in Resources */ = {isa = PBXBuildFile; fileRef = 959F3A6322BFDA2900D1F4D4 /* sponza_fabric_diff.dds */; };
+		959F3AA222BFDA3200D1F4D4 /* sponza_flagpole_ddn.dds in Resources */ = {isa = PBXBuildFile; fileRef = 959F3A6422BFDA2900D1F4D4 /* sponza_flagpole_ddn.dds */; };
+		959F3AA322BFDA3200D1F4D4 /* sponza_curtain_green_diff.dds in Resources */ = {isa = PBXBuildFile; fileRef = 959F3A6522BFDA2900D1F4D4 /* sponza_curtain_green_diff.dds */; };
+		959F3AA422BFDA3200D1F4D4 /* sponza_column_b_ddn.dds in Resources */ = {isa = PBXBuildFile; fileRef = 959F3A6622BFDA2A00D1F4D4 /* sponza_column_b_ddn.dds */; };
+		959F3AA522BFDA3200D1F4D4 /* vase_ddn.dds in Resources */ = {isa = PBXBuildFile; fileRef = 959F3A6722BFDA2A00D1F4D4 /* vase_ddn.dds */; };
+		959F3AA622BFDA3200D1F4D4 /* sponza_column_b_spec.dds in Resources */ = {isa = PBXBuildFile; fileRef = 959F3A6822BFDA2A00D1F4D4 /* sponza_column_b_spec.dds */; };
+		959F3AA722BFDA3200D1F4D4 /* vase_round_ddn.dds in Resources */ = {isa = PBXBuildFile; fileRef = 959F3A6922BFDA2A00D1F4D4 /* vase_round_ddn.dds */; };
+		959F3AA822BFDA3200D1F4D4 /* dummy_ddn.dds in Resources */ = {isa = PBXBuildFile; fileRef = 959F3A6A22BFDA2A00D1F4D4 /* dummy_ddn.dds */; };
+		959F3AA922BFDA3200D1F4D4 /* sponza_arch_ddn.dds in Resources */ = {isa = PBXBuildFile; fileRef = 959F3A6B22BFDA2A00D1F4D4 /* sponza_arch_ddn.dds */; };
+		959F3AAA22BFDA3200D1F4D4 /* sponza_flagpole_spec.dds in Resources */ = {isa = PBXBuildFile; fileRef = 959F3A6C22BFDA2B00D1F4D4 /* sponza_flagpole_spec.dds */; };
+		959F3AAB22BFDA3200D1F4D4 /* sponza_curtain_ddn.dds in Resources */ = {isa = PBXBuildFile; fileRef = 959F3A6D22BFDA2B00D1F4D4 /* sponza_curtain_ddn.dds */; };
+		959F3AAC22BFDA3200D1F4D4 /* sponza_flagpole_diff.dds in Resources */ = {isa = PBXBuildFile; fileRef = 959F3A6E22BFDA2C00D1F4D4 /* sponza_flagpole_diff.dds */; };
+		959F3AAD22BFDA3200D1F4D4 /* sponza_details_spec.dds in Resources */ = {isa = PBXBuildFile; fileRef = 959F3A6F22BFDA2C00D1F4D4 /* sponza_details_spec.dds */; };
+		959F3AAE22BFDA3200D1F4D4 /* background_ddn.dds in Resources */ = {isa = PBXBuildFile; fileRef = 959F3A7022BFDA2C00D1F4D4 /* background_ddn.dds */; };
+		959F3AAF22BFDA3200D1F4D4 /* sponza_fabric_green_diff.dds in Resources */ = {isa = PBXBuildFile; fileRef = 959F3A7122BFDA2D00D1F4D4 /* sponza_fabric_green_diff.dds */; };
+		959F3AB022BFDA3200D1F4D4 /* sponza_details_diff.dds in Resources */ = {isa = PBXBuildFile; fileRef = 959F3A7222BFDA2D00D1F4D4 /* sponza_details_diff.dds */; };
+		959F3AB122BFDA3200D1F4D4 /* sponza_arch_diff.dds in Resources */ = {isa = PBXBuildFile; fileRef = 959F3A7322BFDA2D00D1F4D4 /* sponza_arch_diff.dds */; };
+		959F3AB222BFDA3200D1F4D4 /* dummy_specular.dds in Resources */ = {isa = PBXBuildFile; fileRef = 959F3A7422BFDA2D00D1F4D4 /* dummy_specular.dds */; };
+		959F3AB322BFDA3200D1F4D4 /* sponza_roof_ddn.dds in Resources */ = {isa = PBXBuildFile; fileRef = 959F3A7522BFDA2E00D1F4D4 /* sponza_roof_ddn.dds */; };
+		959F3AB422BFDA3200D1F4D4 /* sponza_thorn_ddn.dds in Resources */ = {isa = PBXBuildFile; fileRef = 959F3A7622BFDA2E00D1F4D4 /* sponza_thorn_ddn.dds */; };
+		959F3AB522BFDA3200D1F4D4 /* sponza_floor_a_spec.dds in Resources */ = {isa = PBXBuildFile; fileRef = 959F3A7722BFDA2E00D1F4D4 /* sponza_floor_a_spec.dds */; };
+		959F3AB622BFDA3200D1F4D4 /* sponza_roof_diff.dds in Resources */ = {isa = PBXBuildFile; fileRef = 959F3A7822BFDA2E00D1F4D4 /* sponza_roof_diff.dds */; };
+		959F3AB722BFDA3200D1F4D4 /* sponza_floor_a_diff.dds in Resources */ = {isa = PBXBuildFile; fileRef = 959F3A7922BFDA2E00D1F4D4 /* sponza_floor_a_diff.dds */; };
+		959F3AB822BFDA3200D1F4D4 /* vase_plant_spec.dds in Resources */ = {isa = PBXBuildFile; fileRef = 959F3A7A22BFDA2F00D1F4D4 /* vase_plant_spec.dds */; };
+		959F3AB922BFDA3200D1F4D4 /* sponza_curtain_spec.dds in Resources */ = {isa = PBXBuildFile; fileRef = 959F3A7B22BFDA3000D1F4D4 /* sponza_curtain_spec.dds */; };
+		959F3ABA22BFDA3200D1F4D4 /* lion.dds in Resources */ = {isa = PBXBuildFile; fileRef = 959F3A7C22BFDA3000D1F4D4 /* lion.dds */; };
+		959F3ABB22BFDA3200D1F4D4 /* sponza_fabric_ddn.dds in Resources */ = {isa = PBXBuildFile; fileRef = 959F3A7D22BFDA3000D1F4D4 /* sponza_fabric_ddn.dds */; };
+		959F3ABC22BFDA3200D1F4D4 /* background_spec.dds in Resources */ = {isa = PBXBuildFile; fileRef = 959F3A7E22BFDA3000D1F4D4 /* background_spec.dds */; };
+		959F3ABD22BFDA3200D1F4D4 /* vase_round.dds in Resources */ = {isa = PBXBuildFile; fileRef = 959F3A7F22BFDA3000D1F4D4 /* vase_round.dds */; };
+		959F3ABE22BFDA3200D1F4D4 /* vase_diff.dds in Resources */ = {isa = PBXBuildFile; fileRef = 959F3A8022BFDA3000D1F4D4 /* vase_diff.dds */; };
+		959F3ABF22BFDA3200D1F4D4 /* sponza_floor_a_ddn.dds in Resources */ = {isa = PBXBuildFile; fileRef = 959F3A8122BFDA3100D1F4D4 /* sponza_floor_a_ddn.dds */; };
+		959F3AC022BFDA3200D1F4D4 /* sponza_thorn_spec.dds in Resources */ = {isa = PBXBuildFile; fileRef = 959F3A8222BFDA3100D1F4D4 /* sponza_thorn_spec.dds */; };
+		959F3AC122BFDA3200D1F4D4 /* sponza_column_a_spec.dds in Resources */ = {isa = PBXBuildFile; fileRef = 959F3A8322BFDA3100D1F4D4 /* sponza_column_a_spec.dds */; };
+		959F3AC222BFDA3200D1F4D4 /* vase_hanging_diff.dds in Resources */ = {isa = PBXBuildFile; fileRef = 959F3A8422BFDA3100D1F4D4 /* vase_hanging_diff.dds */; };
+		959F3AC322BFDA3200D1F4D4 /* sponza_column_c_diff.dds in Resources */ = {isa = PBXBuildFile; fileRef = 959F3A8522BFDA3100D1F4D4 /* sponza_column_c_diff.dds */; };
+		959F3AC422BFDA3200D1F4D4 /* lion_spec.dds in Resources */ = {isa = PBXBuildFile; fileRef = 959F3A8622BFDA3100D1F4D4 /* lion_spec.dds */; };
+		959F3AC522BFDA3200D1F4D4 /* spnza_bricks_a_ddn.dds in Resources */ = {isa = PBXBuildFile; fileRef = 959F3A8722BFDA3200D1F4D4 /* spnza_bricks_a_ddn.dds */; };
+		959F3AC622BFDA3200D1F4D4 /* sponza_fabric_spec.dds in Resources */ = {isa = PBXBuildFile; fileRef = 959F3A8822BFDA3200D1F4D4 /* sponza_fabric_spec.dds */; };
+		959F3AC722BFDA3300D1F4D4 /* sponza_details_ddn.dds in Resources */ = {isa = PBXBuildFile; fileRef = 959F3A8922BFDA3200D1F4D4 /* sponza_details_ddn.dds */; };
+		959F3AC822BFDA3300D1F4D4 /* chain_texture.dds in Resources */ = {isa = PBXBuildFile; fileRef = 959F3A8A22BFDA3200D1F4D4 /* chain_texture.dds */; };
+		959F3AC922BFDA3300D1F4D4 /* chain_texture_ddn.dds in Resources */ = {isa = PBXBuildFile; fileRef = 959F3A8B22BFDA3200D1F4D4 /* chain_texture_ddn.dds */; };
+		959F3ACA22BFDA3300D1F4D4 /* sponza_column_a_diff.dds in Resources */ = {isa = PBXBuildFile; fileRef = 959F3A8C22BFDA3200D1F4D4 /* sponza_column_a_diff.dds */; };
 		95A4D9292283F1E0004653B6 /* MGPImageBasedLighting.m in Sources */ = {isa = PBXBuildFile; fileRef = 95A4D9282283F1E0004653B6 /* MGPImageBasedLighting.m */; };
 		95A4D93022840E5B004653B6 /* Skybox.metal in Sources */ = {isa = PBXBuildFile; fileRef = 95A4D92F22840E5B004653B6 /* Skybox.metal */; };
 		95A4D93522846F99004653B6 /* CommonStages.metal in Sources */ = {isa = PBXBuildFile; fileRef = 95A4D93422846F99004653B6 /* CommonStages.metal */; };
@@ -112,7 +175,6 @@
 		95B39E07228E51EC003358D9 /* teapot.obj in Resources */ = {isa = PBXBuildFile; fileRef = 95B39E06228E51EC003358D9 /* teapot.obj */; };
 		95BED31C2286746B006E5C2F /* CommonMath.metal in Sources */ = {isa = PBXBuildFile; fileRef = 95BED31B2286746B006E5C2F /* CommonMath.metal */; };
 		95C42C541D29501F00806E15 /* Shadow.metal in Sources */ = {isa = PBXBuildFile; fileRef = 95C42C531D29501F00806E15 /* Shadow.metal */; };
-		95CF822F1E098365001BDF8D /* MetalView.m in Sources */ = {isa = PBXBuildFile; fileRef = 958A9C2D1D16D14F00021744 /* MetalView.m */; };
 		95D6C40E21DBA0470007BB90 /* SimpleMetalRenderer.m in Sources */ = {isa = PBXBuildFile; fileRef = 95D6C40D21DBA0470007BB90 /* SimpleMetalRenderer.m */; };
 		95EFD8DB22AF941800D4C0F5 /* DDSTextureLoader.mm in Sources */ = {isa = PBXBuildFile; fileRef = 95EFD8D922AF941800D4C0F5 /* DDSTextureLoader.mm */; };
 		95EFD8DC22AF941800D4C0F5 /* DDSTextureLoader.mm in Sources */ = {isa = PBXBuildFile; fileRef = 95EFD8D922AF941800D4C0F5 /* DDSTextureLoader.mm */; };
@@ -149,6 +211,8 @@
 		95F5E09D2276255900445BB0 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 95F5E09C2276255900445BB0 /* main.m */; };
 		95FBA5D622BC57FB00EC4417 /* test-dxt1.dds in Resources */ = {isa = PBXBuildFile; fileRef = 95FBA5D522BC573D00EC4417 /* test-dxt1.dds */; };
 		95FBA5D822BC674600EC4417 /* test-dxt5.dds in Resources */ = {isa = PBXBuildFile; fileRef = 95FBA5D722BC674600EC4417 /* test-dxt5.dds */; };
+		95FBA5DA22BC6A5300EC4417 /* MetalMath.c in Sources */ = {isa = PBXBuildFile; fileRef = 958A9C361D16E08200021744 /* MetalMath.c */; };
+		95FBA5DB22BC6A9400EC4417 /* MetalMath.c in Sources */ = {isa = PBXBuildFile; fileRef = 958A9C361D16E08200021744 /* MetalMath.c */; };
 		95FBFD47229465EB002BA1E0 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 95FBFD46229465EB002BA1E0 /* AppDelegate.m */; };
 		95FBFD49229465ED002BA1E0 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 95FBFD48229465ED002BA1E0 /* Assets.xcassets */; };
 		95FBFD4C229465ED002BA1E0 /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 95FBFD4A229465ED002BA1E0 /* MainMenu.xib */; };
@@ -268,8 +332,6 @@
 		958A9C221D16D0F600021744 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		958A9C251D16D0F600021744 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/MainMenu.xib; sourceTree = "<group>"; };
 		958A9C271D16D0F600021744 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		958A9C2C1D16D14F00021744 /* MetalView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MetalView.h; sourceTree = "<group>"; };
-		958A9C2D1D16D14F00021744 /* MetalView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MetalView.m; sourceTree = "<group>"; };
 		958A9C2F1D16D1C600021744 /* MetalMath.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; path = MetalMath.h; sourceTree = "<group>"; };
 		958A9C301D16D36C00021744 /* Shaders.metal */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.metal; path = Shaders.metal; sourceTree = "<group>"; };
 		958A9C321D16D37B00021744 /* SharedStructures.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SharedStructures.h; sourceTree = "<group>"; };
@@ -281,6 +343,70 @@
 		959B51FC1B9F3C690059E40B /* PrinE2013.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = PrinE2013.png; sourceTree = "<group>"; };
 		959C8300227F409E00C2C245 /* ImageBasedLighting.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = ImageBasedLighting.metal; sourceTree = "<group>"; };
 		959C8302227F424900C2C245 /* BRDF.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = BRDF.metal; sourceTree = "<group>"; };
+		959F3A4A22BFA6D300D1F4D4 /* MGPLight.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MGPLight.h; sourceTree = "<group>"; };
+		959F3A4B22BFA6D300D1F4D4 /* MGPLight.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MGPLight.m; sourceTree = "<group>"; };
+		959F3A4F22BFDA2500D1F4D4 /* sponza_fabric_blue_diff.dds */ = {isa = PBXFileReference; lastKnownFileType = file; path = sponza_fabric_blue_diff.dds; sourceTree = "<group>"; };
+		959F3A5022BFDA2500D1F4D4 /* sponza_column_b_diff.dds */ = {isa = PBXFileReference; lastKnownFileType = file; path = sponza_column_b_diff.dds; sourceTree = "<group>"; };
+		959F3A5122BFDA2500D1F4D4 /* spnza_bricks_a_diff.dds */ = {isa = PBXFileReference; lastKnownFileType = file; path = spnza_bricks_a_diff.dds; sourceTree = "<group>"; };
+		959F3A5222BFDA2500D1F4D4 /* vase_round_spec.dds */ = {isa = PBXFileReference; lastKnownFileType = file; path = vase_round_spec.dds; sourceTree = "<group>"; };
+		959F3A5322BFDA2600D1F4D4 /* dummy.dds */ = {isa = PBXFileReference; lastKnownFileType = file; path = dummy.dds; sourceTree = "<group>"; };
+		959F3A5422BFDA2600D1F4D4 /* vase_plant.dds */ = {isa = PBXFileReference; lastKnownFileType = file; path = vase_plant.dds; sourceTree = "<group>"; };
+		959F3A5522BFDA2600D1F4D4 /* sponza_ceiling_a_spec.dds */ = {isa = PBXFileReference; lastKnownFileType = file; path = sponza_ceiling_a_spec.dds; sourceTree = "<group>"; };
+		959F3A5622BFDA2600D1F4D4 /* vase_spec.dds */ = {isa = PBXFileReference; lastKnownFileType = file; path = vase_spec.dds; sourceTree = "<group>"; };
+		959F3A5722BFDA2600D1F4D4 /* sponza_arch_spec.dds */ = {isa = PBXFileReference; lastKnownFileType = file; path = sponza_arch_spec.dds; sourceTree = "<group>"; };
+		959F3A5822BFDA2700D1F4D4 /* sponza_column_c_ddn.dds */ = {isa = PBXFileReference; lastKnownFileType = file; path = sponza_column_c_ddn.dds; sourceTree = "<group>"; };
+		959F3A5922BFDA2700D1F4D4 /* background.dds */ = {isa = PBXFileReference; lastKnownFileType = file; path = background.dds; sourceTree = "<group>"; };
+		959F3A5A22BFDA2700D1F4D4 /* sponza_thorn_diff.dds */ = {isa = PBXFileReference; lastKnownFileType = file; path = sponza_thorn_diff.dds; sourceTree = "<group>"; };
+		959F3A5B22BFDA2700D1F4D4 /* sponza_column_c_spec.dds */ = {isa = PBXFileReference; lastKnownFileType = file; path = sponza_column_c_spec.dds; sourceTree = "<group>"; };
+		959F3A5C22BFDA2700D1F4D4 /* sponza_curtain_diff.dds */ = {isa = PBXFileReference; lastKnownFileType = file; path = sponza_curtain_diff.dds; sourceTree = "<group>"; };
+		959F3A5D22BFDA2800D1F4D4 /* sponza_column_a_ddn.dds */ = {isa = PBXFileReference; lastKnownFileType = file; path = sponza_column_a_ddn.dds; sourceTree = "<group>"; };
+		959F3A5E22BFDA2800D1F4D4 /* sponza_ceiling_a_ddn.dds */ = {isa = PBXFileReference; lastKnownFileType = file; path = sponza_ceiling_a_ddn.dds; sourceTree = "<group>"; };
+		959F3A5F22BFDA2800D1F4D4 /* sponza_ceiling_a_diff.dds */ = {isa = PBXFileReference; lastKnownFileType = file; path = sponza_ceiling_a_diff.dds; sourceTree = "<group>"; };
+		959F3A6022BFDA2800D1F4D4 /* spnza_bricks_a_spec.dds */ = {isa = PBXFileReference; lastKnownFileType = file; path = spnza_bricks_a_spec.dds; sourceTree = "<group>"; };
+		959F3A6122BFDA2800D1F4D4 /* sponza_curtain_blue_diff.dds */ = {isa = PBXFileReference; lastKnownFileType = file; path = sponza_curtain_blue_diff.dds; sourceTree = "<group>"; };
+		959F3A6222BFDA2900D1F4D4 /* lion_ddn.dds */ = {isa = PBXFileReference; lastKnownFileType = file; path = lion_ddn.dds; sourceTree = "<group>"; };
+		959F3A6322BFDA2900D1F4D4 /* sponza_fabric_diff.dds */ = {isa = PBXFileReference; lastKnownFileType = file; path = sponza_fabric_diff.dds; sourceTree = "<group>"; };
+		959F3A6422BFDA2900D1F4D4 /* sponza_flagpole_ddn.dds */ = {isa = PBXFileReference; lastKnownFileType = file; path = sponza_flagpole_ddn.dds; sourceTree = "<group>"; };
+		959F3A6522BFDA2900D1F4D4 /* sponza_curtain_green_diff.dds */ = {isa = PBXFileReference; lastKnownFileType = file; path = sponza_curtain_green_diff.dds; sourceTree = "<group>"; };
+		959F3A6622BFDA2A00D1F4D4 /* sponza_column_b_ddn.dds */ = {isa = PBXFileReference; lastKnownFileType = file; path = sponza_column_b_ddn.dds; sourceTree = "<group>"; };
+		959F3A6722BFDA2A00D1F4D4 /* vase_ddn.dds */ = {isa = PBXFileReference; lastKnownFileType = file; path = vase_ddn.dds; sourceTree = "<group>"; };
+		959F3A6822BFDA2A00D1F4D4 /* sponza_column_b_spec.dds */ = {isa = PBXFileReference; lastKnownFileType = file; path = sponza_column_b_spec.dds; sourceTree = "<group>"; };
+		959F3A6922BFDA2A00D1F4D4 /* vase_round_ddn.dds */ = {isa = PBXFileReference; lastKnownFileType = file; path = vase_round_ddn.dds; sourceTree = "<group>"; };
+		959F3A6A22BFDA2A00D1F4D4 /* dummy_ddn.dds */ = {isa = PBXFileReference; lastKnownFileType = file; path = dummy_ddn.dds; sourceTree = "<group>"; };
+		959F3A6B22BFDA2A00D1F4D4 /* sponza_arch_ddn.dds */ = {isa = PBXFileReference; lastKnownFileType = file; path = sponza_arch_ddn.dds; sourceTree = "<group>"; };
+		959F3A6C22BFDA2B00D1F4D4 /* sponza_flagpole_spec.dds */ = {isa = PBXFileReference; lastKnownFileType = file; path = sponza_flagpole_spec.dds; sourceTree = "<group>"; };
+		959F3A6D22BFDA2B00D1F4D4 /* sponza_curtain_ddn.dds */ = {isa = PBXFileReference; lastKnownFileType = file; path = sponza_curtain_ddn.dds; sourceTree = "<group>"; };
+		959F3A6E22BFDA2C00D1F4D4 /* sponza_flagpole_diff.dds */ = {isa = PBXFileReference; lastKnownFileType = file; path = sponza_flagpole_diff.dds; sourceTree = "<group>"; };
+		959F3A6F22BFDA2C00D1F4D4 /* sponza_details_spec.dds */ = {isa = PBXFileReference; lastKnownFileType = file; path = sponza_details_spec.dds; sourceTree = "<group>"; };
+		959F3A7022BFDA2C00D1F4D4 /* background_ddn.dds */ = {isa = PBXFileReference; lastKnownFileType = file; path = background_ddn.dds; sourceTree = "<group>"; };
+		959F3A7122BFDA2D00D1F4D4 /* sponza_fabric_green_diff.dds */ = {isa = PBXFileReference; lastKnownFileType = file; path = sponza_fabric_green_diff.dds; sourceTree = "<group>"; };
+		959F3A7222BFDA2D00D1F4D4 /* sponza_details_diff.dds */ = {isa = PBXFileReference; lastKnownFileType = file; path = sponza_details_diff.dds; sourceTree = "<group>"; };
+		959F3A7322BFDA2D00D1F4D4 /* sponza_arch_diff.dds */ = {isa = PBXFileReference; lastKnownFileType = file; path = sponza_arch_diff.dds; sourceTree = "<group>"; };
+		959F3A7422BFDA2D00D1F4D4 /* dummy_specular.dds */ = {isa = PBXFileReference; lastKnownFileType = file; path = dummy_specular.dds; sourceTree = "<group>"; };
+		959F3A7522BFDA2E00D1F4D4 /* sponza_roof_ddn.dds */ = {isa = PBXFileReference; lastKnownFileType = file; path = sponza_roof_ddn.dds; sourceTree = "<group>"; };
+		959F3A7622BFDA2E00D1F4D4 /* sponza_thorn_ddn.dds */ = {isa = PBXFileReference; lastKnownFileType = file; path = sponza_thorn_ddn.dds; sourceTree = "<group>"; };
+		959F3A7722BFDA2E00D1F4D4 /* sponza_floor_a_spec.dds */ = {isa = PBXFileReference; lastKnownFileType = file; path = sponza_floor_a_spec.dds; sourceTree = "<group>"; };
+		959F3A7822BFDA2E00D1F4D4 /* sponza_roof_diff.dds */ = {isa = PBXFileReference; lastKnownFileType = file; path = sponza_roof_diff.dds; sourceTree = "<group>"; };
+		959F3A7922BFDA2E00D1F4D4 /* sponza_floor_a_diff.dds */ = {isa = PBXFileReference; lastKnownFileType = file; path = sponza_floor_a_diff.dds; sourceTree = "<group>"; };
+		959F3A7A22BFDA2F00D1F4D4 /* vase_plant_spec.dds */ = {isa = PBXFileReference; lastKnownFileType = file; path = vase_plant_spec.dds; sourceTree = "<group>"; };
+		959F3A7B22BFDA3000D1F4D4 /* sponza_curtain_spec.dds */ = {isa = PBXFileReference; lastKnownFileType = file; path = sponza_curtain_spec.dds; sourceTree = "<group>"; };
+		959F3A7C22BFDA3000D1F4D4 /* lion.dds */ = {isa = PBXFileReference; lastKnownFileType = file; path = lion.dds; sourceTree = "<group>"; };
+		959F3A7D22BFDA3000D1F4D4 /* sponza_fabric_ddn.dds */ = {isa = PBXFileReference; lastKnownFileType = file; path = sponza_fabric_ddn.dds; sourceTree = "<group>"; };
+		959F3A7E22BFDA3000D1F4D4 /* background_spec.dds */ = {isa = PBXFileReference; lastKnownFileType = file; path = background_spec.dds; sourceTree = "<group>"; };
+		959F3A7F22BFDA3000D1F4D4 /* vase_round.dds */ = {isa = PBXFileReference; lastKnownFileType = file; path = vase_round.dds; sourceTree = "<group>"; };
+		959F3A8022BFDA3000D1F4D4 /* vase_diff.dds */ = {isa = PBXFileReference; lastKnownFileType = file; path = vase_diff.dds; sourceTree = "<group>"; };
+		959F3A8122BFDA3100D1F4D4 /* sponza_floor_a_ddn.dds */ = {isa = PBXFileReference; lastKnownFileType = file; path = sponza_floor_a_ddn.dds; sourceTree = "<group>"; };
+		959F3A8222BFDA3100D1F4D4 /* sponza_thorn_spec.dds */ = {isa = PBXFileReference; lastKnownFileType = file; path = sponza_thorn_spec.dds; sourceTree = "<group>"; };
+		959F3A8322BFDA3100D1F4D4 /* sponza_column_a_spec.dds */ = {isa = PBXFileReference; lastKnownFileType = file; path = sponza_column_a_spec.dds; sourceTree = "<group>"; };
+		959F3A8422BFDA3100D1F4D4 /* vase_hanging_diff.dds */ = {isa = PBXFileReference; lastKnownFileType = file; path = vase_hanging_diff.dds; sourceTree = "<group>"; };
+		959F3A8522BFDA3100D1F4D4 /* sponza_column_c_diff.dds */ = {isa = PBXFileReference; lastKnownFileType = file; path = sponza_column_c_diff.dds; sourceTree = "<group>"; };
+		959F3A8622BFDA3100D1F4D4 /* lion_spec.dds */ = {isa = PBXFileReference; lastKnownFileType = file; path = lion_spec.dds; sourceTree = "<group>"; };
+		959F3A8722BFDA3200D1F4D4 /* spnza_bricks_a_ddn.dds */ = {isa = PBXFileReference; lastKnownFileType = file; path = spnza_bricks_a_ddn.dds; sourceTree = "<group>"; };
+		959F3A8822BFDA3200D1F4D4 /* sponza_fabric_spec.dds */ = {isa = PBXFileReference; lastKnownFileType = file; path = sponza_fabric_spec.dds; sourceTree = "<group>"; };
+		959F3A8922BFDA3200D1F4D4 /* sponza_details_ddn.dds */ = {isa = PBXFileReference; lastKnownFileType = file; path = sponza_details_ddn.dds; sourceTree = "<group>"; };
+		959F3A8A22BFDA3200D1F4D4 /* chain_texture.dds */ = {isa = PBXFileReference; lastKnownFileType = file; path = chain_texture.dds; sourceTree = "<group>"; };
+		959F3A8B22BFDA3200D1F4D4 /* chain_texture_ddn.dds */ = {isa = PBXFileReference; lastKnownFileType = file; path = chain_texture_ddn.dds; sourceTree = "<group>"; };
+		959F3A8C22BFDA3200D1F4D4 /* sponza_column_a_diff.dds */ = {isa = PBXFileReference; lastKnownFileType = file; path = sponza_column_a_diff.dds; sourceTree = "<group>"; };
 		95A4D9272283F1E0004653B6 /* MGPImageBasedLighting.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MGPImageBasedLighting.h; sourceTree = "<group>"; };
 		95A4D9282283F1E0004653B6 /* MGPImageBasedLighting.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MGPImageBasedLighting.m; sourceTree = "<group>"; };
 		95A4D92C228406FF004653B6 /* MGPCommonVertices.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MGPCommonVertices.h; sourceTree = "<group>"; };
@@ -704,6 +830,75 @@
 			path = Common;
 			sourceTree = "<group>";
 		};
+		959F3A4E22BFDA1100D1F4D4 /* Sponza */ = {
+			isa = PBXGroup;
+			children = (
+				959F3A7022BFDA2C00D1F4D4 /* background_ddn.dds */,
+				959F3A7E22BFDA3000D1F4D4 /* background_spec.dds */,
+				959F3A5922BFDA2700D1F4D4 /* background.dds */,
+				959F3A8B22BFDA3200D1F4D4 /* chain_texture_ddn.dds */,
+				959F3A8A22BFDA3200D1F4D4 /* chain_texture.dds */,
+				959F3A6A22BFDA2A00D1F4D4 /* dummy_ddn.dds */,
+				959F3A7422BFDA2D00D1F4D4 /* dummy_specular.dds */,
+				959F3A5322BFDA2600D1F4D4 /* dummy.dds */,
+				959F3A6222BFDA2900D1F4D4 /* lion_ddn.dds */,
+				959F3A8622BFDA3100D1F4D4 /* lion_spec.dds */,
+				959F3A7C22BFDA3000D1F4D4 /* lion.dds */,
+				959F3A8722BFDA3200D1F4D4 /* spnza_bricks_a_ddn.dds */,
+				959F3A5122BFDA2500D1F4D4 /* spnza_bricks_a_diff.dds */,
+				959F3A6022BFDA2800D1F4D4 /* spnza_bricks_a_spec.dds */,
+				959F3A6B22BFDA2A00D1F4D4 /* sponza_arch_ddn.dds */,
+				959F3A7322BFDA2D00D1F4D4 /* sponza_arch_diff.dds */,
+				959F3A5722BFDA2600D1F4D4 /* sponza_arch_spec.dds */,
+				959F3A5E22BFDA2800D1F4D4 /* sponza_ceiling_a_ddn.dds */,
+				959F3A5F22BFDA2800D1F4D4 /* sponza_ceiling_a_diff.dds */,
+				959F3A5522BFDA2600D1F4D4 /* sponza_ceiling_a_spec.dds */,
+				959F3A5D22BFDA2800D1F4D4 /* sponza_column_a_ddn.dds */,
+				959F3A8C22BFDA3200D1F4D4 /* sponza_column_a_diff.dds */,
+				959F3A8322BFDA3100D1F4D4 /* sponza_column_a_spec.dds */,
+				959F3A6622BFDA2A00D1F4D4 /* sponza_column_b_ddn.dds */,
+				959F3A5022BFDA2500D1F4D4 /* sponza_column_b_diff.dds */,
+				959F3A6822BFDA2A00D1F4D4 /* sponza_column_b_spec.dds */,
+				959F3A5822BFDA2700D1F4D4 /* sponza_column_c_ddn.dds */,
+				959F3A8522BFDA3100D1F4D4 /* sponza_column_c_diff.dds */,
+				959F3A5B22BFDA2700D1F4D4 /* sponza_column_c_spec.dds */,
+				959F3A6122BFDA2800D1F4D4 /* sponza_curtain_blue_diff.dds */,
+				959F3A6D22BFDA2B00D1F4D4 /* sponza_curtain_ddn.dds */,
+				959F3A5C22BFDA2700D1F4D4 /* sponza_curtain_diff.dds */,
+				959F3A6522BFDA2900D1F4D4 /* sponza_curtain_green_diff.dds */,
+				959F3A7B22BFDA3000D1F4D4 /* sponza_curtain_spec.dds */,
+				959F3A8922BFDA3200D1F4D4 /* sponza_details_ddn.dds */,
+				959F3A7222BFDA2D00D1F4D4 /* sponza_details_diff.dds */,
+				959F3A6F22BFDA2C00D1F4D4 /* sponza_details_spec.dds */,
+				959F3A4F22BFDA2500D1F4D4 /* sponza_fabric_blue_diff.dds */,
+				959F3A7D22BFDA3000D1F4D4 /* sponza_fabric_ddn.dds */,
+				959F3A6322BFDA2900D1F4D4 /* sponza_fabric_diff.dds */,
+				959F3A7122BFDA2D00D1F4D4 /* sponza_fabric_green_diff.dds */,
+				959F3A8822BFDA3200D1F4D4 /* sponza_fabric_spec.dds */,
+				959F3A6422BFDA2900D1F4D4 /* sponza_flagpole_ddn.dds */,
+				959F3A6E22BFDA2C00D1F4D4 /* sponza_flagpole_diff.dds */,
+				959F3A6C22BFDA2B00D1F4D4 /* sponza_flagpole_spec.dds */,
+				959F3A8122BFDA3100D1F4D4 /* sponza_floor_a_ddn.dds */,
+				959F3A7922BFDA2E00D1F4D4 /* sponza_floor_a_diff.dds */,
+				959F3A7722BFDA2E00D1F4D4 /* sponza_floor_a_spec.dds */,
+				959F3A7522BFDA2E00D1F4D4 /* sponza_roof_ddn.dds */,
+				959F3A7822BFDA2E00D1F4D4 /* sponza_roof_diff.dds */,
+				959F3A7622BFDA2E00D1F4D4 /* sponza_thorn_ddn.dds */,
+				959F3A5A22BFDA2700D1F4D4 /* sponza_thorn_diff.dds */,
+				959F3A8222BFDA3100D1F4D4 /* sponza_thorn_spec.dds */,
+				959F3A6722BFDA2A00D1F4D4 /* vase_ddn.dds */,
+				959F3A8022BFDA3000D1F4D4 /* vase_diff.dds */,
+				959F3A8422BFDA3100D1F4D4 /* vase_hanging_diff.dds */,
+				959F3A7A22BFDA2F00D1F4D4 /* vase_plant_spec.dds */,
+				959F3A5422BFDA2600D1F4D4 /* vase_plant.dds */,
+				959F3A6922BFDA2A00D1F4D4 /* vase_round_ddn.dds */,
+				959F3A5222BFDA2500D1F4D4 /* vase_round_spec.dds */,
+				959F3A7F22BFDA3000D1F4D4 /* vase_round.dds */,
+				959F3A5622BFDA2600D1F4D4 /* vase_spec.dds */,
+			);
+			path = Sponza;
+			sourceTree = "<group>";
+		};
 		95A4D93122841A49004653B6 /* STB */ = {
 			isa = PBXGroup;
 			children = (
@@ -724,6 +919,7 @@
 		95EFEC2C22AE92D10091C698 /* Textures */ = {
 			isa = PBXGroup;
 			children = (
+				959F3A4E22BFDA1100D1F4D4 /* Sponza */,
 				95FBA5D922BC697600EC4417 /* Test */,
 				95EFEC3C22AE97CE0091C698 /* Sky */,
 			);
@@ -762,8 +958,6 @@
 				95EFEC4722AEA8BD0091C698 /* Model */,
 				95EFEC4622AEA89C0091C698 /* View */,
 				95EFEC4522AEA8960091C698 /* Utility */,
-				958A9C2C1D16D14F00021744 /* MetalView.h */,
-				958A9C2D1D16D14F00021744 /* MetalView.m */,
 			);
 			path = Sources;
 			sourceTree = "<group>";
@@ -800,6 +994,8 @@
 				95F0D28A227D4DF600DEEC3B /* MGPMesh.m */,
 				95A4D9272283F1E0004653B6 /* MGPImageBasedLighting.h */,
 				95A4D9282283F1E0004653B6 /* MGPImageBasedLighting.m */,
+				959F3A4A22BFA6D300D1F4D4 /* MGPLight.h */,
+				959F3A4B22BFA6D300D1F4D4 /* MGPLight.m */,
 			);
 			path = Model;
 			sourceTree = "<group>";
@@ -1295,12 +1491,74 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				959F3A9722BFDA3200D1F4D4 /* background.dds in Resources */,
+				959F3AB922BFDA3200D1F4D4 /* sponza_curtain_spec.dds in Resources */,
+				959F3A8D22BFDA3200D1F4D4 /* sponza_fabric_blue_diff.dds in Resources */,
 				95FBFD49229465ED002BA1E0 /* Assets.xcassets in Resources */,
+				959F3AB322BFDA3200D1F4D4 /* sponza_roof_ddn.dds in Resources */,
+				959F3ACA22BFDA3300D1F4D4 /* sponza_column_a_diff.dds in Resources */,
+				959F3AAA22BFDA3200D1F4D4 /* sponza_flagpole_spec.dds in Resources */,
+				959F3A9122BFDA3200D1F4D4 /* dummy.dds in Resources */,
+				959F3ABB22BFDA3200D1F4D4 /* sponza_fabric_ddn.dds in Resources */,
+				959F3A9A22BFDA3200D1F4D4 /* sponza_curtain_diff.dds in Resources */,
+				959F3AC822BFDA3300D1F4D4 /* chain_texture.dds in Resources */,
+				959F3AB022BFDA3200D1F4D4 /* sponza_details_diff.dds in Resources */,
+				959F3AA222BFDA3200D1F4D4 /* sponza_flagpole_ddn.dds in Resources */,
+				959F3A9C22BFDA3200D1F4D4 /* sponza_ceiling_a_ddn.dds in Resources */,
+				959F3ABD22BFDA3200D1F4D4 /* vase_round.dds in Resources */,
+				959F3ABA22BFDA3200D1F4D4 /* lion.dds in Resources */,
+				959F3A8F22BFDA3200D1F4D4 /* spnza_bricks_a_diff.dds in Resources */,
+				959F3A9822BFDA3200D1F4D4 /* sponza_thorn_diff.dds in Resources */,
+				959F3AA122BFDA3200D1F4D4 /* sponza_fabric_diff.dds in Resources */,
+				959F3AA022BFDA3200D1F4D4 /* lion_ddn.dds in Resources */,
+				959F3AA822BFDA3200D1F4D4 /* dummy_ddn.dds in Resources */,
+				959F3AB522BFDA3200D1F4D4 /* sponza_floor_a_spec.dds in Resources */,
+				959F3A8E22BFDA3200D1F4D4 /* sponza_column_b_diff.dds in Resources */,
+				959F3AAF22BFDA3200D1F4D4 /* sponza_fabric_green_diff.dds in Resources */,
+				959F3AB422BFDA3200D1F4D4 /* sponza_thorn_ddn.dds in Resources */,
+				959F3AAB22BFDA3200D1F4D4 /* sponza_curtain_ddn.dds in Resources */,
+				959F3AB722BFDA3200D1F4D4 /* sponza_floor_a_diff.dds in Resources */,
+				959F3ABF22BFDA3200D1F4D4 /* sponza_floor_a_ddn.dds in Resources */,
+				959F3AC422BFDA3200D1F4D4 /* lion_spec.dds in Resources */,
 				95F40BBF22AD75B600F747D2 /* sponza.mtl in Resources */,
 				95F40BC022AD75B600F747D2 /* sponza.obj in Resources */,
+				959F3A9E22BFDA3200D1F4D4 /* spnza_bricks_a_spec.dds in Resources */,
+				959F3AB122BFDA3200D1F4D4 /* sponza_arch_diff.dds in Resources */,
+				959F3A9422BFDA3200D1F4D4 /* vase_spec.dds in Resources */,
+				959F3A9B22BFDA3200D1F4D4 /* sponza_column_a_ddn.dds in Resources */,
+				959F3AC522BFDA3200D1F4D4 /* spnza_bricks_a_ddn.dds in Resources */,
+				959F3AC222BFDA3200D1F4D4 /* vase_hanging_diff.dds in Resources */,
+				959F3A9922BFDA3200D1F4D4 /* sponza_column_c_spec.dds in Resources */,
+				959F3AC022BFDA3200D1F4D4 /* sponza_thorn_spec.dds in Resources */,
+				959F3AC322BFDA3200D1F4D4 /* sponza_column_c_diff.dds in Resources */,
+				959F3AA522BFDA3200D1F4D4 /* vase_ddn.dds in Resources */,
+				959F3A9022BFDA3200D1F4D4 /* vase_round_spec.dds in Resources */,
+				959F3AA622BFDA3200D1F4D4 /* sponza_column_b_spec.dds in Resources */,
+				959F3AAE22BFDA3200D1F4D4 /* background_ddn.dds in Resources */,
+				959F3AC922BFDA3300D1F4D4 /* chain_texture_ddn.dds in Resources */,
+				959F3AC622BFDA3200D1F4D4 /* sponza_fabric_spec.dds in Resources */,
+				959F3AAD22BFDA3200D1F4D4 /* sponza_details_spec.dds in Resources */,
+				959F3AB222BFDA3200D1F4D4 /* dummy_specular.dds in Resources */,
+				959F3AA922BFDA3200D1F4D4 /* sponza_arch_ddn.dds in Resources */,
+				959F3A9F22BFDA3200D1F4D4 /* sponza_curtain_blue_diff.dds in Resources */,
+				959F3A9222BFDA3200D1F4D4 /* vase_plant.dds in Resources */,
 				95EFEC3222AE94480091C698 /* sponza.h3d in Resources */,
+				959F3AB622BFDA3200D1F4D4 /* sponza_roof_diff.dds in Resources */,
+				959F3AC122BFDA3200D1F4D4 /* sponza_column_a_spec.dds in Resources */,
+				959F3AC722BFDA3300D1F4D4 /* sponza_details_ddn.dds in Resources */,
+				959F3AA722BFDA3200D1F4D4 /* vase_round_ddn.dds in Resources */,
+				959F3A9322BFDA3200D1F4D4 /* sponza_ceiling_a_spec.dds in Resources */,
+				959F3ABE22BFDA3200D1F4D4 /* vase_diff.dds in Resources */,
+				959F3A9D22BFDA3200D1F4D4 /* sponza_ceiling_a_diff.dds in Resources */,
+				959F3A9522BFDA3200D1F4D4 /* sponza_arch_spec.dds in Resources */,
 				95EFEC3A22AE97C40091C698 /* Tropical_Beach_3k.hdr in Resources */,
+				959F3AA422BFDA3200D1F4D4 /* sponza_column_b_ddn.dds in Resources */,
+				959F3AA322BFDA3200D1F4D4 /* sponza_curtain_green_diff.dds in Resources */,
 				95FBFD4C229465ED002BA1E0 /* MainMenu.xib in Resources */,
+				959F3ABC22BFDA3200D1F4D4 /* background_spec.dds in Resources */,
+				959F3AB822BFDA3200D1F4D4 /* vase_plant_spec.dds in Resources */,
+				959F3A9622BFDA3200D1F4D4 /* sponza_column_c_ddn.dds in Resources */,
+				959F3AAC22BFDA3200D1F4D4 /* sponza_flagpole_diff.dds in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1341,6 +1599,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				95FBA5DA22BC6A5300EC4417 /* MetalMath.c in Sources */,
 				950BEC641BA581B6006A4D3A /* MyView.m in Sources */,
 				95EFEC4A22AEA8F60091C698 /* MGPCamera.m in Sources */,
 				953EAB901B9B5E9B0024994F /* Shaders.metal in Sources */,
@@ -1368,7 +1627,6 @@
 				9553ABBC1E097642004E8465 /* main.m in Sources */,
 				9553ABCB1E09786D004E8465 /* MetalMath.c in Sources */,
 				957E3C031E4B658300C10FB2 /* BRDF.metal in Sources */,
-				95CF822F1E098365001BDF8D /* MetalView.m in Sources */,
 				9553ABB91E097642004E8465 /* AppDelegate.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1377,6 +1635,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				95FBA5DB22BC6A9400EC4417 /* MetalMath.c in Sources */,
 				955489491BA8645D00F4868E /* MyView.m in Sources */,
 				9554893C1BA863F900F4868E /* main.m in Sources */,
 				955489461BA8641600F4868E /* AppDelegate.m in Sources */,
@@ -1403,7 +1662,6 @@
 				95C42C541D29501F00806E15 /* Shadow.metal in Sources */,
 				958A9C311D16D36C00021744 /* Shaders.metal in Sources */,
 				958A9C211D16D0F600021744 /* main.m in Sources */,
-				958A9C2E1D16D14F00021744 /* MetalView.m in Sources */,
 				958A9C1E1D16D0F600021744 /* AppDelegate.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1423,6 +1681,7 @@
 				95765E3F227D7EEA0053D66D /* MGPMesh.m in Sources */,
 				95F5E09D2276255900445BB0 /* main.m in Sources */,
 				95F5E0952276255600445BB0 /* AppDelegate.m in Sources */,
+				959F3A4C22BFA6D300D1F4D4 /* MGPLight.m in Sources */,
 				958955C82277369B00414591 /* MGPView.m in Sources */,
 				95A4D9292283F1E0004653B6 /* MGPImageBasedLighting.m in Sources */,
 				95F4CB2A2279937200F51454 /* MGPGBuffer.m in Sources */,
@@ -1448,6 +1707,7 @@
 				95F40BC622AD76EA00F747D2 /* CommonMath.metal in Sources */,
 				95F40BC722AD76EA00F747D2 /* MetalMath.c in Sources */,
 				95F40BC822AD76EA00F747D2 /* MGPView.m in Sources */,
+				959F3A4D22BFA6D300D1F4D4 /* MGPLight.m in Sources */,
 				95F40BC922AD76EA00F747D2 /* MGPRenderer.m in Sources */,
 				95F40BCA22AD76EA00F747D2 /* MGPGBuffer.m in Sources */,
 				95F40BCB22AD76EA00F747D2 /* MGPMesh.m in Sources */,

@@ -7,6 +7,7 @@
 //
 
 #import <Foundation/Foundation.h>
+#import "../Utility/MGPTextureLoader.h"
 @import ModelIO;
 @import Metal;
 @import MetalKit;
@@ -36,7 +37,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (instancetype)initWithModelIOMesh: (MDLMesh *)mdlMesh
             modelIOVertexDescriptor: (nonnull MDLVertexDescriptor *)descriptor
-                      textureLoader: (MTKTextureLoader *)textureLoader
+                      textureLoader: (MGPTextureLoader *)textureLoader
                              device: (id<MTLDevice>)device
                    calculateNormals: (BOOL)calculateNormals
                               error: (NSError **)error;

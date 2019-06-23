@@ -10,8 +10,8 @@
 #import <MetalKit/MetalKit.h>
 #import <ModelIO/ModelIO.h>
 #import "AppDelegate.h"
-#import "MetalMath.h"
-#import "MetalView.h"
+#import "../Common/Sources/Utility/MetalMath.h"
+#import "../Common/Sources/View/MGPView.h"
 #import "SharedStructures.h"
 
 typedef NS_OPTIONS(NSInteger, MDepthMapType) {
@@ -56,7 +56,7 @@ typedef NS_OPTIONS(NSInteger, MDepthMapType) {
     float _r2;
 }
 
-@property (weak) IBOutlet MetalView *view;
+@property (weak) IBOutlet MGPView *view;
 @property (weak) IBOutlet NSWindow *window;
 @end
 

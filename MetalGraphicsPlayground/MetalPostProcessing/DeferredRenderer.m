@@ -8,11 +8,12 @@
 
 #import "DeferredRenderer.h"
 #import "../Common/Shaders/SharedStructures.h"
-#import "../Common/MGPGBuffer.h"
-#import "../Common/MGPMesh.h"
-#import "../Common/MGPImageBasedLighting.h"
-#import "../Common/MetalMath.h"
-#import "../Common/MGPCommonVertices.h"
+#import "../Common/Sources/Rendering/MGPGBuffer.h"
+#import "../Common/Sources/Model/MGPMesh.h"
+#import "../Common/Sources/Model/MGPImageBasedLighting.h"
+#import "../Common/Sources/Utility/MetalMath.h"
+#import "../Common/Sources/Utility/MGPCommonVertices.h"
+#import "../Common/Sources/Utility/MGPTextureLoader.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #import "../Common/STB/stb_image.h"
@@ -165,6 +166,7 @@ const float kLightIntensityVariation = 3.0;
     if(self) {
         _animate = YES;
         _cameraPos = vector3(0.0f, 0.0f, -60.0f);
+        _numLights = 1;
         [self initUniformBuffers];
         [self initAssets];
     }
@@ -232,11 +234,13 @@ const float kLightIntensityVariation = 3.0;
     mdlVertexDescriptor.attributes[attrib_bitangent].name = MDLVertexAttributeBitangent;
     
     // meshes
-    _meshes = [MGPMesh loadMeshesFromURL: [[NSBundle mainBundle] URLForResource: @"teapot"
+    _meshes = [MGPMesh loadMeshesFromURL: [[NSBundle mainBundle] URLForResource: @"sponza"
                                                                   withExtension: @"obj"]
                  modelIOVertexDescriptor: mdlVertexDescriptor
                                   device: self.device
                                    error: nil];
+    
+    MGPTextureLoader *textureLoader = [[MGPTextureLoader alloc] initWithDevice: self.device];
     
     MDLMesh *mdlMesh = [MDLMesh newEllipsoidWithRadii: vector3(10.0f, 10.0f, 10.0f)
                                        radialSegments: 32
@@ -249,7 +253,7 @@ const float kLightIntensityVariation = 3.0;
     mdlMesh.vertexDescriptor = mdlVertexDescriptor;
     MGPMesh *mesh = [[MGPMesh alloc] initWithModelIOMesh: mdlMesh
                                  modelIOVertexDescriptor: mdlVertexDescriptor
-                                           textureLoader: [[MTKTextureLoader alloc] initWithDevice: self.device]
+                                           textureLoader: textureLoader
                                                   device: self.device
                                         calculateNormals: NO
                                                    error: nil];
@@ -378,7 +382,7 @@ const float kLightIntensityVariation = 3.0;
 - (void)_updateUniformBuffers: (float)deltaTime {
     // Update camera properties
     camera_props[_currentBufferIndex].view = _cameraInverseMatrix;
-    camera_props[_currentBufferIndex].projection = matrix_from_perspective_fov_aspectLH(DEG_TO_RAD(60.0f), _gBuffer.size.width / _gBuffer.size.height, 1.0f, 2000.0f);
+    camera_props[_currentBufferIndex].projection = matrix_from_perspective_fov_aspectLH(DEG_TO_RAD(60.0f), _gBuffer.size.width / _gBuffer.size.height, 1.0f, 5000.0f);
     camera_props[_currentBufferIndex].viewProjection = matrix_multiply(camera_props[_currentBufferIndex].projection, camera_props[_currentBufferIndex].view);
     camera_props[_currentBufferIndex].rotation = _cameraRotationInverseMatrix;
     camera_props[_currentBufferIndex].position = _cameraPos;

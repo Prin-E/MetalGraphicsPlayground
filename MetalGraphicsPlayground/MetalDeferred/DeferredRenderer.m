@@ -260,8 +260,7 @@ const float kLightIntensityVariation = 3.0;
                                   device: self.device
                                    error: nil];
     
-    MTKTextureLoader *textureLoader = [[MTKTextureLoader alloc] initWithDevice: self.device];
-    
+    MGPTextureLoader *textureLoader = [[MGPTextureLoader alloc] initWithDevice: self.device];
     MDLMesh *mdlMesh = [MDLMesh newEllipsoidWithRadii: vector3(10.0f, 10.0f, 10.0f)
                                        radialSegments: 32
                                      verticalSegments: 32
@@ -273,43 +272,37 @@ const float kLightIntensityVariation = 3.0;
     mdlMesh.vertexDescriptor = mdlVertexDescriptor;
     MGPMesh *mesh = [[MGPMesh alloc] initWithModelIOMesh: mdlMesh
                                  modelIOVertexDescriptor: mdlVertexDescriptor
-                                           textureLoader: [[MTKTextureLoader alloc] initWithDevice: self.device]
+                                           textureLoader: textureLoader
                                                   device: self.device
                                         calculateNormals: NO
                                                    error: nil];
     
-    NSDictionary *textureLoaderOptions = @{
-                                           MTKTextureLoaderOptionTextureUsage       : @(MTLTextureUsageShaderRead),
-                                           MTKTextureLoaderOptionSRGB       : @(NO),
-                                           MTKTextureLoaderOptionTextureStorageMode : @(MTLStorageModePrivate),
-                                           };
-    
-    mesh.submeshes[0].textures[tex_albedo] = [textureLoader newTextureWithContentsOfURL: [[NSBundle mainBundle] URLForResource: @"albedo" withExtension: @"png"]
-                                                                                options: textureLoaderOptions
-                                                                                  error: nil];
-    mesh.submeshes[0].textures[tex_normal] = [textureLoader newTextureWithContentsOfURL: [[NSBundle mainBundle] URLForResource: @"normal" withExtension: @"png"]
-                                                                                options: textureLoaderOptions
-                                                                                  error: nil];
-    mesh.submeshes[0].textures[tex_roughness] = [textureLoader newTextureWithContentsOfURL: [[NSBundle mainBundle] URLForResource: @"roughness" withExtension: @"png"]
-                                                                                options: textureLoaderOptions
-                                                                                  error: nil];
-    mesh.submeshes[0].textures[tex_metalic] = [textureLoader newTextureWithContentsOfURL: [[NSBundle mainBundle] URLForResource: @"metallic" withExtension: @"png"]
-                                                                                 options: textureLoaderOptions
-                                                                                   error: nil];
-    mesh.submeshes[0].textures[tex_occlusion] = [textureLoader newTextureWithContentsOfURL: [[NSBundle mainBundle] URLForResource: @"ao" withExtension: @"png"]
-                                                                                   options: textureLoaderOptions
-                                                                                     error: nil];
-     /*
-    mesh.submeshes[0].textures[tex_anisotropic] = [textureLoader newTextureWithContentsOfURL: [[NSBundle mainBundle] URLForResource: @"AnisoDirection1" withExtension: @"jpg"]
-                                                                                   options: textureLoaderOptions
-                                                                                     error: nil];
-      */
-    
-    MGPTextureLoader *mgpTextureLoader = [[MGPTextureLoader alloc] initWithDevice: self.device];
-    mesh.submeshes[0].textures[tex_albedo] = [mgpTextureLoader newTextureFromURL: [[NSBundle mainBundle] URLForResource: @"test-dxt5" withExtension: @"dds"]
+    mesh.submeshes[0].textures[tex_albedo] = [textureLoader newTextureFromURL: [[NSBundle mainBundle] URLForResource: @"albedo" withExtension: @"png"]
+                                                                        usage: MTLTextureUsageShaderRead
+                                                                  storageMode: MTLStorageModePrivate
+                                                                        error: nil];
+    mesh.submeshes[0].textures[tex_normal] = [textureLoader newTextureFromURL: [[NSBundle mainBundle] URLForResource: @"normal" withExtension: @"png"]
+                                                                        usage: MTLTextureUsageShaderRead
+                                                                  storageMode: MTLStorageModePrivate
+                                                                        error: nil];
+    mesh.submeshes[0].textures[tex_roughness] = [textureLoader newTextureFromURL: [[NSBundle mainBundle] URLForResource: @"roughness" withExtension: @"png"]
+                                                                        usage: MTLTextureUsageShaderRead
+                                                                  storageMode: MTLStorageModePrivate
+                                                                        error: nil];
+    mesh.submeshes[0].textures[tex_metalic] = [textureLoader newTextureFromURL: [[NSBundle mainBundle] URLForResource: @"metallic" withExtension: @"png"]
+                                                                        usage: MTLTextureUsageShaderRead
+                                                                  storageMode: MTLStorageModePrivate
+                                                                        error: nil];
+    mesh.submeshes[0].textures[tex_occlusion] = [textureLoader newTextureFromURL: [[NSBundle mainBundle] URLForResource: @"ao" withExtension: @"png"]
                                                                            usage: MTLTextureUsageShaderRead
-                                                                     storageMode: MTLStorageModeManaged
+                                                                     storageMode: MTLStorageModePrivate
                                                                            error: nil];
+    /*
+    mesh.submeshes[0].textures[tex_anisotropic] = [textureLoader newTextureFromURL: [[NSBundle mainBundle] URLForResource: @"AnisoDirection1" withExtension: @"jpg"]
+                                                                           usage: MTLTextureUsageShaderRead
+                                                                     storageMode: MTLStorageModePrivate
+                                                                           error: nil];
+     */
     
     _testObjects = @[ mesh ];
     

@@ -263,16 +263,19 @@ constexpr int D3D11_REQ_MIP_LEVELS = 15;
 
 #pragma pack(pop)
 
+// NSErrorDomain
+NSString * const DDSTextureErrorDomain = @"DDSTextureErrorDomain";
+
 //--------------------------------------------------------------------------------------
 namespace
 {
     //--------------------------------------------------------------------------------------
-    BOOL LoadTextureDataFromMemory(
-                                   const uint8_t* ddsData,
+    BOOL LoadTextureDataFromMemory(const uint8_t* ddsData,
                                    size_t ddsDataSize,
                                    const DDS_HEADER** header,
                                    const uint8_t** bitData,
-                                   size_t* bitSize)
+                                   size_t* bitSize,
+                                   NSError** error)
     {
         if (!header || !bitData || !bitSize)
         {
@@ -330,7 +333,7 @@ namespace
         return YES;
     }
     
-    BOOL LoadTextureDataFromFile(const char *filePath, std::unique_ptr<uint8_t[]>& ddsData, const DDS_HEADER** header, const uint8_t** bitData, size_t* bitSize)
+    BOOL LoadTextureDataFromFile(const char *filePath, std::unique_ptr<uint8_t[]>& ddsData, const DDS_HEADER** header, const uint8_t** bitData, size_t* bitSize, NSError** error)
     {
         if (!header || !bitData || !bitSize)
         {
@@ -341,7 +344,15 @@ namespace
         FILE *file = fopen(filePath, "r");
         if (!file)
         {
-            return NO;
+            if(error != nil) {
+                *error = [NSError errorWithDomain: DDSTextureErrorDomain
+                                             code: -1
+                                         userInfo: @{
+                                                     NSDebugDescriptionErrorKey : @"IO error",
+                                                     NSLocalizedDescriptionKey : [NSString stringWithFormat: @"Couldn't open file at path : %s", filePath]
+                                                     }];
+            }
+            return false;
         }
         
         // Get the file size
@@ -350,12 +361,36 @@ namespace
         fseek(file, 0, SEEK_SET);
         
         // File is too big for 32-bit allocation, so reject read
-        if(fileSize > 0xffffffff)
+        if(fileSize > 0xffffffff) {
+            fclose(file);
+            
+            if(error != nil) {
+                *error = [NSError errorWithDomain: DDSTextureErrorDomain
+                                             code: -1
+                                         userInfo: @{
+                                                     NSDebugDescriptionErrorKey : @"IO error",
+                                                     NSLocalizedDescriptionKey : @"File is too big for 32-bit allocation"
+                                                     }];
+            }
+            
             return NO;
+        }
         
         // Need at least enough data to fill the header and magic number to be a valid DDS
         if (fileSize < (sizeof(uint32_t) + sizeof(DDS_HEADER)))
         {
+            fclose(file);
+            
+            
+            if(error != nil) {
+                *error = [NSError errorWithDomain: DDSTextureErrorDomain
+                                             code: -1
+                                         userInfo: @{
+                                                     NSDebugDescriptionErrorKey : @"IO error",
+                                                     NSLocalizedDescriptionKey : [NSString stringWithFormat: @"File size is not valid - %lu < sizeof(uint32_t) + sizeof(DDS_HEADER)", fileSize]
+                                                     }];
+            }
+            
             return NO;
         }
         
@@ -364,21 +399,54 @@ namespace
         ddsData.reset(ddsDataBuffer);
         if (!ddsData)
         {
+            fclose(file);
+            
+            if(error != nil) {
+                *error = [NSError errorWithDomain: DDSTextureErrorDomain
+                                             code: -1
+                                         userInfo: @{
+                                                     NSDebugDescriptionErrorKey : @"Memory allocation error",
+                                                     NSLocalizedDescriptionKey : @"Couldn't allocate DDS data buffer."
+                                                     }];
+            }
+            
             return NO;
         }
         
         // read the data in
-        size_t BytesRead = fread(ddsDataBuffer, 1, fileSize, file);
-        if (BytesRead < fileSize)
+        size_t bytesRead = fread(ddsDataBuffer, 1, fileSize, file);
+        if (bytesRead < fileSize)
         {
+            fclose(file);
+            
+            if(error != nil) {
+                *error = [NSError errorWithDomain: DDSTextureErrorDomain
+                                             code: -1
+                                         userInfo: @{
+                                                     NSDebugDescriptionErrorKey : @"IO error",
+                                                     NSLocalizedDescriptionKey : [NSString stringWithFormat: @"File size is not valid - bytesRead(%lu) < fileSize(%lu)", bytesRead, fileSize]
+                                                     }];
+            }
+            
+            
             return NO;
         }
+        
         fclose(file);
         
         // DDS files always start with the same magic number ("DDS ")
         auto dwMagicNumber = *reinterpret_cast<const uint32_t*>(ddsData.get());
         if (dwMagicNumber != DDS_MAGIC)
         {
+            if(error != nil) {
+                *error = [NSError errorWithDomain: DDSTextureErrorDomain
+                                             code: -1
+                                         userInfo: @{
+                                                     NSDebugDescriptionErrorKey : @"IO error",
+                                                     NSLocalizedDescriptionKey : @"Invalid magic number."
+                                                     }];
+            }
+            
             return NO;
         }
         
@@ -388,6 +456,15 @@ namespace
         if (hdr->size != sizeof(DDS_HEADER) ||
             hdr->ddspf.size != sizeof(DDS_PIXELFORMAT))
         {
+            if(error != nil) {
+                *error = [NSError errorWithDomain: DDSTextureErrorDomain
+                                             code: -1
+                                         userInfo: @{
+                                                     NSDebugDescriptionErrorKey : @"IO error",
+                                                     NSLocalizedDescriptionKey : @"Invalid header."
+                                                     }];
+            }
+            
             return NO;
         }
         
@@ -399,6 +476,15 @@ namespace
             // Must be long enough for both headers and magic value
             if (fileSize < (sizeof(DDS_HEADER) + sizeof(uint32_t) + sizeof(DDS_HEADER_DXT10)))
             {
+                if(error != nil) {
+                    *error = [NSError errorWithDomain: DDSTextureErrorDomain
+                                                 code: -1
+                                             userInfo: @{
+                                                         NSDebugDescriptionErrorKey : @"IO error",
+                                                         NSLocalizedDescriptionKey : @"Invalid DXT10 header."
+                                                         }];
+                }
+                
                 return NO;
             }
             
@@ -1115,7 +1201,8 @@ namespace
                               MTLTextureUsage usage,
                               MTLStorageMode storageMode,
                               bool forceSRGB,
-                              id<MTLTexture>* texture)
+                              id<MTLTexture>* texture,
+                              NSError** error)
     {
         uint32_t width = header->width;
         uint32_t height = header->height;
@@ -1147,6 +1234,9 @@ namespace
             }
             
             descriptor.pixelFormat = GetMetalPixelFormatFromDXGIFormat(d3d10ext->dxgiFormat);
+            if(forceSRGB)
+                descriptor.pixelFormat = MakeSRGB(descriptor.pixelFormat);
+            
             if(descriptor.pixelFormat == MTLPixelFormatInvalid)
                 return false;
             if(BitsPerPixel(descriptor.pixelFormat) == 0)
@@ -1334,28 +1424,54 @@ extern "C" {
                                     MTLStorageMode storageMode,
                                     bool forceSRGB,
                                     id<MTLTexture>* texture,
-                                    DDS_ALPHA_MODE* alphaMode = nullptr)
+                                    DDS_ALPHA_MODE* alphaMode,
+                                    NSError** error)
     {
-        if (texture)
-        {
-            *texture = nullptr;
-        }
-        if (alphaMode)
-        {
-            *alphaMode = DDS_ALPHA_MODE_UNKNOWN;
-        }
-        
-        if (!device || !ddsData || !texture)
-        {
+        // Argument validation
+        if(device == nil) {
+            if(error != nil) {
+                *error = [NSError errorWithDomain: DDSTextureErrorDomain
+                                             code: -1
+                                         userInfo: @{
+                                                     NSDebugDescriptionErrorKey : @"invalid argument",
+                                                     NSLocalizedDescriptionKey : @"device is nil."
+                                                     }];
+            }
             return false;
         }
+        if(texture == nil) {
+            if(error != nil) {
+                *error = [NSError errorWithDomain: DDSTextureErrorDomain
+                                             code: -1
+                                         userInfo: @{
+                                                     NSDebugDescriptionErrorKey : @"invalid argument",
+                                                     NSLocalizedDescriptionKey : @"texture pointer is nil."
+                                                     }];
+            }
+            return false;
+        }
+        if(ddsData == nil) {
+            if(error != nil) {
+                *error = [NSError errorWithDomain: DDSTextureErrorDomain
+                                             code: -1
+                                         userInfo: @{
+                                                     NSDebugDescriptionErrorKey : @"invalid argument",
+                                                     NSLocalizedDescriptionKey : @"DDS data is null."
+                                                     }];
+            }
+            return false;
+        }
+        
+        *texture = nullptr;
+        if (alphaMode)
+            *alphaMode = DDS_ALPHA_MODE_UNKNOWN;
         
         // Validate DDS file in memory
         const DDS_HEADER* header = nullptr;
         const uint8_t* bitData = nullptr;
         size_t bitSize = 0;
         
-        BOOL flag = LoadTextureDataFromMemory(ddsData, ddsDataSize, &header, &bitData, &bitSize);
+        BOOL flag = LoadTextureDataFromMemory(ddsData, ddsDataSize, &header, &bitData, &bitSize, error);
         if (!flag)
             return false;
         
@@ -1364,7 +1480,8 @@ extern "C" {
                                     maxsize,
                                     usage, storageMode,
                                     forceSRGB,
-                                    texture);
+                                    texture,
+                                    error);
         if (flag)
         {
             (*texture).label = @"DDSTextureLoader";
@@ -1383,34 +1500,60 @@ extern "C" {
                                   MTLStorageMode storageMode,
                                   bool forceSRGB,
                                   id<MTLTexture>* texture,
-                                  DDS_ALPHA_MODE* alphaMode = nullptr)
+                                  DDS_ALPHA_MODE* alphaMode,
+                                  NSError** error)
     {
-        if (texture)
-        {
-            *texture = nullptr;
-        }
-        if (alphaMode)
-        {
-            *alphaMode = DDS_ALPHA_MODE_UNKNOWN;
-        }
-        
-        if (!device || !fileName || !texture)
-        {
+        // Argument validation
+        if(device == nil) {
+            if(error != nil) {
+                *error = [NSError errorWithDomain: DDSTextureErrorDomain
+                                             code: -1
+                                         userInfo: @{
+                                                     NSDebugDescriptionErrorKey : @"invalid argument",
+                                                     NSLocalizedDescriptionKey : @"device is nil."
+                                                     }];
+            }
             return false;
         }
+        if(texture == nil) {
+            if(error != nil) {
+                *error = [NSError errorWithDomain: DDSTextureErrorDomain
+                                             code: -1
+                                         userInfo: @{
+                                                     NSDebugDescriptionErrorKey : @"invalid argument",
+                                                     NSLocalizedDescriptionKey : @"texture pointer is nil."
+                                                     }];
+            }
+            return false;
+        }
+        if(fileName == nil) {
+            if(error != nil) {
+                *error = [NSError errorWithDomain: DDSTextureErrorDomain
+                                             code: -1
+                                         userInfo: @{
+                                                     NSDebugDescriptionErrorKey : @"invalid argument",
+                                                     NSLocalizedDescriptionKey : @"filename is null."
+                                                     }];
+            }
+            return false;
+        }
+        
+        *texture = nullptr;
+        if (alphaMode)
+            *alphaMode = DDS_ALPHA_MODE_UNKNOWN;
         
         const DDS_HEADER* header = nullptr;
         const uint8_t* bitData = nullptr;
         size_t bitSize = 0;
         
         std::unique_ptr<uint8_t[]> ddsData;
-        bool flag = LoadTextureDataFromFile(fileName.UTF8String, ddsData, &header, &bitData, &bitSize);
+        bool flag = LoadTextureDataFromFile(fileName.UTF8String, ddsData, &header, &bitData, &bitSize, error);
         if (!flag)
             return false;
         
         flag = CreateTextureFromDDS(device, header, bitData, bitSize,
                                     maxsize, usage, storageMode,
-                                    forceSRGB, texture);
+                                    forceSRGB, texture, error);
         
         if (flag)
         {

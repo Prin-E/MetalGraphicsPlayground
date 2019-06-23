@@ -17,6 +17,11 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (instancetype)initWithDevice: (id<MTLDevice>)device;
 
+- (id<MTLTexture>)newTextureWithName: (NSString *)name
+                               usage: (MTLTextureUsage)textureUsage
+                         storageMode: (MTLStorageMode)storageMode
+                               error: (NSError **)error;
+
 - (id<MTLTexture>)newTextureFromPath: (NSString *)filePath
                                usage: (MTLTextureUsage)textureUsage
                          storageMode: (MTLStorageMode)storageMode

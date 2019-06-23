@@ -20,7 +20,7 @@
 
 - (instancetype)initWithModelIOSubmesh: (MDLSubmesh *)mdlSubmesh
                        metalKitSubmesh: (MTKSubmesh *)mtkSubmesh
-                         textureLoader: (MTKTextureLoader *)textureLoader
+                         textureLoader: (MGPTextureLoader *)textureLoader
                                  error: (NSError **)error {
     self = [super init];
     if(self) {
@@ -40,7 +40,7 @@
         for(NSInteger i = 0; i < tex_total; i++) {
             id<MTLTexture> texture = [MGPSubmesh createMetalTextureFromMaterial: mdlSubmesh.material
                                                         modelIOMaterialSemantic: meterialSemantics[i]
-                                                          metalKitTextureLoader: textureLoader];
+                                                                  textureLoader: textureLoader];
             if(texture != nil) {
                 [_textures addObject: texture];
             }
@@ -54,7 +54,7 @@
 
 + (nonnull id<MTLTexture>) createMetalTextureFromMaterial:(nonnull MDLMaterial *)material
                                   modelIOMaterialSemantic:(MDLMaterialSemantic)materialSemantic
-                                    metalKitTextureLoader:(nonnull MTKTextureLoader *)textureLoader
+                                            textureLoader:(nonnull MGPTextureLoader *)textureLoader
 {
     id<MTLTexture> texture;
     
@@ -66,16 +66,6 @@
         if(property.type == MDLMaterialPropertyTypeString ||
            property.type == MDLMaterialPropertyTypeURL)
         {
-            // Load our textures with shader read using private storage
-            NSDictionary *textureLoaderOptions =
-            @{
-              MTKTextureLoaderOptionTextureUsage       : @(MTLTextureUsageShaderRead),
-              MTKTextureLoaderOptionTextureStorageMode : @(MTLStorageModePrivate),
-              };
-            
-            // First will interpret the string as a file path and attempt to load it with
-            //    -[MTKTextureLoader newTextureWithContentsOfURL:options:error:]
-            
             NSURL *url = property.URLValue;
             NSMutableString *URLString = nil;
             if(property.type == MDLMaterialPropertyTypeURL ||
@@ -87,11 +77,13 @@
             }
             
             NSURL *textureURL = [NSURL URLWithString:URLString];
+            NSError *error = nil;
             
             // Attempt to load the texture from the file system
-            texture = [textureLoader newTextureWithContentsOfURL:textureURL
-                                                         options:textureLoaderOptions
-                                                           error:nil];
+            texture = [textureLoader newTextureFromURL: textureURL
+                                                 usage: MTLTextureUsageShaderRead
+                                           storageMode: MTLStorageModePrivate
+                                                 error: &error];
             
             // If we found a texture using the string as a file path name...
             if(texture)
@@ -103,11 +95,9 @@
             // If we did not find a texture by interpreting the URL as a path, we'll interpret
             // string as an asset catalog name and attempt to load it with
             //  -[MTKTextureLoader newTextureWithName:scaleFactor:bundle:options::error:]
-            NSError *error = nil;
             texture = [textureLoader newTextureWithName:property.stringValue
-                                            scaleFactor:1.0
-                                                 bundle:nil
-                                                options:textureLoaderOptions
+                                                  usage:MTLTextureUsageShaderRead
+                                            storageMode:MTLStorageModePrivate
                                                   error:&error];
             
             // If we found a texture with the string in our asset catalog...
@@ -155,7 +145,7 @@
 
 - (instancetype)initWithModelIOMesh: (MDLMesh *)mdlMesh
             modelIOVertexDescriptor: (nonnull MDLVertexDescriptor *)descriptor
-                      textureLoader: (MTKTextureLoader *)textureLoader
+                      textureLoader: (MGPTextureLoader *)textureLoader
                              device: (id<MTLDevice>)device
                    calculateNormals: (BOOL)calculateNormals
                               error: (NSError **)error {
@@ -230,7 +220,7 @@
     
     if([object isKindOfClass: MDLMesh.class]) {
         MDLMesh *mdlMesh = (MDLMesh *)object;
-        MTKTextureLoader *textureLoader = [[MTKTextureLoader alloc] initWithDevice: device];
+        MGPTextureLoader *textureLoader = [[MGPTextureLoader alloc] initWithDevice: device];
         
         MGPMesh *mesh = [[MGPMesh alloc] initWithModelIOMesh: mdlMesh
                                      modelIOVertexDescriptor: descriptor

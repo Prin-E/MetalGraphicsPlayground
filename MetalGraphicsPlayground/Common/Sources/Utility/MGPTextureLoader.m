@@ -12,14 +12,38 @@
 
 @implementation MGPTextureLoader {
     MTKTextureLoader *_mtkTextureLoader;
+    id<MTLCommandQueue> _commandQueue;
 }
 
 - (instancetype)initWithDevice:(id<MTLDevice>)device {
     self = [super init];
     if(self) {
         _device = device;
+        _commandQueue = [_device newCommandQueueWithMaxCommandBufferCount:1];
+        _mtkTextureLoader = [[MTKTextureLoader alloc] initWithDevice: _device];
     }
     return self;
+}
+
+- (id<MTLTexture>)newTextureWithName:(NSString *)name
+                               usage:(MTLTextureUsage)textureUsage
+                         storageMode:(MTLStorageMode)storageMode
+                               error:(NSError * _Nullable __autoreleasing *)error {
+    if(name.length == 0) {
+        *error = [NSError errorWithDomain: NSURLErrorDomain
+                                     code: 0
+                                 userInfo: nil];
+        return nil;
+    }
+    
+    NSMutableDictionary<MTKTextureLoaderOption, id> *options = [NSMutableDictionary dictionaryWithCapacity: 4];
+    options[MTKTextureLoaderOptionTextureUsage] = @(textureUsage);
+    options[MTKTextureLoaderOptionTextureStorageMode] = @(storageMode);
+    return [_mtkTextureLoader newTextureWithName: name
+                                     scaleFactor: 1.0f
+                                          bundle: nil
+                                         options: options
+                                           error: error];
 }
 
 - (id<MTLTexture>)newTextureFromPath:(NSString *)filePath
@@ -44,9 +68,11 @@
                         storageMode:(MTLStorageMode)storageMode
                               error:(NSError * _Nullable __autoreleasing *)error {
     if(url.absoluteString.length == 0) {
-        *error = [NSError errorWithDomain: NSURLErrorDomain
-                                     code: 0
-                                 userInfo: nil];
+        if(error) {
+            *error = [NSError errorWithDomain: NSURLErrorDomain
+                                         code: 0
+                                     userInfo: nil];
+        }
         return nil;
     }
     
@@ -86,15 +112,56 @@
                                                    withString: @""];
     
     id<MTLTexture> texture = nil;
-    DDS_ALPHA_MODE alphaMode = DDS_ALPHA_MODE_UNKNOWN;
-    CreateDDSTextureFromFile(self.device,
-                             filePath,
-                             0,
-                             textureUsage,
-                             storageMode,
-                             false,
-                             &texture,
-                             &alphaMode);
+    @autoreleasepool {
+        DDS_ALPHA_MODE alphaMode = DDS_ALPHA_MODE_UNKNOWN;
+        CreateDDSTextureFromFile(self.device,
+                                 filePath,
+                                 0,
+                                 textureUsage,
+                                 MTLStorageModeManaged,
+                                 false,
+                                 &texture,
+                                 &alphaMode,
+                                 error);
+        
+        if(storageMode == MTLStorageModePrivate) {
+            id<MTLTexture> intermediateTexture = texture;
+            MTLTextureDescriptor *desc = [[MTLTextureDescriptor alloc] init];
+            desc.textureType = intermediateTexture.textureType;
+            desc.width = intermediateTexture.width;
+            desc.height = intermediateTexture.height;
+            desc.depth = intermediateTexture.depth;
+            desc.mipmapLevelCount = intermediateTexture.mipmapLevelCount;
+            desc.arrayLength = intermediateTexture.arrayLength;
+            desc.pixelFormat = intermediateTexture.pixelFormat;
+            desc.sampleCount = intermediateTexture.sampleCount;
+            desc.storageMode = storageMode;
+            desc.usage = textureUsage;
+            texture = [_device newTextureWithDescriptor: desc];
+            
+            id<MTLCommandBuffer> buffer = [_commandQueue commandBufferWithUnretainedReferences];
+            id<MTLBlitCommandEncoder> blit = [buffer blitCommandEncoder];
+            MTLSize size = MTLSizeMake(texture.width, texture.height, texture.depth);
+            for(int level = 0; level < desc.mipmapLevelCount; level++) {
+                [blit copyFromTexture: intermediateTexture
+                          sourceSlice: 0
+                          sourceLevel: level
+                         sourceOrigin: MTLOriginMake(0, 0, 0)
+                           sourceSize: size
+                            toTexture: texture
+                     destinationSlice: 0
+                     destinationLevel: level
+                    destinationOrigin: MTLOriginMake(0, 0, 0)];
+                size.width = MAX(1, size.width / 2);
+                size.height = MAX(1, size.height / 2);
+                size.depth = MAX(1, size.depth / 2);
+            }
+            
+            [blit endEncoding];
+            [buffer commit];
+            [buffer waitUntilCompleted];
+        }
+    }
     return texture;
 }
 

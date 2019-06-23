@@ -7,8 +7,8 @@
 //
 
 #import <Foundation/Foundation.h>
-#import "../Common/MGPRenderer.h"
-#import "../Common/MGPView.h"
+#import "../Common/Sources/Rendering/MGPRenderer.h"
+#import "../Common/Sources/View/MGPView.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
