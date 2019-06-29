@@ -14,6 +14,8 @@
 #import "../Common/Sources/Utility/MetalMath.h"
 #import "../Common/Sources/Utility/MGPCommonVertices.h"
 #import "../Common/Sources/Utility/MGPTextureLoader.h"
+#import "../Common/Sources/Model/MGPPostProcessing.h"
+#import "../Common/Sources/Model/MGPPostProcessingLayer.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #import "../Common/STB/stb_image.h"
@@ -73,7 +75,6 @@ const float kLightIntensityVariation = 3.0;
     // render pass, pipeline states
     id<MTLRenderPipelineState> _renderPipelineSkybox;
     id<MTLRenderPipelineState> _renderPipelineGBuffer;
-    id<MTLRenderPipelineState> _renderPipelineGBufferTest;
     id<MTLRenderPipelineState> _renderPipelineLighting;
     id<MTLRenderPipelineState> _renderPipelinePresent;
     MTLRenderPassDescriptor *_renderPassSkybox;
@@ -87,7 +88,6 @@ const float kLightIntensityVariation = 3.0;
     
     // Meshes
     NSArray<MGPMesh *> *_meshes;
-    NSArray<MGPMesh *> *_testObjects;
 }
 
 - (void)setView:(MGPView *)view {
@@ -240,26 +240,6 @@ const float kLightIntensityVariation = 3.0;
                                   device: self.device
                                    error: nil];
     
-    MGPTextureLoader *textureLoader = [[MGPTextureLoader alloc] initWithDevice: self.device];
-    
-    MDLMesh *mdlMesh = [MDLMesh newEllipsoidWithRadii: vector3(10.0f, 10.0f, 10.0f)
-                                       radialSegments: 32
-                                     verticalSegments: 32
-                                         geometryType: MDLGeometryTypeTriangles
-                                        inwardNormals: NO
-                                           hemisphere: NO
-                                            allocator: [[MTKMeshBufferAllocator alloc] initWithDevice: self.device]];
-    
-    mdlMesh.vertexDescriptor = mdlVertexDescriptor;
-    MGPMesh *mesh = [[MGPMesh alloc] initWithModelIOMesh: mdlMesh
-                                 modelIOVertexDescriptor: mdlVertexDescriptor
-                                           textureLoader: textureLoader
-                                                  device: self.device
-                                        calculateNormals: NO
-                                                   error: nil];
-    
-    _testObjects = @[ mesh ];
-    
     // build render pipeline
     MTLFunctionConstantValues *constantValues = [[MTLFunctionConstantValues alloc] init];
     BOOL hasAlbedoMap = _meshes[0].submeshes[0].textures[tex_albedo] != NSNull.null;
@@ -275,21 +255,6 @@ const float kLightIntensityVariation = 3.0;
     [constantValues setConstantValue: &hasOcculusionMap type: MTLDataTypeBool atIndex: fcv_occlusion];
     [constantValues setConstantValue: &hasAnisotropicMap type: MTLDataTypeBool atIndex: fcv_anisotropic];
     _renderPipelineGBuffer = [_gBuffer renderPipelineStateWithConstants: constantValues error: nil];
-    
-    hasAlbedoMap = _testObjects[0].submeshes[0].textures[tex_albedo] != NSNull.null;
-    hasNormalMap = _testObjects[0].submeshes[0].textures[tex_normal] != NSNull.null;
-    hasRoughnessMap = _testObjects[0].submeshes[0].textures[tex_roughness] != NSNull.null;
-    hasMetalicMap = _testObjects[0].submeshes[0].textures[tex_metalic] != NSNull.null;
-    hasOcculusionMap = _testObjects[0].submeshes[0].textures[tex_occlusion] != NSNull.null;
-    hasAnisotropicMap = _testObjects[0].submeshes[0].textures[tex_anisotropic] != NSNull.null;
-    [constantValues setConstantValue: &hasAlbedoMap type: MTLDataTypeBool atIndex: fcv_albedo];
-    [constantValues setConstantValue: &hasNormalMap type: MTLDataTypeBool atIndex: fcv_normal];
-    [constantValues setConstantValue: &hasRoughnessMap type: MTLDataTypeBool atIndex: fcv_roughness];
-    [constantValues setConstantValue: &hasMetalicMap type: MTLDataTypeBool atIndex: fcv_metalic];
-    [constantValues setConstantValue: &hasOcculusionMap type: MTLDataTypeBool atIndex: fcv_occlusion];
-    [constantValues setConstantValue: &hasAnisotropicMap type: MTLDataTypeBool atIndex: fcv_anisotropic];
-    _renderPipelineGBufferTest = [_gBuffer renderPipelineStateWithConstants: constantValues error: nil];
-    
     _renderPipelineLighting = [_gBuffer lightingPipelineStateWithError: nil];
     
     MTLRenderPipelineDescriptor *renderPipelineDescriptorPresent = [[MTLRenderPipelineDescriptor alloc] init];
@@ -555,13 +520,7 @@ const float kLightIntensityVariation = 3.0;
     NSArray<MGPMesh *> *meshes = _meshes;
     
     encoder.label = @"G-buffer";
-    if(_showsTestObjects) {
-        [encoder setRenderPipelineState: _renderPipelineGBufferTest];
-        meshes = _testObjects;
-    }
-    else {
-        [encoder setRenderPipelineState: _renderPipelineGBuffer];
-    }
+    [encoder setRenderPipelineState: _renderPipelineGBuffer];
     [encoder setDepthStencilState: _depthStencil];
     [encoder setCullMode: MTLCullModeBack];
     

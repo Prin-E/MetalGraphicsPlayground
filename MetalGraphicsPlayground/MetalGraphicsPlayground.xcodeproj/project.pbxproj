@@ -10,6 +10,8 @@
 		950192A31E4A032D002F90FD /* bun_zipper.obj in Resources */ = {isa = PBXBuildFile; fileRef = 950192A21E4A032D002F90FD /* bun_zipper.obj */; };
 		9502743A1BA8636B0015CE21 /* teapot.obj in Resources */ = {isa = PBXBuildFile; fileRef = 950274391BA8636B0015CE21 /* teapot.obj */; };
 		950BEC641BA581B6006A4D3A /* MyView.m in Sources */ = {isa = PBXBuildFile; fileRef = 950BEC631BA581B6006A4D3A /* MyView.m */; };
+		950C345822C5B05D004C32CA /* MGPShadowBuffer.m in Sources */ = {isa = PBXBuildFile; fileRef = 950C345722C5B05D004C32CA /* MGPShadowBuffer.m */; };
+		950C345922C5B05D004C32CA /* MGPShadowBuffer.m in Sources */ = {isa = PBXBuildFile; fileRef = 950C345722C5B05D004C32CA /* MGPShadowBuffer.m */; };
 		95209FD21BADA87F00F8B5AF /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 95209FD11BADA87F00F8B5AF /* AppDelegate.m */; };
 		95209FD51BADA87F00F8B5AF /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 95209FD41BADA87F00F8B5AF /* main.m */; };
 		95209FD71BADA87F00F8B5AF /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 95209FD61BADA87F00F8B5AF /* Assets.xcassets */; };
@@ -21,6 +23,8 @@
 		95209FE41BADAACC00F8B5AF /* PrinE2013.png in Resources */ = {isa = PBXBuildFile; fileRef = 959B51FC1B9F3C690059E40B /* PrinE2013.png */; };
 		95273DD61B9BEB100015BB27 /* Metal.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 95273DD51B9BEB100015BB27 /* Metal.framework */; };
 		95273DD81B9BEB180015BB27 /* MetalKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 95273DD71B9BEB180015BB27 /* MetalKit.framework */; };
+		952C964922C0A1D9004C8C34 /* MGPPostProcessing.m in Sources */ = {isa = PBXBuildFile; fileRef = 952C964822C0A1D9004C8C34 /* MGPPostProcessing.m */; };
+		952C964C22C0A2E4004C8C34 /* MGPPostProcessingLayer.m in Sources */ = {isa = PBXBuildFile; fileRef = 952C964B22C0A2E4004C8C34 /* MGPPostProcessingLayer.m */; };
 		952CF6E91BA9CC5C00919726 /* teapot.obj in Resources */ = {isa = PBXBuildFile; fileRef = 950274391BA8636B0015CE21 /* teapot.obj */; };
 		953040941BEF9673001DECA7 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 953040931BEF9673001DECA7 /* AppDelegate.m */; };
 		953040971BEF9673001DECA7 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 953040961BEF9673001DECA7 /* main.m */; };
@@ -176,6 +180,8 @@
 		95BED31C2286746B006E5C2F /* CommonMath.metal in Sources */ = {isa = PBXBuildFile; fileRef = 95BED31B2286746B006E5C2F /* CommonMath.metal */; };
 		95C42C541D29501F00806E15 /* Shadow.metal in Sources */ = {isa = PBXBuildFile; fileRef = 95C42C531D29501F00806E15 /* Shadow.metal */; };
 		95D6C40E21DBA0470007BB90 /* SimpleMetalRenderer.m in Sources */ = {isa = PBXBuildFile; fileRef = 95D6C40D21DBA0470007BB90 /* SimpleMetalRenderer.m */; };
+		95EFB7D222C7AD5A00813903 /* MGPShadowManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 95EFB7D122C7AD5A00813903 /* MGPShadowManager.m */; };
+		95EFB7D322C7AD5A00813903 /* MGPShadowManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 95EFB7D122C7AD5A00813903 /* MGPShadowManager.m */; };
 		95EFD8DB22AF941800D4C0F5 /* DDSTextureLoader.mm in Sources */ = {isa = PBXBuildFile; fileRef = 95EFD8D922AF941800D4C0F5 /* DDSTextureLoader.mm */; };
 		95EFD8DC22AF941800D4C0F5 /* DDSTextureLoader.mm in Sources */ = {isa = PBXBuildFile; fileRef = 95EFD8D922AF941800D4C0F5 /* DDSTextureLoader.mm */; };
 		95EFD8DD22AF958500D4C0F5 /* MGPTextureLoader.m in Sources */ = {isa = PBXBuildFile; fileRef = 95EFEC4C22AEAE3B0091C698 /* MGPTextureLoader.m */; };
@@ -189,6 +195,8 @@
 		95EFEC4A22AEA8F60091C698 /* MGPCamera.m in Sources */ = {isa = PBXBuildFile; fileRef = 95FBFD55229466DC002BA1E0 /* MGPCamera.m */; };
 		95EFEC4D22AEAE3B0091C698 /* MGPTextureLoader.m in Sources */ = {isa = PBXBuildFile; fileRef = 95EFEC4C22AEAE3B0091C698 /* MGPTextureLoader.m */; };
 		95F0D28B227D4DF600DEEC3B /* MGPMesh.m in Sources */ = {isa = PBXBuildFile; fileRef = 95F0D28A227D4DF600DEEC3B /* MGPMesh.m */; };
+		95F0F94522C1FEA6002AF368 /* SSAO.metal in Sources */ = {isa = PBXBuildFile; fileRef = 95F0F94422C1FEA6002AF368 /* SSAO.metal */; };
+		95F0F94622C1FEA6002AF368 /* SSAO.metal in Sources */ = {isa = PBXBuildFile; fileRef = 95F0F94422C1FEA6002AF368 /* SSAO.metal */; };
 		95F40BBF22AD75B600F747D2 /* sponza.mtl in Resources */ = {isa = PBXBuildFile; fileRef = 95F40BBD22AD75B600F747D2 /* sponza.mtl */; };
 		95F40BC022AD75B600F747D2 /* sponza.obj in Resources */ = {isa = PBXBuildFile; fileRef = 95F40BBE22AD75B600F747D2 /* sponza.obj */; };
 		95F40BC122AD76EA00F747D2 /* GBuffer.metal in Sources */ = {isa = PBXBuildFile; fileRef = 95F4CB2C22799BFF00F51454 /* GBuffer.metal */; };
@@ -232,6 +240,8 @@
 		950B52C61F0E7D68005D6953 /* SharedStructures.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SharedStructures.h; sourceTree = "<group>"; };
 		950BEC621BA581B6006A4D3A /* MyView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MyView.h; sourceTree = "<group>"; };
 		950BEC631BA581B6006A4D3A /* MyView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MyView.m; sourceTree = "<group>"; };
+		950C345622C5B05D004C32CA /* MGPShadowBuffer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MGPShadowBuffer.h; sourceTree = "<group>"; };
+		950C345722C5B05D004C32CA /* MGPShadowBuffer.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MGPShadowBuffer.m; sourceTree = "<group>"; };
 		95209FCE1BADA87F00F8B5AF /* MetalMSAA.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MetalMSAA.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		95209FD01BADA87F00F8B5AF /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		95209FD11BADA87F00F8B5AF /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
@@ -243,6 +253,10 @@
 		95209FE51BADABCE00F8B5AF /* SharedStructures.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SharedStructures.h; sourceTree = "<group>"; };
 		95273DD51B9BEB100015BB27 /* Metal.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Metal.framework; path = System/Library/Frameworks/Metal.framework; sourceTree = SDKROOT; };
 		95273DD71B9BEB180015BB27 /* MetalKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MetalKit.framework; path = System/Library/Frameworks/MetalKit.framework; sourceTree = SDKROOT; };
+		952C964722C0A1D9004C8C34 /* MGPPostProcessing.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MGPPostProcessing.h; sourceTree = "<group>"; };
+		952C964822C0A1D9004C8C34 /* MGPPostProcessing.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MGPPostProcessing.m; sourceTree = "<group>"; };
+		952C964A22C0A2E4004C8C34 /* MGPPostProcessingLayer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MGPPostProcessingLayer.h; sourceTree = "<group>"; };
+		952C964B22C0A2E4004C8C34 /* MGPPostProcessingLayer.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MGPPostProcessingLayer.m; sourceTree = "<group>"; };
 		953040901BEF9673001DECA7 /* MetalGeometry.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MetalGeometry.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		953040921BEF9673001DECA7 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		953040931BEF9673001DECA7 /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
@@ -423,6 +437,8 @@
 		95C42C531D29501F00806E15 /* Shadow.metal */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.metal; path = Shadow.metal; sourceTree = "<group>"; };
 		95D6C40C21DBA0470007BB90 /* SimpleMetalRenderer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SimpleMetalRenderer.h; sourceTree = "<group>"; };
 		95D6C40D21DBA0470007BB90 /* SimpleMetalRenderer.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SimpleMetalRenderer.m; sourceTree = "<group>"; };
+		95EFB7D022C7AD5A00813903 /* MGPShadowManager.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MGPShadowManager.h; sourceTree = "<group>"; };
+		95EFB7D122C7AD5A00813903 /* MGPShadowManager.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MGPShadowManager.m; sourceTree = "<group>"; };
 		95EFD8D922AF941800D4C0F5 /* DDSTextureLoader.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = DDSTextureLoader.mm; sourceTree = "<group>"; };
 		95EFD8DA22AF941800D4C0F5 /* DDSTextureLoader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DDSTextureLoader.h; sourceTree = "<group>"; };
 		95EFEC3122AE94480091C698 /* sponza.h3d */ = {isa = PBXFileReference; lastKnownFileType = file; path = sponza.h3d; sourceTree = "<group>"; };
@@ -435,6 +451,7 @@
 		95EFEC4C22AEAE3B0091C698 /* MGPTextureLoader.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MGPTextureLoader.m; sourceTree = "<group>"; };
 		95F0D289227D4DF600DEEC3B /* MGPMesh.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MGPMesh.h; sourceTree = "<group>"; };
 		95F0D28A227D4DF600DEEC3B /* MGPMesh.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MGPMesh.m; sourceTree = "<group>"; };
+		95F0F94422C1FEA6002AF368 /* SSAO.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = SSAO.metal; sourceTree = "<group>"; };
 		95F40BBD22AD75B600F747D2 /* sponza.mtl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = sponza.mtl; sourceTree = "<group>"; };
 		95F40BBE22AD75B600F747D2 /* sponza.obj */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = sponza.obj; sourceTree = "<group>"; };
 		95F4CB282279937200F51454 /* MGPGBuffer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MGPGBuffer.h; sourceTree = "<group>"; };
@@ -996,6 +1013,14 @@
 				95A4D9282283F1E0004653B6 /* MGPImageBasedLighting.m */,
 				959F3A4A22BFA6D300D1F4D4 /* MGPLight.h */,
 				959F3A4B22BFA6D300D1F4D4 /* MGPLight.m */,
+				952C964722C0A1D9004C8C34 /* MGPPostProcessing.h */,
+				952C964822C0A1D9004C8C34 /* MGPPostProcessing.m */,
+				952C964A22C0A2E4004C8C34 /* MGPPostProcessingLayer.h */,
+				952C964B22C0A2E4004C8C34 /* MGPPostProcessingLayer.m */,
+				950C345622C5B05D004C32CA /* MGPShadowBuffer.h */,
+				950C345722C5B05D004C32CA /* MGPShadowBuffer.m */,
+				95EFB7D022C7AD5A00813903 /* MGPShadowManager.h */,
+				95EFB7D122C7AD5A00813903 /* MGPShadowManager.m */,
 			);
 			path = Model;
 			sourceTree = "<group>";
@@ -1025,6 +1050,7 @@
 				95A4D93422846F99004653B6 /* CommonStages.metal */,
 				95A4D93722847214004653B6 /* CommonMath.h */,
 				95BED31B2286746B006E5C2F /* CommonMath.metal */,
+				95F0F94422C1FEA6002AF368 /* SSAO.metal */,
 			);
 			path = Shaders;
 			sourceTree = "<group>";
@@ -1670,11 +1696,14 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				95EFB7D222C7AD5A00813903 /* MGPShadowManager.m in Sources */,
 				959C8303227F424900C2C245 /* BRDF.metal in Sources */,
 				95A4D93022840E5B004653B6 /* Skybox.metal in Sources */,
 				95F4CB2D22799BFF00F51454 /* GBuffer.metal in Sources */,
+				950C345822C5B05D004C32CA /* MGPShadowBuffer.m in Sources */,
 				95FBFD56229466DC002BA1E0 /* MGPCamera.m in Sources */,
 				95A4D93522846F99004653B6 /* CommonStages.metal in Sources */,
+				95F0F94522C1FEA6002AF368 /* SSAO.metal in Sources */,
 				95BED31C2286746B006E5C2F /* CommonMath.metal in Sources */,
 				959C8301227F409E00C2C245 /* ImageBasedLighting.metal in Sources */,
 				95765E40227D81060053D66D /* MetalMath.c in Sources */,
@@ -1705,16 +1734,21 @@
 				95EFEC4D22AEAE3B0091C698 /* MGPTextureLoader.m in Sources */,
 				9561BB7522AE2998005ACC48 /* DeferredRenderer.m in Sources */,
 				95F40BC622AD76EA00F747D2 /* CommonMath.metal in Sources */,
+				95EFB7D322C7AD5A00813903 /* MGPShadowManager.m in Sources */,
 				95F40BC722AD76EA00F747D2 /* MetalMath.c in Sources */,
 				95F40BC822AD76EA00F747D2 /* MGPView.m in Sources */,
 				959F3A4D22BFA6D300D1F4D4 /* MGPLight.m in Sources */,
+				952C964C22C0A2E4004C8C34 /* MGPPostProcessingLayer.m in Sources */,
 				95F40BC922AD76EA00F747D2 /* MGPRenderer.m in Sources */,
 				95F40BCA22AD76EA00F747D2 /* MGPGBuffer.m in Sources */,
+				950C345922C5B05D004C32CA /* MGPShadowBuffer.m in Sources */,
+				952C964922C0A1D9004C8C34 /* MGPPostProcessing.m in Sources */,
 				95F40BCB22AD76EA00F747D2 /* MGPMesh.m in Sources */,
 				95F40BCC22AD76EA00F747D2 /* MGPImageBasedLighting.m in Sources */,
 				95FBFD4F229465ED002BA1E0 /* main.m in Sources */,
 				95FBFD57229466DC002BA1E0 /* MGPCamera.m in Sources */,
 				95FBFD47229465EB002BA1E0 /* AppDelegate.m in Sources */,
+				95F0F94622C1FEA6002AF368 /* SSAO.metal in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

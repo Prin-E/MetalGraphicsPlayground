@@ -10,6 +10,19 @@
 
 @implementation MGPLight
 
+- (id)copyWithZone:(NSZone *)zone {
+    MGPLight* clone = [[[self class] alloc] init];
+    if(clone) {
+        clone.type = _type;
+        clone.direction = _direction;
+        clone.position = _position;
+        clone.intensity = _intensity;
+        clone.color = _color;
+        clone.hasShadow = _hasShadow;
+    }
+    return clone;
+}
+
 - (light_t)shaderLightProperties {
     light_t light;
     light.direction = _direction;

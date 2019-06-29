@@ -18,7 +18,7 @@ typedef NS_ENUM(NSUInteger, MGPLightType) {
     // TODO: spot-light
 };
 
-@interface MGPLight : NSObject
+@interface MGPLight : NSObject <NSCopying>
 
 @property (nonatomic) MGPLightType type;
 @property (nonatomic) simd_float3 direction;
