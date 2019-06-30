@@ -192,9 +192,7 @@
 		95EFEC4122AE98640091C698 /* Milkyway_small.hdr in Resources */ = {isa = PBXBuildFile; fileRef = 95EFEC3822AE97BE0091C698 /* Milkyway_small.hdr */; };
 		95EFEC4222AE98640091C698 /* Tropical_Beach_3k.hdr in Resources */ = {isa = PBXBuildFile; fileRef = 95EFEC3922AE97C40091C698 /* Tropical_Beach_3k.hdr */; };
 		95EFEC4322AE98640091C698 /* WinterForest_Ref.hdr in Resources */ = {isa = PBXBuildFile; fileRef = 95EFEC3B22AE97CA0091C698 /* WinterForest_Ref.hdr */; };
-		95EFEC4A22AEA8F60091C698 /* MGPCamera.m in Sources */ = {isa = PBXBuildFile; fileRef = 95FBFD55229466DC002BA1E0 /* MGPCamera.m */; };
 		95EFEC4D22AEAE3B0091C698 /* MGPTextureLoader.m in Sources */ = {isa = PBXBuildFile; fileRef = 95EFEC4C22AEAE3B0091C698 /* MGPTextureLoader.m */; };
-		95F0D28B227D4DF600DEEC3B /* MGPMesh.m in Sources */ = {isa = PBXBuildFile; fileRef = 95F0D28A227D4DF600DEEC3B /* MGPMesh.m */; };
 		95F0F94522C1FEA6002AF368 /* SSAO.metal in Sources */ = {isa = PBXBuildFile; fileRef = 95F0F94422C1FEA6002AF368 /* SSAO.metal */; };
 		95F0F94622C1FEA6002AF368 /* SSAO.metal in Sources */ = {isa = PBXBuildFile; fileRef = 95F0F94422C1FEA6002AF368 /* SSAO.metal */; };
 		95F40BBF22AD75B600F747D2 /* sponza.mtl in Resources */ = {isa = PBXBuildFile; fileRef = 95F40BBD22AD75B600F747D2 /* sponza.mtl */; };
@@ -1627,11 +1625,9 @@
 			files = (
 				95FBA5DA22BC6A5300EC4417 /* MetalMath.c in Sources */,
 				950BEC641BA581B6006A4D3A /* MyView.m in Sources */,
-				95EFEC4A22AEA8F60091C698 /* MGPCamera.m in Sources */,
 				953EAB901B9B5E9B0024994F /* Shaders.metal in Sources */,
 				953EAB831B9B5AFC0024994F /* main.m in Sources */,
 				953EAB801B9B5AFC0024994F /* AppDelegate.m in Sources */,
-				95F0D28B227D4DF600DEEC3B /* MGPMesh.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

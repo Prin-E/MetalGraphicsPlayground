@@ -18,12 +18,17 @@ typedef NS_ENUM(NSUInteger, MGPPostProcessingRenderingOrder) {
     MGPPostProcessingRenderingOrderAfterShadePass = 3000
 };
 
+@class MGPGBuffer;
+@class MGPPostProcessing;
 @protocol MGPPostProcessingLayer <NSObject>
+
+@property (weak) MGPPostProcessing *postProcessing;
 
 - (instancetype)initWithDevice: (id<MTLDevice>)device
                        library: (id<MTLLibrary>)library;
 - (NSUInteger)renderingOrder;
 - (void)render:(id<MTLCommandBuffer>)buffer;
+- (void)resize:(CGSize)newSize;
 
 @end
 
@@ -33,6 +38,11 @@ typedef NS_ENUM(NSUInteger, MGPPostProcessingRenderingOrder) {
 
 // Ambient Occlusion
 @interface MGPPostProcessingLayerSSAO : MGPPostProcessingLayer
+
+@property (nonatomic, readonly) id<MTLTexture> ssaoTexture;
+@property (nonatomic, readonly) float intensity;    // 0.0~1.0
+@property (nonatomic, readonly) float radius;       // world-space
+
 @end
 
 NS_ASSUME_NONNULL_END

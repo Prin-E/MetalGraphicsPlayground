@@ -55,7 +55,8 @@ typedef enum {
     attachment_tangent,
     attachment_irradiance,
     attachment_prefiltered_specular,
-    attachment_brdf_lookup
+    attachment_brdf_lookup,
+    attachment_ssao
 } attachment_index;
 
 typedef enum {

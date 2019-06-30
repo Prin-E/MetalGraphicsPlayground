@@ -88,6 +88,9 @@ const float kLightIntensityVariation = 3.0;
     
     // Meshes
     NSArray<MGPMesh *> *_meshes;
+    
+    // Post-processing
+    MGPPostProcessing *_postProcess;
 }
 
 - (void)setView:(MGPView *)view {
@@ -294,6 +297,16 @@ const float kLightIntensityVariation = 3.0;
     depthStencilDescriptor.depthWriteEnabled = YES;
     depthStencilDescriptor.depthCompareFunction = MTLCompareFunctionLess;
     _depthStencil = [self.device newDepthStencilStateWithDescriptor: depthStencilDescriptor];
+    
+    // post-process
+    _postProcess = [[MGPPostProcessing alloc] initWithDevice: self.device
+                                                     library: self.defaultLibrary];
+    _postProcess.gBuffer = _gBuffer;
+    _postProcess.cameraBuffer = _cameraPropsBuffer;
+    MGPPostProcessingLayerSSAO *ssao = [[MGPPostProcessingLayerSSAO alloc] initWithDevice: self.device
+                                                                                 library: self.defaultLibrary];
+    [_postProcess addLayer: ssao];
+    [_postProcess resize: _gBuffer.size];
 }
 
 - (void)_initSkyboxDepthTexture {
@@ -317,6 +330,7 @@ const float kLightIntensityVariation = 3.0;
     // camera
     [self _updateCameraMatrix: deltaTime];
     [self _updateUniformBuffers: deltaTime];
+    _postProcess.currentBufferIndex = _currentBufferIndex;
 }
 
 - (void)_updateCameraMatrix: (float)deltaTime {
@@ -474,13 +488,29 @@ const float kLightIntensityVariation = 3.0;
     id<MTLRenderCommandEncoder> skyboxPassEncoder = [commandBuffer renderCommandEncoderWithDescriptor: _renderPassSkybox];
     [self renderSkybox:skyboxPassEncoder];
     
+    // Post-process before prepass
+    [_postProcess render: commandBuffer
+       forRenderingOrder: MGPPostProcessingRenderingOrderBeforePrepass];
+    
     // G-buffer pass
     id<MTLRenderCommandEncoder> gBufferPassEncoder = [commandBuffer renderCommandEncoderWithDescriptor: _gBuffer.renderPassDescriptor];
     [self renderGBuffer:gBufferPassEncoder];
     
-    // lighting pass
+    // Post-process before light pass
+    [_postProcess render: commandBuffer
+       forRenderingOrder: MGPPostProcessingRenderingOrderBeforeLightPass];
+    
+    // Post-process before shade pass
+    [_postProcess render: commandBuffer
+       forRenderingOrder: MGPPostProcessingRenderingOrderBeforeShadePass];
+    
+    // TODO: split into light and shade pass
     id<MTLRenderCommandEncoder> lightingPassEncoder = [commandBuffer renderCommandEncoderWithDescriptor: _gBuffer.lightingPassDescriptor];
     [self renderLighting:lightingPassEncoder];
+    
+    // Post-process before prepass
+    [_postProcess render: commandBuffer
+       forRenderingOrder: MGPPostProcessingRenderingOrderAfterShadePass];
     
     // present to framebuffer
     _renderPassPresent.colorAttachments[0].texture = self.view.currentDrawable.texture;
@@ -592,6 +622,8 @@ const float kLightIntensityVariation = 3.0;
                         atIndex: attachment_prefiltered_specular];
     [encoder setFragmentTexture: _IBLs[_renderingIBLIndex].BRDFLookupTexture
                         atIndex: attachment_brdf_lookup];
+    [encoder setFragmentTexture: ((MGPPostProcessingLayerSSAO *)_postProcess[0]).ssaoTexture
+                        atIndex: attachment_ssao];
     [encoder drawPrimitives: MTLPrimitiveTypeTriangle
                 vertexStart: 0
                 vertexCount: 6];
@@ -617,6 +649,7 @@ const float kLightIntensityVariation = 3.0;
 
 - (void)resize:(CGSize)newSize {
     [_gBuffer resize:newSize];
+    [_postProcess resize:newSize];
     [self _initSkyboxDepthTexture];
 }
 

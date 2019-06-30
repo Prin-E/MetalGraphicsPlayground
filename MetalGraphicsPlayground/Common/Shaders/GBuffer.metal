@@ -168,7 +168,8 @@ fragment half4 lighting_frag(LightingFragment in [[stage_in]],
                              texture2d<half> tangent [[texture(attachment_tangent)]],
                              texturecube<half> irradiance [[texture(attachment_irradiance)]],
                              texturecube<half> prefilteredSpecular [[texture(attachment_prefiltered_specular)]],
-                             texture2d<half> brdfLookup [[texture(attachment_brdf_lookup)]]) {
+                             texture2d<half> brdfLookup [[texture(attachment_brdf_lookup)]],
+                             texture2d<half> ssao [[texture(attachment_ssao)]]) {
     float3 out_color = float3(0);
     
     // shared values
@@ -185,6 +186,9 @@ fragment half4 lighting_frag(LightingFragment in [[stage_in]],
     float n_v = max(0.001, saturate(dot(n, v)));
     float t_v = max(0.001, saturate(dot(t, v)));
     float b_v = max(0.001, saturate(dot(b, v)));
+    half ao = ssao.sample(linear, in.uv).r;
+    
+    //return half4(ao, ao, ao, 1.0);
     
     // make shading parameters
     shading_t shading_params;
@@ -200,13 +204,13 @@ fragment half4 lighting_frag(LightingFragment in [[stage_in]],
     float3 irradiance_color = float3(irradiance.sample(linear, n).xyz);
     float3 k_s = fresnel(mix(0.04, shading_params.albedo, shading_params.metalic), n_v);
     float3 k_d = (float3(1.0) - k_s) * (1.0 - shading_params.metalic);
-    out_color += k_d * irradiance_color * albedo_c * shading_values.z;
+    out_color += ao * k_d * irradiance_color * albedo_c * shading_values.z;
     
     // prefiltered specular
     float mip_index = shading_params.roughness * prefilteredSpecular.get_num_mip_levels();
     float3 prefiltered_color = float3(prefilteredSpecular.sample(linear, n, level(mip_index)).xyz);
     float3 environment_brdf = float3(brdfLookup.sample(linear_clamp_to_edge, float2(shading_params.roughness, n_v)).xyz);
-    out_color += k_s * prefiltered_color * (albedo_c * environment_brdf.x + environment_brdf.y);
+    out_color += ao * k_s * prefiltered_color * (albedo_c * environment_brdf.x + environment_brdf.y);
     
     // direct lights
     const uint num_light = lightGlobal.num_light;

@@ -14,6 +14,7 @@ NSString * const MGPPostProcessingErrorDomain = @"MGPPostProcessingErrorDomain";
 @implementation MGPPostProcessing {
     NSMutableArray<id<MGPPostProcessingLayer>> *_layers;
     NSMutableArray<id<MGPPostProcessingLayer>> *_layersForRendering;
+    CGSize _size;
 }
 
 - (instancetype)init {
@@ -53,6 +54,10 @@ NSString * const MGPPostProcessingErrorDomain = @"MGPPostProcessingErrorDomain";
         if(!insert) {
             [_layers addObject: layer];
         }
+        
+        layer.postProcessing = self;
+        if(_size.width > 0 && _size.height > 0)
+            [layer resize: _size];
     }
     else {
         NSLog(@"layer is null.");
@@ -64,6 +69,8 @@ NSString * const MGPPostProcessingErrorDomain = @"MGPPostProcessingErrorDomain";
 }
 
 - (void)removeLayerAtIndex:(NSUInteger)index {
+    id<MGPPostProcessingLayer> layer = [_layers objectAtIndex: index];
+    layer.postProcessing = nil;
     [_layers removeObjectAtIndex:index];
 }
 
@@ -98,6 +105,13 @@ NSString * const MGPPostProcessingErrorDomain = @"MGPPostProcessingErrorDomain";
            forRenderingOrder: renderingOrder];
     for(id<MGPPostProcessingLayer> layer in _layersForRendering) {
         [layer render: buffer];
+    }
+}
+
+- (void)resize:(CGSize)newSize {
+    _size = newSize;
+    for(id<MGPPostProcessingLayer> layer in _layers) {
+        [layer resize: newSize];
     }
 }
 

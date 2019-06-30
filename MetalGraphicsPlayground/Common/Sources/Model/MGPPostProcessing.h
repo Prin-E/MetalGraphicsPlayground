@@ -20,6 +20,12 @@ NS_ASSUME_NONNULL_BEGIN
 // ordered by renderingOrder
 @property (nonatomic, readonly) NSArray<id<MGPPostProcessingLayer>> *layers;
 
+// camera, g-buffer
+@property (nonatomic) MGPGBuffer *gBuffer;
+@property (nonatomic) id<MTLBuffer> cameraBuffer;
+@property (nonatomic) NSUInteger currentBufferIndex;
+
+// init
 - (instancetype)initWithDevice:(id<MTLDevice>)device
                        library:(id<MTLLibrary>)library;
 
@@ -35,6 +41,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (NSArray<id<MGPPostProcessingLayer>> *)orderedLayersForRenderingOrder: (MGPPostProcessingRenderingOrder)renderingOrder;
 
 - (void)render:(id<MTLCommandBuffer>)buffer forRenderingOrder: (MGPPostProcessingRenderingOrder)renderingOrder;
+- (void)resize:(CGSize)newSize;
 
 @end
 
