@@ -72,7 +72,8 @@ typedef enum {
     fcv_roughness,
     fcv_metalic,
     fcv_occlusion,
-    fcv_anisotropic
+    fcv_anisotropic,
+    fcv_flip_vertically
 } function_constant_values;
 
 // vertex attribute

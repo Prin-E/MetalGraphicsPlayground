@@ -19,6 +19,7 @@ constant bool has_roughness_map [[function_constant(fcv_roughness)]];
 constant bool has_metalic_map [[function_constant(fcv_metalic)]];
 constant bool has_occlusion_map [[function_constant(fcv_occlusion)]];
 constant bool has_anisotropic_map [[function_constant(fcv_anisotropic)]];
+constant bool flip_vertically [[function_constant(fcv_flip_vertically)]];
 
 // g-buffer vertex input data
 typedef struct {
@@ -100,6 +101,10 @@ fragment GBufferOutput gbuffer_frag(GBufferFragment in [[stage_in]],
                                   ) {
     GBufferOutput out;
     material_t material = instanceProps[in.iid].material;
+    
+    if(flip_vertically) {
+        in.uv.y = 1.0 - in.uv.y;
+    }
     
     if(has_albedo_map) {
         out.albedo = albedoMap.sample(linear, in.uv);

@@ -170,6 +170,8 @@ const float kLightIntensityVariation = 3.0;
         _animate = YES;
         _cameraPos = vector3(0.0f, 50.0f, -60.0f);
         _numLights = 0;
+        _roughness = 1.0f;
+        _metalic = 0.0f;
         [self initUniformBuffers];
         [self initAssets];
     }
@@ -251,12 +253,14 @@ const float kLightIntensityVariation = 3.0;
     BOOL hasMetalicMap = _meshes[0].submeshes[0].textures[tex_metalic] != NSNull.null;
     BOOL hasOcculusionMap = _meshes[0].submeshes[0].textures[tex_occlusion] != NSNull.null;
     BOOL hasAnisotropicMap = _meshes[0].submeshes[0].textures[tex_anisotropic] != NSNull.null;
+    BOOL flipVertically = YES;  // for sponza textures
     [constantValues setConstantValue: &hasAlbedoMap type: MTLDataTypeBool atIndex: fcv_albedo];
     [constantValues setConstantValue: &hasNormalMap type: MTLDataTypeBool atIndex: fcv_normal];
     [constantValues setConstantValue: &hasRoughnessMap type: MTLDataTypeBool atIndex: fcv_roughness];
     [constantValues setConstantValue: &hasMetalicMap type: MTLDataTypeBool atIndex: fcv_metalic];
     [constantValues setConstantValue: &hasOcculusionMap type: MTLDataTypeBool atIndex: fcv_occlusion];
     [constantValues setConstantValue: &hasAnisotropicMap type: MTLDataTypeBool atIndex: fcv_anisotropic];
+    [constantValues setConstantValue: &flipVertically type: MTLDataTypeBool atIndex: fcv_flip_vertically];
     _renderPipelineGBuffer = [_gBuffer renderPipelineStateWithConstants: constantValues error: nil];
     _renderPipelineLighting = [_gBuffer lightingPipelineStateWithError: nil];
     
