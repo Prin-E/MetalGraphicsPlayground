@@ -47,6 +47,13 @@ typedef struct __attribute__((__aligned__(256))) {
     float roughness;
 } prefiltered_specular_option_t;
 
+typedef struct __attribute__((__aligned__(256))) {
+    uint32_t num_samples;
+    float intensity;
+    float radius;
+    float bias;
+} ssao_props_t;
+
 typedef enum {
     attachment_albedo,
     attachment_normal,

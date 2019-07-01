@@ -188,8 +188,6 @@ fragment half4 lighting_frag(LightingFragment in [[stage_in]],
     float b_v = max(0.001, saturate(dot(b, v)));
     half ao = ssao.sample(linear, in.uv).r;
     
-    //return half4(ao, ao, ao, 1.0);
-    
     // make shading parameters
     shading_t shading_params;
     shading_params.albedo = albedo_c;

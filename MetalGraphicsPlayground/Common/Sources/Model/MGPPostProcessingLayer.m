@@ -52,15 +52,19 @@ NSString * const MGPPostProcessingLayerErrorDomain = @"MGPPostProcessingLayerErr
 @implementation MGPPostProcessingLayerSSAO {
     id<MTLComputePipelineState> _ssaoPipeline;
     id<MTLBuffer> _ssaoRandomSamplesBuffer;
+    id<MTLBuffer> _ssaoPropsBuffer;
 }
 
 - (instancetype)initWithDevice:(id<MTLDevice>)device library:(id<MTLLibrary>)library {
     self = [super initWithDevice: device library: library];
     if(self) {
+        _numSamples = 32;
         _intensity = 0.5f;
         _radius = 0.1f;
+        _bias = 0.05f;
         [self _makeComputePipeline];
         [self _makeRandomSamples];
+        [self _makePropsBuffer];
     }
     return self;
 }
@@ -90,10 +94,15 @@ NSString * const MGPPostProcessingLayerErrorDomain = @"MGPPostProcessingLayerErr
         sample.x = arc4random() / (float)UINT_MAX * 2.0f - 1.0f;
         sample.y = arc4random() / (float)UINT_MAX * 2.0f - 1.0f;
         sample.z = arc4random() / (float)UINT_MAX;
-        sample = simd_normalize(sample) * (float)arc4random() / (float)UINT_MAX;
+        sample = simd_normalize(sample) * (0.15f + 0.85f * powf((float)arc4random() / (float)UINT_MAX, 2.0f));
         ((simd_float3*)_ssaoRandomSamplesBuffer.contents)[i] = sample;
     }
     [_ssaoRandomSamplesBuffer didModifyRange: NSMakeRange(0, sizeof(simd_float3) * numSamples)];
+}
+
+- (void)_makePropsBuffer {
+    _ssaoPropsBuffer = [_device newBufferWithLength: sizeof(ssao_props_t) * 3
+                                            options: MTLResourceStorageModeManaged];
 }
 
 - (NSUInteger)renderingOrder {
@@ -101,6 +110,16 @@ NSString * const MGPPostProcessingLayerErrorDomain = @"MGPPostProcessingLayerErr
 }
 
 - (void)render: (id<MTLCommandBuffer>)buffer {
+    ssao_props_t props = {
+        .num_samples = _numSamples,
+        .intensity = _intensity,
+        .radius = _radius,
+        .bias = _bias
+    };
+    memcpy(_ssaoPropsBuffer.contents + sizeof(ssao_props_t) * _postProcessing.currentBufferIndex,
+           &props, sizeof(ssao_props_t));
+    [_ssaoPropsBuffer didModifyRange: NSMakeRange(sizeof(ssao_props_t) * _postProcessing.currentBufferIndex, sizeof(ssao_props_t))];
+    
     NSUInteger width = _ssaoTexture.width, height = _ssaoTexture.height;
     MGPGBuffer *gBuffer = _postProcessing.gBuffer;
     id<MTLBuffer> cameraBuffer = _postProcessing.cameraBuffer;
@@ -116,9 +135,12 @@ NSString * const MGPPostProcessingLayerErrorDomain = @"MGPPostProcessingLayerErr
     [encoder setBuffer: _ssaoRandomSamplesBuffer
                 offset: 0
                atIndex: 0];
+    [encoder setBuffer: _ssaoPropsBuffer
+                offset: sizeof(ssao_props_t) * _postProcessing.currentBufferIndex
+               atIndex: 1];
     [encoder setBuffer: cameraBuffer
                 offset: currentBufferIndex * sizeof(camera_props_t)
-               atIndex: 1];
+               atIndex: 2];
     [encoder dispatchThreadgroups: MTLSizeMake((width+15)/16, (height+15)/16, 1)
             threadsPerThreadgroup: MTLSizeMake(16, 16, 1)];
     [encoder endEncoding];

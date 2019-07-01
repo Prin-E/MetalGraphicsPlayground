@@ -168,8 +168,8 @@ const float kLightIntensityVariation = 3.0;
     self = [super init];
     if(self) {
         _animate = YES;
-        _cameraPos = vector3(0.0f, 0.0f, -60.0f);
-        _numLights = 1;
+        _cameraPos = vector3(0.0f, 50.0f, -60.0f);
+        _numLights = 0;
         [self initUniformBuffers];
         [self initAssets];
     }
@@ -305,6 +305,10 @@ const float kLightIntensityVariation = 3.0;
     _postProcess.cameraBuffer = _cameraPropsBuffer;
     MGPPostProcessingLayerSSAO *ssao = [[MGPPostProcessingLayerSSAO alloc] initWithDevice: self.device
                                                                                  library: self.defaultLibrary];
+    ssao.intensity = 0.8f;
+    ssao.radius = 50.0f;
+    ssao.bias = 2.0f;
+    ssao.numSamples = 48;
     [_postProcess addLayer: ssao];
     [_postProcess resize: _gBuffer.size];
 }
