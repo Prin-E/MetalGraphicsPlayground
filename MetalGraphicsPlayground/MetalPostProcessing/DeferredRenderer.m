@@ -14,8 +14,8 @@
 #import "../Common/Sources/Utility/MetalMath.h"
 #import "../Common/Sources/Utility/MGPCommonVertices.h"
 #import "../Common/Sources/Utility/MGPTextureLoader.h"
-#import "../Common/Sources/Model/MGPPostProcessing.h"
-#import "../Common/Sources/Model/MGPPostProcessingLayer.h"
+#import "../Common/Sources/Rendering/MGPPostProcessing.h"
+#import "../Common/Sources/Rendering/MGPPostProcessingLayer.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #import "../Common/STB/stb_image.h"

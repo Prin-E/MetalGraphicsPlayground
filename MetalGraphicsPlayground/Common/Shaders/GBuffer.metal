@@ -191,7 +191,7 @@ fragment half4 lighting_frag(LightingFragment in [[stage_in]],
     float n_v = max(0.001, saturate(dot(n, v)));
     float t_v = max(0.001, saturate(dot(t, v)));
     float b_v = max(0.001, saturate(dot(b, v)));
-    half ao = ssao.sample(linear, in.uv).r;
+    half ao = 1.0 - ssao.sample(linear, in.uv).r; // ao will be 0 when ssao texture is not set
     
     // make shading parameters
     shading_t shading_params;

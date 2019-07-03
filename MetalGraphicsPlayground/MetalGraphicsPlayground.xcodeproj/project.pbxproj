@@ -23,8 +23,6 @@
 		95209FE41BADAACC00F8B5AF /* PrinE2013.png in Resources */ = {isa = PBXBuildFile; fileRef = 959B51FC1B9F3C690059E40B /* PrinE2013.png */; };
 		95273DD61B9BEB100015BB27 /* Metal.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 95273DD51B9BEB100015BB27 /* Metal.framework */; };
 		95273DD81B9BEB180015BB27 /* MetalKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 95273DD71B9BEB180015BB27 /* MetalKit.framework */; };
-		952C964922C0A1D9004C8C34 /* MGPPostProcessing.m in Sources */ = {isa = PBXBuildFile; fileRef = 952C964822C0A1D9004C8C34 /* MGPPostProcessing.m */; };
-		952C964C22C0A2E4004C8C34 /* MGPPostProcessingLayer.m in Sources */ = {isa = PBXBuildFile; fileRef = 952C964B22C0A2E4004C8C34 /* MGPPostProcessingLayer.m */; };
 		952CF6E91BA9CC5C00919726 /* teapot.obj in Resources */ = {isa = PBXBuildFile; fileRef = 950274391BA8636B0015CE21 /* teapot.obj */; };
 		953040941BEF9673001DECA7 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 953040931BEF9673001DECA7 /* AppDelegate.m */; };
 		953040971BEF9673001DECA7 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 953040961BEF9673001DECA7 /* main.m */; };
@@ -196,6 +194,8 @@
 		95F002AB22CCEEFF000A951B /* MGPScene.m in Sources */ = {isa = PBXBuildFile; fileRef = 95F002AA22CCEEFF000A951B /* MGPScene.m */; };
 		95F002AC22CCEFB5000A951B /* MGPPostProcessing.m in Sources */ = {isa = PBXBuildFile; fileRef = 952C964822C0A1D9004C8C34 /* MGPPostProcessing.m */; };
 		95F002AD22CCEFB5000A951B /* MGPPostProcessingLayer.m in Sources */ = {isa = PBXBuildFile; fileRef = 952C964B22C0A2E4004C8C34 /* MGPPostProcessingLayer.m */; };
+		95F002AE22CD0841000A951B /* MGPPostProcessing.m in Sources */ = {isa = PBXBuildFile; fileRef = 952C964822C0A1D9004C8C34 /* MGPPostProcessing.m */; };
+		95F002AF22CD0841000A951B /* MGPPostProcessingLayer.m in Sources */ = {isa = PBXBuildFile; fileRef = 952C964B22C0A2E4004C8C34 /* MGPPostProcessingLayer.m */; };
 		95F0F94522C1FEA6002AF368 /* SSAO.metal in Sources */ = {isa = PBXBuildFile; fileRef = 95F0F94422C1FEA6002AF368 /* SSAO.metal */; };
 		95F0F94622C1FEA6002AF368 /* SSAO.metal in Sources */ = {isa = PBXBuildFile; fileRef = 95F0F94422C1FEA6002AF368 /* SSAO.metal */; };
 		95F40BBF22AD75B600F747D2 /* sponza.mtl in Resources */ = {isa = PBXBuildFile; fileRef = 95F40BBD22AD75B600F747D2 /* sponza.mtl */; };
@@ -1730,6 +1730,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				95F002AE22CD0841000A951B /* MGPPostProcessing.m in Sources */,
+				95F002AF22CD0841000A951B /* MGPPostProcessingLayer.m in Sources */,
 				95F40BC122AD76EA00F747D2 /* GBuffer.metal in Sources */,
 				95F40BC222AD76EA00F747D2 /* BRDF.metal in Sources */,
 				95F002AB22CCEEFF000A951B /* MGPScene.m in Sources */,
@@ -1744,11 +1746,9 @@
 				95F40BC722AD76EA00F747D2 /* MetalMath.c in Sources */,
 				95F40BC822AD76EA00F747D2 /* MGPView.m in Sources */,
 				959F3A4D22BFA6D300D1F4D4 /* MGPLight.m in Sources */,
-				952C964C22C0A2E4004C8C34 /* MGPPostProcessingLayer.m in Sources */,
 				95F40BC922AD76EA00F747D2 /* MGPRenderer.m in Sources */,
 				95F40BCA22AD76EA00F747D2 /* MGPGBuffer.m in Sources */,
 				950C345922C5B05D004C32CA /* MGPShadowBuffer.m in Sources */,
-				952C964922C0A1D9004C8C34 /* MGPPostProcessing.m in Sources */,
 				95F40BCB22AD76EA00F747D2 /* MGPMesh.m in Sources */,
 				95F40BCC22AD76EA00F747D2 /* MGPImageBasedLighting.m in Sources */,
 				95FBFD4F229465ED002BA1E0 /* main.m in Sources */,

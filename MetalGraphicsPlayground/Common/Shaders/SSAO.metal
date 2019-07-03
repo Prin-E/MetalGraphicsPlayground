@@ -59,5 +59,5 @@ kernel void ssao(texture2d<float> normal [[texture(0)]],
     }
     
     occlusion /= float(num_samples);
-    output.write(1.0 - occlusion * intensity, thread_pos);
+    output.write(occlusion * intensity, thread_pos);
 }
