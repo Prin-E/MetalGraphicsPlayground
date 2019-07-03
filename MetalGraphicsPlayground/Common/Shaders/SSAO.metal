@@ -32,7 +32,7 @@ kernel void ssao(texture2d<float> normal [[texture(0)]],
     
     const uint num_samples = ssao_props.num_samples;
     const float sample_bias = ssao_props.bias;
-    const float radius = ssao_props.radius;   // TODO
+    const float radius = ssao_props.radius;
     const float intensity = ssao_props.intensity;
     
     float occlusion = 0;
@@ -46,10 +46,14 @@ kernel void ssao(texture2d<float> normal [[texture(0)]],
         proj_offset_pos.xy = saturate(proj_offset_pos.xy);
         proj_offset_pos.y = 1.0 - proj_offset_pos.y;
         
+        // clip space -> screen space
         uint2 screen_offset_pos = uint2(proj_offset_pos.x * output.get_width(), proj_offset_pos.y * output.get_height());
         
+        // screen space -> view space
         float3 world_sample_pos = pos.read(screen_offset_pos).xyz;
         float4 view_sample_pos = camera_props.view * float4(world_sample_pos, 1.0);
+        
+        // check occlusion
         float range_check = smoothstep(0.0, 1.0, radius / abs(view_sample_pos.z - view_pos.z));
         occlusion += (view_offset_pos.z >= view_sample_pos.z + sample_bias ? 1.0 : 0.0) * range_check;
     }

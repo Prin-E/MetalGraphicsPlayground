@@ -314,12 +314,14 @@ const float kLightIntensityVariation = 3.0;
     BOOL hasMetalicMap = _meshes[0].submeshes[0].textures[tex_metalic] != NSNull.null;
     BOOL hasOcculusionMap = _meshes[0].submeshes[0].textures[tex_occlusion] != NSNull.null;
     BOOL hasAnisotropicMap = _meshes[0].submeshes[0].textures[tex_anisotropic] != NSNull.null;
+    BOOL flipVertically = NO;
     [constantValues setConstantValue: &hasAlbedoMap type: MTLDataTypeBool atIndex: fcv_albedo];
     [constantValues setConstantValue: &hasNormalMap type: MTLDataTypeBool atIndex: fcv_normal];
     [constantValues setConstantValue: &hasRoughnessMap type: MTLDataTypeBool atIndex: fcv_roughness];
     [constantValues setConstantValue: &hasMetalicMap type: MTLDataTypeBool atIndex: fcv_metalic];
     [constantValues setConstantValue: &hasOcculusionMap type: MTLDataTypeBool atIndex: fcv_occlusion];
     [constantValues setConstantValue: &hasAnisotropicMap type: MTLDataTypeBool atIndex: fcv_anisotropic];
+    [constantValues setConstantValue: &flipVertically type: MTLDataTypeBool atIndex: fcv_flip_vertically];
     _renderPipelineGBuffer = [_gBuffer renderPipelineStateWithConstants: constantValues error: nil];
     
     hasAlbedoMap = _testObjects[0].submeshes[0].textures[tex_albedo] != NSNull.null;

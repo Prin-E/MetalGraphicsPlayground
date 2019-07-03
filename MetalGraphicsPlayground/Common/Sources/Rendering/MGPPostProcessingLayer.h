@@ -48,4 +48,11 @@ typedef NS_ENUM(NSUInteger, MGPPostProcessingRenderingOrder) {
 
 @end
 
+// Temporal AA
+@interface MGPPostProcessingLayerTemporalAA : MGPPostProcessingLayer
+
+@property (nonatomic, readonly) id<MTLTexture> historyTexture;
+
+@end
+
 NS_ASSUME_NONNULL_END

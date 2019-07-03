@@ -193,6 +193,9 @@
 		95EFEC4222AE98640091C698 /* Tropical_Beach_3k.hdr in Resources */ = {isa = PBXBuildFile; fileRef = 95EFEC3922AE97C40091C698 /* Tropical_Beach_3k.hdr */; };
 		95EFEC4322AE98640091C698 /* WinterForest_Ref.hdr in Resources */ = {isa = PBXBuildFile; fileRef = 95EFEC3B22AE97CA0091C698 /* WinterForest_Ref.hdr */; };
 		95EFEC4D22AEAE3B0091C698 /* MGPTextureLoader.m in Sources */ = {isa = PBXBuildFile; fileRef = 95EFEC4C22AEAE3B0091C698 /* MGPTextureLoader.m */; };
+		95F002AB22CCEEFF000A951B /* MGPScene.m in Sources */ = {isa = PBXBuildFile; fileRef = 95F002AA22CCEEFF000A951B /* MGPScene.m */; };
+		95F002AC22CCEFB5000A951B /* MGPPostProcessing.m in Sources */ = {isa = PBXBuildFile; fileRef = 952C964822C0A1D9004C8C34 /* MGPPostProcessing.m */; };
+		95F002AD22CCEFB5000A951B /* MGPPostProcessingLayer.m in Sources */ = {isa = PBXBuildFile; fileRef = 952C964B22C0A2E4004C8C34 /* MGPPostProcessingLayer.m */; };
 		95F0F94522C1FEA6002AF368 /* SSAO.metal in Sources */ = {isa = PBXBuildFile; fileRef = 95F0F94422C1FEA6002AF368 /* SSAO.metal */; };
 		95F0F94622C1FEA6002AF368 /* SSAO.metal in Sources */ = {isa = PBXBuildFile; fileRef = 95F0F94422C1FEA6002AF368 /* SSAO.metal */; };
 		95F40BBF22AD75B600F747D2 /* sponza.mtl in Resources */ = {isa = PBXBuildFile; fileRef = 95F40BBD22AD75B600F747D2 /* sponza.mtl */; };
@@ -447,6 +450,8 @@
 		95EFEC3B22AE97CA0091C698 /* WinterForest_Ref.hdr */ = {isa = PBXFileReference; lastKnownFileType = file; path = WinterForest_Ref.hdr; sourceTree = "<group>"; };
 		95EFEC4B22AEAE3B0091C698 /* MGPTextureLoader.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MGPTextureLoader.h; sourceTree = "<group>"; };
 		95EFEC4C22AEAE3B0091C698 /* MGPTextureLoader.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MGPTextureLoader.m; sourceTree = "<group>"; };
+		95F002A922CCEEFF000A951B /* MGPScene.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MGPScene.h; sourceTree = "<group>"; };
+		95F002AA22CCEEFF000A951B /* MGPScene.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MGPScene.m; sourceTree = "<group>"; };
 		95F0D289227D4DF600DEEC3B /* MGPMesh.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MGPMesh.h; sourceTree = "<group>"; };
 		95F0D28A227D4DF600DEEC3B /* MGPMesh.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MGPMesh.m; sourceTree = "<group>"; };
 		95F0F94422C1FEA6002AF368 /* SSAO.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = SSAO.metal; sourceTree = "<group>"; };
@@ -1011,14 +1016,12 @@
 				95A4D9282283F1E0004653B6 /* MGPImageBasedLighting.m */,
 				959F3A4A22BFA6D300D1F4D4 /* MGPLight.h */,
 				959F3A4B22BFA6D300D1F4D4 /* MGPLight.m */,
-				952C964722C0A1D9004C8C34 /* MGPPostProcessing.h */,
-				952C964822C0A1D9004C8C34 /* MGPPostProcessing.m */,
-				952C964A22C0A2E4004C8C34 /* MGPPostProcessingLayer.h */,
-				952C964B22C0A2E4004C8C34 /* MGPPostProcessingLayer.m */,
 				950C345622C5B05D004C32CA /* MGPShadowBuffer.h */,
 				950C345722C5B05D004C32CA /* MGPShadowBuffer.m */,
 				95EFB7D022C7AD5A00813903 /* MGPShadowManager.h */,
 				95EFB7D122C7AD5A00813903 /* MGPShadowManager.m */,
+				95F002A922CCEEFF000A951B /* MGPScene.h */,
+				95F002AA22CCEEFF000A951B /* MGPScene.m */,
 			);
 			path = Model;
 			sourceTree = "<group>";
@@ -1030,6 +1033,10 @@
 				958955CA227736F700414591 /* MGPRenderer.m */,
 				95F4CB282279937200F51454 /* MGPGBuffer.h */,
 				95F4CB292279937200F51454 /* MGPGBuffer.m */,
+				952C964722C0A1D9004C8C34 /* MGPPostProcessing.h */,
+				952C964822C0A1D9004C8C34 /* MGPPostProcessing.m */,
+				952C964A22C0A2E4004C8C34 /* MGPPostProcessingLayer.h */,
+				952C964B22C0A2E4004C8C34 /* MGPPostProcessingLayer.m */,
 			);
 			path = Rendering;
 			sourceTree = "<group>";
@@ -1699,6 +1706,7 @@
 				950C345822C5B05D004C32CA /* MGPShadowBuffer.m in Sources */,
 				95FBFD56229466DC002BA1E0 /* MGPCamera.m in Sources */,
 				95A4D93522846F99004653B6 /* CommonStages.metal in Sources */,
+				95F002AD22CCEFB5000A951B /* MGPPostProcessingLayer.m in Sources */,
 				95F0F94522C1FEA6002AF368 /* SSAO.metal in Sources */,
 				95BED31C2286746B006E5C2F /* CommonMath.metal in Sources */,
 				959C8301227F409E00C2C245 /* ImageBasedLighting.metal in Sources */,
@@ -1714,6 +1722,7 @@
 				958955CB227736F700414591 /* MGPRenderer.m in Sources */,
 				95EFD8DD22AF958500D4C0F5 /* MGPTextureLoader.m in Sources */,
 				95EFD8DB22AF941800D4C0F5 /* DDSTextureLoader.mm in Sources */,
+				95F002AC22CCEFB5000A951B /* MGPPostProcessing.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1723,6 +1732,7 @@
 			files = (
 				95F40BC122AD76EA00F747D2 /* GBuffer.metal in Sources */,
 				95F40BC222AD76EA00F747D2 /* BRDF.metal in Sources */,
+				95F002AB22CCEEFF000A951B /* MGPScene.m in Sources */,
 				95EFD8DC22AF941800D4C0F5 /* DDSTextureLoader.mm in Sources */,
 				95F40BC322AD76EA00F747D2 /* ImageBasedLighting.metal in Sources */,
 				95F40BC422AD76EA00F747D2 /* Skybox.metal in Sources */,

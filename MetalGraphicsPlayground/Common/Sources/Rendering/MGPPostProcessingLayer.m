@@ -151,3 +151,11 @@ NSString * const MGPPostProcessingLayerErrorDomain = @"MGPPostProcessingLayerErr
 }
 
 @end
+
+@implementation MGPPostProcessingLayerTemporalAA
+
+- (NSUInteger)renderingOrder {
+    return MGPPostProcessingRenderingOrderAfterShadePass;
+}
+
+@end
