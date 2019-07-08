@@ -138,6 +138,7 @@
             desc.storageMode = storageMode;
             desc.usage = textureUsage;
             texture = [_device newTextureWithDescriptor: desc];
+            texture.label = intermediateTexture.label;
             
             id<MTLCommandBuffer> buffer = [_commandQueue commandBufferWithUnretainedReferences];
             id<MTLBlitCommandEncoder> blit = [buffer blitCommandEncoder];

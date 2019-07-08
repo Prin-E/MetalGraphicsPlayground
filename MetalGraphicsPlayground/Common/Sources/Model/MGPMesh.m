@@ -21,6 +21,7 @@
 - (instancetype)initWithModelIOSubmesh: (MDLSubmesh *)mdlSubmesh
                        metalKitSubmesh: (MTKSubmesh *)mtkSubmesh
                          textureLoader: (MGPTextureLoader *)textureLoader
+                           textureDict: (NSMutableDictionary *)textureDict
                                  error: (NSError **)error {
     self = [super init];
     if(self) {
@@ -40,7 +41,8 @@
         for(NSInteger i = 0; i < tex_total; i++) {
             id<MTLTexture> texture = [MGPSubmesh createMetalTextureFromMaterial: mdlSubmesh.material
                                                         modelIOMaterialSemantic: meterialSemantics[i]
-                                                                  textureLoader: textureLoader];
+                                                                  textureLoader: textureLoader
+                                                                    textureDict: textureDict];
             if(texture != nil) {
                 [_textures addObject: texture];
             }
@@ -55,6 +57,7 @@
 + (nonnull id<MTLTexture>) createMetalTextureFromMaterial:(nonnull MDLMaterial *)material
                                   modelIOMaterialSemantic:(MDLMaterialSemantic)materialSemantic
                                             textureLoader:(nonnull MGPTextureLoader *)textureLoader
+                                              textureDict:(NSMutableDictionary *)textureDict;
 {
     id<MTLTexture> texture;
     
@@ -77,7 +80,17 @@
             }
             
             NSURL *textureURL = [NSURL URLWithString:URLString];
+            NSString *textureName = [URLString lastPathComponent];
             NSError *error = nil;
+            
+            // Find a texture in the pool
+            texture = [textureDict objectForKey: textureName];
+            
+            // If we found a texture in the pool...
+            if(texture) {
+                // ...return it
+                return texture;
+            }
             
             // Attempt to load the texture from the file system
             texture = [textureLoader newTextureFromURL: textureURL
@@ -88,6 +101,8 @@
             // If we found a texture using the string as a file path name...
             if(texture)
             {
+                // save a texture in the pool
+                textureDict[texture.label] = texture;
                 // ...return it
                 return texture;
             }
@@ -102,6 +117,8 @@
             
             // If we found a texture with the string in our asset catalog...
             if(texture) {
+                // save a texture in the pool
+                textureDict[texture.label] = texture;
                 // ...return it
                 return texture;
             }
@@ -138,6 +155,7 @@
 @implementation MGPMesh {
     MTKMesh *_metalKitMesh;
     NSMutableArray *_submeshes;
+    NSMutableDictionary<NSString*, id<MTLTexture>> *_textureDict;
 }
 
 @synthesize metalKitMesh = _metalKitMesh;
@@ -175,10 +193,14 @@
         // init submeshes
         _submeshes = [[NSMutableArray alloc] initWithCapacity: _metalKitMesh.submeshes.count];
         
+        // local texture pool
+        _textureDict = [NSMutableDictionary new];
+        
         for(NSInteger i = 0; i < _metalKitMesh.submeshes.count; i++) {
             MGPSubmesh *submesh = [[MGPSubmesh alloc] initWithModelIOSubmesh: mdlMesh.submeshes[i]
                                                              metalKitSubmesh: mtkMesh.submeshes[i]
                                                                textureLoader: textureLoader
+                                                                 textureDict: _textureDict
                                                                        error: error];
             [_submeshes addObject: submesh];
         }
