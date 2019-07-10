@@ -57,6 +57,25 @@ typedef struct __attribute__((__aligned__(256))) {
 } ssao_props_t;
 
 typedef enum {
+    attachment_gbuffer_light_albedo,
+    attachment_gbuffer_light_normal,
+    attachment_gbuffer_light_pos,
+    attachment_gbuffer_light_shading,
+    attachment_gbuffer_light_tangent,
+    attachment_gbuffer_light_irradiance,
+    attachment_gbuffer_light_prefiltered_specular,
+    attachment_gbuffer_light_brdf_lookup,
+    attachment_gbuffer_light_ssao,
+    attachment_gbuffer_light_total
+} attachment_gbuffer_light_index;
+
+typedef enum {
+    attachment_gbuffer_shade_albedo,
+    attachment_gbuffer_shade_light,
+    attachment_gbuffer_shade_total
+} attachment_gbuffer_shade_index;
+
+typedef enum {
     attachment_albedo,
     attachment_normal,
     attachment_pos,
@@ -66,7 +85,8 @@ typedef enum {
     attachment_irradiance,
     attachment_prefiltered_specular,
     attachment_brdf_lookup,
-    attachment_ssao
+    attachment_ssao,
+    attachment_total
 } attachment_index;
 
 typedef enum {

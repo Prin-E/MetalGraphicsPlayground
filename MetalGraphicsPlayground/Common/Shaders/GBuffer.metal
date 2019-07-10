@@ -156,8 +156,8 @@ fragment half4 gbuffer_light_frag(ScreenFragment in [[stage_in]],
                                   texture2d<float> pos [[texture(attachment_pos)]],
                                   texture2d<half> shading [[texture(attachment_shading)]],
                                   texture2d<half> tangent [[texture(attachment_tangent)]],
-                                  array<texture2d<half>,32> shadow_maps [[texture(11)]]) {
-    float4 out_color = float4(0);
+                                  array<texture2d<float>,32> shadow_maps [[texture(11)]]) {
+    float4 out_color = float4(0.0, 0.0, 0.0, 1.0);
     
     // shared values
     float4 n_c = float4(normal.sample(linear, in.uv));
@@ -179,7 +179,7 @@ fragment half4 gbuffer_light_frag(ScreenFragment in [[stage_in]],
     float4 world_pos = pos.sample(linear_clamp_to_edge, in.uv);
     
     // global ambient color
-    out_color += light_global.ambient_color;
+    out_color.xyz += light_global.ambient_color;
     
     // calculate lights
     for(uint i = 0; i < light_global.num_light; i++) {
@@ -188,13 +188,13 @@ fragment half4 gbuffer_light_frag(ScreenFragment in [[stage_in]],
         float2 light_screen_uv = (light_clip_pos.xy / max(0.001, light_clip_pos.w)) * 0.5 + 0.5;
         light_screen_uv.y = 1.0 - light_screen_uv.y;
         
-        float depth_value = shadow_maps[i].sample(linear_clamp_to_edge, light_screen_uv);
+        float depth_value = shadow_maps[i].sample(linear_clamp_to_edge, light_screen_uv).r;
         bool lit = depth_value < light_view_pos.z - lights[i].shadow_bias;
         if(lit) {
             float3 light_dir = lights[i].light_view[2].xyz;
             float3 light_color = lights[i].color;
             float light_intensity = lights[i].intensity;
-            
+            float3 v = normalize(lights[i].light_view[3].xyz - world_pos.xyz);
             float3 h = normalize(light_dir + v);
             float h_v = max(0.001, saturate(dot(h, v)));
             float n_h = dot(n, h);
@@ -203,7 +203,6 @@ fragment half4 gbuffer_light_frag(ScreenFragment in [[stage_in]],
             float n_l = max(0.001, saturate(dot(n, light_dir)));
             float t_l = max(0.001, saturate(dot(t, light_dir)));
             float b_l = max(0.001, saturate(dot(b, light_dir)));
-            float3 v = normalize(lights[i].position - world_pos);
             float n_v = max(0.001, saturate(dot(n, v)));
             float t_v = max(0.001, saturate(dot(t, v)));
             float b_v = max(0.001, saturate(dot(b, v)));
@@ -220,7 +219,7 @@ fragment half4 gbuffer_light_frag(ScreenFragment in [[stage_in]],
             shading_params.t_v = t_v;
             shading_params.b_v = b_v;
             
-            out_color += calculate_brdf(shading_params) * shading_values.z;
+            out_color.xyz += calculate_brdf(shading_params) * shading_values.z;
         }
     }
     
@@ -241,19 +240,22 @@ fragment half4 gbuffer_shade_frag(ScreenFragment in [[stage_in]],
                                   constant camera_props_t &cameraProps [[buffer(1)]],
                                   texture2d<half> albedo [[texture(attachment_albedo)]],
                                   texture2d<half> normal [[texture(attachment_normal)]],
+                                  texture2d<float> pos [[texture(attachment_pos)]],
                                   texture2d<half> shading [[texture(attachment_shading)]],
                                   texture2d<half> light [[texture(attachment_light)]],
                                   texturecube<half> irradiance [[texture(attachment_irradiance), function_constant(uses_ibl_irradiance_map)]],
                                   texturecube<half> prefilteredSpecular [[texture(attachment_prefiltered_specular), function_constant(uses_ibl_specular_map)]],
                                   texture2d<half> brdfLookup [[texture(attachment_brdf_lookup), function_constant(uses_ibl_specular_map)]],
                                   texture2d<half> ssao [[texture(attachment_ssao), function_constant(uses_ssao_map)]]) {
-    float4 out_color = float4(0);
+    float4 out_color = float4(0.0, 0.0, 0.0, 1.0);
     
     float4 n_c = float4(normal.sample(linear, in.uv));
     if(n_c.w == 0.0)
         return half4(0, 0, 0, 0);
     float3 n = normalize((n_c.xyz - 0.5) * 2.0);
-    half4 albedo_color = albedo.sample(linear, in.uv);
+    float3 v = normalize(cameraProps.position - pos.sample(linear, in.uv).xyz);
+    float n_v = max(0.001, saturate(dot(n, v)));
+    float3 albedo_color = float3(albedo.sample(linear, in.uv).xyz);
     half4 shading_props_color = shading.sample(linear, in.uv);
     half roughness = shading_props_color.x;
     half metalic = shading_props_color.y;
@@ -267,11 +269,12 @@ fragment half4 gbuffer_shade_frag(ScreenFragment in [[stage_in]],
     }
     
     // irradiance
+    float3 k_s = float3(0);
     if(uses_ibl_irradiance_map) {
         float3 irradiance_color = float3(irradiance.sample(linear, n).xyz);
-        float3 k_s = fresnel(mix(0.04, albedo_color, metalic), n_v);
+        k_s = fresnel(mix(0.04, albedo_color, metalic), n_v);
         float3 k_d = (float3(1.0) - k_s) * (1.0 - metalic);
-        out_color += ao * k_d * irradiance_color * albedo_color * occlusion;
+        out_color.xyz += ao * k_d * irradiance_color * albedo_color * occlusion;
     }
     
     // prefiltered specular
@@ -279,15 +282,16 @@ fragment half4 gbuffer_shade_frag(ScreenFragment in [[stage_in]],
         float mip_index = roughness * prefilteredSpecular.get_num_mip_levels();
         float3 prefiltered_color = float3(prefilteredSpecular.sample(linear, n, level(mip_index)).xyz);
         float3 environment_brdf = float3(brdfLookup.sample(linear_clamp_to_edge, float2(roughness, n_v)).xyz);
-        out_color += ao * k_s * prefiltered_color * (albedo_c * environment_brdf.x + environment_brdf.y);
+        out_color.xyz += ao * k_s * prefiltered_color * (albedo_color * environment_brdf.x + environment_brdf.y);
     }
     
     // lit
-    out_color += light_color * albedo_color;
+    out_color.xyz += float3(light_color.xyz) * albedo_color;
     
     return half4(out_color);
 }
 
+/*
 // shading
 vertex ScreenFragment lighting_vert(constant ScreenVertex *in [[buffer(0)]],
                                       uint vid [[vertex_id]]) {
@@ -393,3 +397,4 @@ fragment half4 lighting_frag(ScreenFragment in [[stage_in]],
     
     return half4(half3(out_color), 1.0);
 }
+*/
