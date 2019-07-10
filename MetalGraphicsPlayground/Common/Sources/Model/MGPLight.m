@@ -25,8 +25,18 @@
 
 - (light_t)shaderLightProperties {
     light_t light;
-    light.direction = _direction;
-    light.position = _position;
+    
+    vector_float3 forward = _direction;
+    vector_float3 up = vector3(0.0f, 1.0f, 0.0f);
+    if(ABS(simd_dot(forward, up)) < 0.01f)
+        up = vector3(0.0f, 0.0f, -1.0f);
+    vector_float3 right = simd_cross(up, forward);
+    up = simd_cross(forward, right);
+
+    light.light_view = simd_matrix(simd_make_float4(right),
+                                   simd_make_float4(up),
+                                   simd_make_float4(forward),
+                                   vector4(-_position.x, -_position.y, -_position.z, 1.0f));
     light.intensity = _intensity;
     light.color = _color;
     return light;

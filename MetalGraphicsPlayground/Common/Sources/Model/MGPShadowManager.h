@@ -17,15 +17,17 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property (nonatomic, readonly) id<MTLDevice> device;
 @property (nonatomic, readonly) id<MTLLibrary> library;
+@property (nonatomic, readonly) MTLVertexDescriptor *vertexDescriptor;
+@property (nonatomic, readonly) id<MTLRenderPipelineState> shadowPipeline;
 
 - (instancetype)initWithDevice: (id<MTLDevice>)device
-                       library: (id<MTLLibrary>)library;
+                       library: (id<MTLLibrary>)library
+              vertexDescriptor: (MTLVertexDescriptor *)vertexDescriptor;
 
 - (MGPShadowBuffer *)newShadowBufferForLight: (MGPLight *)light
                                   resolution: (NSUInteger)resolution
                                cascadeLevels: (NSUInteger)cascadeLevels;
-
-- (void)render: (id<MTLCommandBuffer>)buffer;
+- (void)removeShadowBufferForLight: (MGPLight *)light;
 
 @end
 

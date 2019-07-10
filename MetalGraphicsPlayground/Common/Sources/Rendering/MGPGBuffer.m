@@ -18,11 +18,16 @@
     MTLVertexDescriptor *_baseVertexDescriptor;
     MTLRenderPassDescriptor *_renderPassDescriptor;
     MTLRenderPassDescriptor *_lightingPassDescriptor;
+    MTLRenderPassDescriptor *_shadingPassDescriptor;
     MTLRenderPipelineDescriptor *_renderPipelineDescriptor;
     MTLRenderPipelineDescriptor *_lightingPipelineDescriptor;
+    MTLRenderPipelineDescriptor *_shadingPipelineDescriptor;
     
-    NSMutableDictionary<MTLFunctionConstantValues *, id<MTLRenderPipelineState>> *_renderPipelineDict;
+    // key : bit-flag of function constant values
+    // value : render-pipeline state
+    NSMutableDictionary<NSNumber *, id<MTLRenderPipelineState>> *_renderPipelineDict;
     id<MTLRenderPipelineState> _lightingPipelineState;
+    NSMutableDictionary<NSNumber *, id<MTLRenderPipelineState>> *_shadingPipelineDict;
 }
 
 #pragma mark - Initialization
@@ -45,13 +50,16 @@
     _library = library;
     _size = newSize;
     _renderPipelineDict = [NSMutableDictionary dictionaryWithCapacity: 24];
+    _shadingPipelineDict = [NSMutableDictionary dictionaryWithCapacity: 4];
     
     [self _makeGBufferTextures];
     [self _makeBaseVertexDescriptor];
     [self _makeRenderPipelineDescriptor];
     [self _makeLightingPipelineDescriptor];
+    [self _makeShadingPipelineDescriptor];
     [self _makeRenderPassDescriptor];
     [self _makeLightingPassDescriptor];
+    [self _makeShadingPassDescriptor];
 }
 
 - (void)_makeGBufferTextures {
@@ -96,7 +104,11 @@
     // lighting
     desc.pixelFormat = MTLPixelFormatRGBA16Float;
     _lighting = [_device newTextureWithDescriptor: desc];
-    _lighting.label = @"Lighting Output";
+    _lighting.label = @"Light Accumulation G-buffer";
+    
+    // shade-output
+    _output = [_device newTextureWithDescriptor: desc];
+    _output.label = @"Output G-buffer";
 }
 
 - (void)_makeBaseVertexDescriptor {
@@ -138,10 +150,6 @@
     // vertex descriptor
     desc.vertexDescriptor = _baseVertexDescriptor;
     
-    // stages
-    desc.vertexFunction = [_library newFunctionWithName:@"gbuffer_vert"];
-    desc.fragmentFunction = [_library newFunctionWithName:@"gbuffer_frag"];
-    
     _renderPipelineDescriptor = desc;
 }
 
@@ -151,10 +159,17 @@
     
     // color attachments
     desc.colorAttachments[0].pixelFormat = _lighting.pixelFormat;
-    desc.vertexFunction = [_library newFunctionWithName:@"lighting_vert"];
-    desc.fragmentFunction = [_library newFunctionWithName:@"lighting_frag"];
+    desc.vertexFunction = [_library newFunctionWithName:@"gbuffer_light_vert"];
+    desc.fragmentFunction = [_library newFunctionWithName:@"gbuffer_light_frag"];
     
     _lightingPipelineDescriptor = desc;
+}
+
+- (void)_makeShadingPipelineDescriptor {
+    MTLRenderPipelineDescriptor *desc = [[MTLRenderPipelineDescriptor alloc] init];
+    desc.label = @"Shading";
+    desc.colorAttachments[0].pixelFormat = _output.pixelFormat;
+    _shadingPipelineDescriptor = desc;
 }
 
 - (void)_makeRenderPassDescriptor {
@@ -197,12 +212,25 @@
         _lightingPassDescriptor = [[MTLRenderPassDescriptor alloc] init];
         
         // color attachments
-        _lightingPassDescriptor.colorAttachments[0].loadAction = MTLLoadActionClear;
+        _lightingPassDescriptor.colorAttachments[0].loadAction = MTLLoadActionLoad;
         _lightingPassDescriptor.colorAttachments[0].storeAction = MTLStoreActionStore;
         _lightingPassDescriptor.colorAttachments[0].clearColor = MTLClearColorMake(0, 0, 0, 0);
     }
     
     _lightingPassDescriptor.colorAttachments[0].texture = _lighting;
+}
+
+- (void)_makeShadingPassDescriptor {
+    if(_shadingPassDescriptor == nil) {
+        _shadingPassDescriptor = [[MTLRenderPassDescriptor alloc] init];
+        
+        // color attachments
+        _shadingPassDescriptor.colorAttachments[0].loadAction = MTLLoadActionClear;
+        _shadingPassDescriptor.colorAttachments[0].storeAction = MTLStoreActionStore;
+        _shadingPassDescriptor.colorAttachments[0].clearColor = MTLClearColorMake(0, 0, 0, 0);
+    }
+    
+    _shadingPassDescriptor.colorAttachments[0].texture = _output;
 }
 
 #pragma mark - Properties
@@ -218,6 +246,10 @@
     return _lightingPassDescriptor;
 }
 
+- (MTLRenderPassDescriptor *)shadingPassDescriptor {
+    return _shadingPassDescriptor;
+}
+
 - (CGSize)size {
     return _size;
 }
@@ -231,29 +263,62 @@
         [self _makeGBufferTextures];
         [self _makeRenderPassDescriptor];
         [self _makeLightingPassDescriptor];
+        [self _makeShadingPassDescriptor];
     }
 }
 
 #pragma mark - Render pipeline states
-- (id<MTLRenderPipelineState>)renderPipelineStateWithConstants:(MTLFunctionConstantValues *)constantValues
+- (id<MTLRenderPipelineState>)renderPipelineStateWithConstants:(MGPGBufferPrepassFunctionConstants)constants
                                                          error:(NSError **)error {
     if(error != nil) {
         *error = nil;
     }
-    if(constantValues == nil) {
-        constantValues = [[MTLFunctionConstantValues alloc] init];
-    }
     
-    id<MTLRenderPipelineState> renderPipelineState = [_renderPipelineDict objectForKey: constantValues];
+    NSUInteger bitflag = 0;
+    bitflag |= constants.hasAlbedoMap ? (1L << fcv_albedo) : 0;
+    bitflag |= constants.hasNormalMap ? (1L << fcv_normal) : 0;
+    bitflag |= constants.hasRoughnessMap ? (1L << fcv_roughness) : 0;
+    bitflag |= constants.hasMetalicMap ? (1L << fcv_metalic) : 0;
+    bitflag |= constants.hasOcclusionMap ? (1L << fcv_occlusion) : 0;
+    bitflag |= constants.hasAnisotropicMap ? (1L << fcv_anisotropic) : 0;
+    bitflag |= constants.flipVertically ? (1L << fcv_flip_vertically) : 0;
+    
+    NSNumber *key = @(bitflag);
+    id<MTLRenderPipelineState> renderPipelineState = [_renderPipelineDict objectForKey: key];
     if(renderPipelineState == nil) {
-        _renderPipelineDescriptor.vertexFunction = [_library newFunctionWithName: @"gbuffer_vert"
+        // make function constant values object
+        MTLFunctionConstantValues *constantValues = [MTLFunctionConstantValues new];
+        [constantValues setConstantValue: &constants.hasAlbedoMap
+                                    type: MTLDataTypeBool
+                                 atIndex: fcv_albedo];
+        [constantValues setConstantValue: &constants.hasNormalMap
+                                    type: MTLDataTypeBool
+                                 atIndex: fcv_normal];
+        [constantValues setConstantValue: &constants.hasRoughnessMap
+                                    type: MTLDataTypeBool
+                                 atIndex: fcv_roughness];
+        [constantValues setConstantValue: &constants.hasMetalicMap
+                                    type: MTLDataTypeBool
+                                 atIndex: fcv_metalic];
+        [constantValues setConstantValue: &constants.hasOcclusionMap
+                                    type: MTLDataTypeBool
+                                 atIndex: fcv_occlusion];
+        [constantValues setConstantValue: &constants.hasAnisotropicMap
+                                    type: MTLDataTypeBool
+                                 atIndex: fcv_anisotropic];
+        [constantValues setConstantValue: &constants.flipVertically
+                                    type: MTLDataTypeBool
+                                 atIndex: fcv_flip_vertically];
+        
+        _renderPipelineDescriptor.vertexFunction = [_library newFunctionWithName: @"gbuffer_prepass_vert"
                                                                   constantValues: constantValues
                                                                            error: error];
-        _renderPipelineDescriptor.fragmentFunction = [_library newFunctionWithName: @"gbuffer_frag"
+        _renderPipelineDescriptor.fragmentFunction = [_library newFunctionWithName: @"gbuffer_prepass_frag"
                                                                     constantValues: constantValues
                                                                              error: error];
         renderPipelineState = [_device newRenderPipelineStateWithDescriptor: _renderPipelineDescriptor
                                                                       error: error];
+        _renderPipelineDict[key] = renderPipelineState;
     }
     return renderPipelineState;
 }
@@ -267,6 +332,45 @@
                                                                          error: error];
     }
     return _lightingPipelineState;
+}
+
+- (id<MTLRenderPipelineState>)shadingPipelineStateWithConstants: (MGPGBufferShadingFunctionConstants)constants
+                                                          error: (NSError **)error; {
+    if(error != nil) {
+        *error = nil;
+    }
+    
+    NSUInteger bitflag = 0;
+    bitflag |= constants.hasIBLIrradianceMap ? (1L << fcv_uses_ibl_irradiance_map) : 0;
+    bitflag |= constants.hasIBLSpecularMap ? (1L << fcv_uses_ibl_specular_map) : 0;
+    bitflag |= constants.hasSSAOMap ? (1L << fcv_uses_ssao_map) : 0;
+    
+    NSNumber *key = @(bitflag);
+    id<MTLRenderPipelineState> renderPipelineState = [_shadingPipelineDict objectForKey: key];
+    if(renderPipelineState == nil) {
+        // make function constant values object
+        MTLFunctionConstantValues *constantValues = [MTLFunctionConstantValues new];
+        [constantValues setConstantValue: &constants.hasIBLIrradianceMap
+                                    type: MTLDataTypeBool
+                                 atIndex: fcv_uses_ibl_irradiance_map];
+        [constantValues setConstantValue: &constants.hasIBLSpecularMap
+                                    type: MTLDataTypeBool
+                                 atIndex: fcv_uses_ibl_specular_map];
+        [constantValues setConstantValue: &constants.hasSSAOMap
+                                    type: MTLDataTypeBool
+                                 atIndex: fcv_uses_ssao_map];
+        
+        _shadingPipelineDescriptor.vertexFunction = [_library newFunctionWithName: @"gbuffer_shade_vert"
+                                                                  constantValues: constantValues
+                                                                           error: error];
+        _shadingPipelineDescriptor.fragmentFunction = [_library newFunctionWithName: @"gbuffer_shade_frag"
+                                                                    constantValues: constantValues
+                                                                             error: error];
+        renderPipelineState = [_device newRenderPipelineStateWithDescriptor: _shadingPipelineDescriptor
+                                                                      error: error];
+        _shadingPipelineDict[key] = renderPipelineState;
+    }
+    return renderPipelineState;
 }
 
 @end

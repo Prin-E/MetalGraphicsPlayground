@@ -330,6 +330,12 @@ const float kLightIntensityVariation = 3.0;
     hasMetalicMap = _testObjects[0].submeshes[0].textures[tex_metalic] != NSNull.null;
     hasOcculusionMap = _testObjects[0].submeshes[0].textures[tex_occlusion] != NSNull.null;
     hasAnisotropicMap = _testObjects[0].submeshes[0].textures[tex_anisotropic] != NSNull.null;
+    hasAlbedoMap = false;
+    hasNormalMap = true;
+    hasRoughnessMap = false;
+    hasMetalicMap = false;
+    hasOcculusionMap = false;
+    hasAnisotropicMap = false;
     [constantValues setConstantValue: &hasAlbedoMap type: MTLDataTypeBool atIndex: fcv_albedo];
     [constantValues setConstantValue: &hasNormalMap type: MTLDataTypeBool atIndex: fcv_normal];
     [constantValues setConstantValue: &hasRoughnessMap type: MTLDataTypeBool atIndex: fcv_roughness];
@@ -557,13 +563,20 @@ const float kLightIntensityVariation = 3.0;
     id<MTLRenderCommandEncoder> skyboxPassEncoder = [commandBuffer renderCommandEncoderWithDescriptor: _renderPassSkybox];
     [self renderSkybox:skyboxPassEncoder];
     
-    // G-buffer pass
-    id<MTLRenderCommandEncoder> gBufferPassEncoder = [commandBuffer renderCommandEncoderWithDescriptor: _gBuffer.renderPassDescriptor];
-    [self renderGBuffer:gBufferPassEncoder];
+    // G-buffer prepass
+    id<MTLRenderCommandEncoder> prepassEncoder = [commandBuffer renderCommandEncoderWithDescriptor: _gBuffer.renderPassDescriptor];
+    [self renderGBuffer:prepassEncoder];
     
-    // lighting pass
+    // Shadowmap Passes
+    [self renderShadows: commandBuffer];
+    
+    // G-buffer light-accumulation pass
     id<MTLRenderCommandEncoder> lightingPassEncoder = [commandBuffer renderCommandEncoderWithDescriptor: _gBuffer.lightingPassDescriptor];
     [self renderLighting:lightingPassEncoder];
+    
+    // G-buffer shade pass
+    id<MTLRenderCommandEncoder> shadingPassEncoder = [commandBuffer renderCommandEncoderWithDescriptor: _gBuffer.shadingPassDescriptor];
+    [self renderShading:shadingPassEncoder];
     
     // present to framebuffer
     _renderPassPresent.colorAttachments[0].texture = self.view.currentDrawable.texture;
@@ -597,6 +610,9 @@ const float kLightIntensityVariation = 3.0;
                 vertexStart: 0
                 vertexCount: 36];
     [encoder endEncoding];
+}
+
+- (void)renderShadows:(id<MTLCommandBuffer>)buffer {
 }
 
 - (void)renderGBuffer:(id<MTLRenderCommandEncoder>)encoder {
@@ -686,6 +702,10 @@ const float kLightIntensityVariation = 3.0;
                 vertexCount: 6];
     
     [encoder endEncoding];
+}
+
+- (void)renderShading:(id<MTLRenderCommandEncoder>)encoder {
+    // TODO
 }
 
 - (void)renderFramebuffer:(id<MTLRenderCommandEncoder>)encoder {

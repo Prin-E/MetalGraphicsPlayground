@@ -20,7 +20,8 @@ NSString * const MGPShadowManagerErrorDoamin = @"MGPShadowManagerError";
 }
 
 - (instancetype)initWithDevice:(id<MTLDevice>)device
-                       library:(id<MTLLibrary>)library {
+                       library:(id<MTLLibrary>)library
+              vertexDescriptor:(nonnull MTLVertexDescriptor *)vertexDescriptor {
     self = [super init];
     if(self) {
         if(device == nil)
@@ -33,9 +34,21 @@ NSString * const MGPShadowManagerErrorDoamin = @"MGPShadowManagerError";
         }
         
         _device = device;
+        _library = library;
+        _vertexDescriptor = vertexDescriptor;
         _shadowBufferDict = [NSMutableDictionary dictionaryWithCapacity: 8];
+        [self _makeRenderPipeline];
     }
     return self;
+}
+
+- (void)_makeRenderPipeline {
+    MTLRenderPipelineDescriptor *desc = [[MTLRenderPipelineDescriptor alloc] init];
+    desc.depthAttachmentPixelFormat = MTLPixelFormatDepth32Float;
+    desc.vertexDescriptor = _vertexDescriptor;
+    desc.vertexFunction = [_library newFunctionWithName: @"shadow_vert"];
+    _shadowPipeline = [_device newRenderPipelineStateWithDescriptor: desc
+                                                              error: nil];
 }
 
 - (MGPShadowBuffer *)newShadowBufferForLight:(MGPLight *)light
@@ -51,8 +64,10 @@ NSString * const MGPShadowManagerErrorDoamin = @"MGPShadowManagerError";
     return [_shadowBufferDict objectForKey: light];
 }
 
-- (void)render:(id<MTLCommandBuffer>)buffer {
-    // TODO
+- (void)removeShadowBufferForLight:(MGPLight *)light {
+    if([_shadowBufferDict objectForKey: light]) {
+        [_shadowBufferDict removeObjectForKey: light];
+    }
 }
 
 @end

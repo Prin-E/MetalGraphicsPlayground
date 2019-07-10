@@ -28,7 +28,6 @@ typedef struct {
     float b_h;
     float b_v;
     float b_l;
-    
 } shading_t;
 
 float fresnel(float f0, float h_v);

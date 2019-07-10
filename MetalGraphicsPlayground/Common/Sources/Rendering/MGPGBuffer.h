@@ -10,6 +10,26 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+typedef struct MGPGBufferPrepassFunctionConstants {
+    bool hasAlbedoMap;
+    bool hasNormalMap;
+    bool hasRoughnessMap;
+    bool hasMetalicMap;
+    bool hasOcclusionMap;
+    bool hasAnisotropicMap;
+    bool flipVertically;
+} MGPGBufferPrepassFunctionConstants;
+
+typedef struct MGPGBufferShadingFunctionConstants {
+    bool hasIBLIrradianceMap;
+    bool hasIBLSpecularMap;
+    bool hasSSAOMap;
+} MGPGBufferShadingFunctionConstants;
+
+/*
+ - G-Buffer -
+ G-Buffer requires 3-render passes. (prepass->light-accumulation->shade)
+ */
 @interface MGPGBuffer : NSObject
 
 // g-buffer
@@ -19,8 +39,11 @@ NS_ASSUME_NONNULL_BEGIN
 @property (readonly) id<MTLTexture> shading;    // R:roughness,G:metalic,BA:TODO
 @property (readonly) id<MTLTexture> tangent;    // view-space (XYZ+A(0.0:empty-space))
 
-// lighting-output
+// light-accumulation-output
 @property (readonly) id<MTLTexture> lighting;
+
+// shade-final-output
+@property (readonly) id<MTLTexture> output;
 
 // depth
 @property (readonly) id<MTLTexture> depth;
@@ -31,6 +54,7 @@ NS_ASSUME_NONNULL_BEGIN
 // render pass
 @property (readonly) MTLRenderPassDescriptor *renderPassDescriptor;
 @property (readonly) MTLRenderPassDescriptor *lightingPassDescriptor;
+@property (readonly) MTLRenderPassDescriptor *shadingPassDescriptor;
 
 // resolution
 @property (nonatomic, readonly) CGSize size;
@@ -42,9 +66,11 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)resize:(CGSize)newSize;
 
 // render pipeline
-- (id<MTLRenderPipelineState>)renderPipelineStateWithConstants: (MTLFunctionConstantValues *)constantValues
+- (id<MTLRenderPipelineState>)renderPipelineStateWithConstants: (MGPGBufferPrepassFunctionConstants)constants
                                                          error: (NSError **)error;
 - (id<MTLRenderPipelineState>)lightingPipelineStateWithError: (NSError **)error;
+- (id<MTLRenderPipelineState>)shadingPipelineStateWithConstants: (MGPGBufferShadingFunctionConstants)constants
+                                                          error: (NSError **)error;
 
 @end
 

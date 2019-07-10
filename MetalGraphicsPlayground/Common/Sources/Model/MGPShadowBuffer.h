@@ -22,6 +22,9 @@ NS_ASSUME_NONNULL_BEGIN
 // target texture
 @property (nonatomic, readonly) id<MTLTexture> texture;
 
+// render pass
+@property (nonatomic, readonly) MTLRenderPassDescriptor *shadowPass;
+
 - (instancetype)initWithDevice: (id<MTLDevice>)device
                          light: (MGPLight *)light
                     resolution: (NSUInteger)resolution

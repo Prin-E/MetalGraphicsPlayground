@@ -48,6 +48,7 @@ NSString * const MGPShadowBufferErrorDoamin = @"MGPShadowBufferError";
         _cascadeLevels = MAX(1, cascadeLevels);
         
         [self _makeShadowTextureWithDevice: device];
+        [self _makeShadowPass];
     }
     return self;
 }
@@ -70,6 +71,13 @@ NSString * const MGPShadowBufferErrorDoamin = @"MGPShadowBufferError";
     descriptor.storageMode = MTLStorageModePrivate;
     
     _texture = [device newTextureWithDescriptor: descriptor];
+}
+
+- (void)_makeShadowPass {
+    _shadowPass = [[MTLRenderPassDescriptor alloc] init];
+    _shadowPass.depthAttachment.loadAction = MTLLoadActionDontCare;
+    _shadowPass.depthAttachment.storeAction = MTLStoreActionStore;
+    _shadowPass.depthAttachment.texture = _texture;
 }
 
 @end

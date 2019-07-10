@@ -32,15 +32,17 @@ typedef struct __attribute__((__aligned__(256))) {
     material_t material;
 } instance_props_t;
 
-typedef struct __attribute__((__aligned__(64))) {
-    vector_float3 position;
-    vector_float3 direction;
+typedef struct __attribute__((__aligned__(256))) {
+    matrix_float4x4 light_view;
     vector_float3 color;
     float intensity;
+    float shadow_bias;
 } light_t;
 
 typedef struct __attribute__((__aligned__(256))) {
+    vector_float3 ambient_color;
     unsigned int num_light;
+    matrix_float4x4 light_projection;
 } light_global_t;
 
 typedef struct __attribute__((__aligned__(256))) {
@@ -60,6 +62,7 @@ typedef enum {
     attachment_pos,
     attachment_shading,
     attachment_tangent,
+    attachment_light,
     attachment_irradiance,
     attachment_prefiltered_specular,
     attachment_brdf_lookup,
@@ -73,7 +76,10 @@ typedef enum {
     fcv_metalic,
     fcv_occlusion,
     fcv_anisotropic,
-    fcv_flip_vertically
+    fcv_flip_vertically,
+    fcv_uses_ibl_irradiance_map,
+    fcv_uses_ibl_specular_map,
+    fcv_uses_ssao_map
 } function_constant_values;
 
 // vertex attribute
