@@ -18,7 +18,7 @@
         clone.position = _position;
         clone.intensity = _intensity;
         clone.color = _color;
-        clone.hasShadow = _hasShadow;
+        clone.castShadows = _castShadows;
     }
     return clone;
 }
@@ -39,6 +39,7 @@
                                    vector4(-_position.x, -_position.y, -_position.z, 1.0f));
     light.intensity = _intensity;
     light.color = _color;
+    light.cast_shadow = _castShadows;
     return light;
 }
 

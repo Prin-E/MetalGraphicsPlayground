@@ -218,6 +218,8 @@
 		95F5E0972276255900445BB0 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 95F5E0962276255900445BB0 /* Assets.xcassets */; };
 		95F5E09A2276255900445BB0 /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 95F5E0982276255900445BB0 /* MainMenu.xib */; };
 		95F5E09D2276255900445BB0 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 95F5E09C2276255900445BB0 /* main.m */; };
+		95F6725722D7867300B630A7 /* Shadow.metal in Sources */ = {isa = PBXBuildFile; fileRef = 95F6725622D7867300B630A7 /* Shadow.metal */; };
+		95F6725822D7867300B630A7 /* Shadow.metal in Sources */ = {isa = PBXBuildFile; fileRef = 95F6725622D7867300B630A7 /* Shadow.metal */; };
 		95FBA5D622BC57FB00EC4417 /* test-dxt1.dds in Resources */ = {isa = PBXBuildFile; fileRef = 95FBA5D522BC573D00EC4417 /* test-dxt1.dds */; };
 		95FBA5D822BC674600EC4417 /* test-dxt5.dds in Resources */ = {isa = PBXBuildFile; fileRef = 95FBA5D722BC674600EC4417 /* test-dxt5.dds */; };
 		95FBA5DA22BC6A5300EC4417 /* MetalMath.c in Sources */ = {isa = PBXBuildFile; fileRef = 958A9C361D16E08200021744 /* MetalMath.c */; };
@@ -469,6 +471,7 @@
 		95F5E09B2276255900445BB0 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		95F5E09C2276255900445BB0 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		95F5E09E2276255900445BB0 /* MetalDeferred.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = MetalDeferred.entitlements; sourceTree = "<group>"; };
+		95F6725622D7867300B630A7 /* Shadow.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = Shadow.metal; sourceTree = "<group>"; };
 		95FBA5D522BC573D00EC4417 /* test-dxt1.dds */ = {isa = PBXFileReference; lastKnownFileType = file; path = "test-dxt1.dds"; sourceTree = "<group>"; };
 		95FBA5D722BC674600EC4417 /* test-dxt5.dds */ = {isa = PBXFileReference; lastKnownFileType = file; path = "test-dxt5.dds"; sourceTree = "<group>"; };
 		95FBFD43229465EB002BA1E0 /* MetalPostProcessing.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MetalPostProcessing.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -1056,6 +1059,7 @@
 				95A4D93722847214004653B6 /* CommonMath.h */,
 				95BED31B2286746B006E5C2F /* CommonMath.metal */,
 				95F0F94422C1FEA6002AF368 /* SSAO.metal */,
+				95F6725622D7867300B630A7 /* Shadow.metal */,
 			);
 			path = Shaders;
 			sourceTree = "<group>";
@@ -1710,6 +1714,7 @@
 				95F0F94522C1FEA6002AF368 /* SSAO.metal in Sources */,
 				95BED31C2286746B006E5C2F /* CommonMath.metal in Sources */,
 				959C8301227F409E00C2C245 /* ImageBasedLighting.metal in Sources */,
+				95F6725722D7867300B630A7 /* Shadow.metal in Sources */,
 				95765E40227D81060053D66D /* MetalMath.c in Sources */,
 				95765E3F227D7EEA0053D66D /* MGPMesh.m in Sources */,
 				95F5E09D2276255900445BB0 /* main.m in Sources */,
@@ -1733,6 +1738,7 @@
 				95F002AE22CD0841000A951B /* MGPPostProcessing.m in Sources */,
 				95F002AF22CD0841000A951B /* MGPPostProcessingLayer.m in Sources */,
 				95F40BC122AD76EA00F747D2 /* GBuffer.metal in Sources */,
+				95F6725822D7867300B630A7 /* Shadow.metal in Sources */,
 				95F40BC222AD76EA00F747D2 /* BRDF.metal in Sources */,
 				95F002AB22CCEEFF000A951B /* MGPScene.m in Sources */,
 				95EFD8DC22AF941800D4C0F5 /* DDSTextureLoader.mm in Sources */,

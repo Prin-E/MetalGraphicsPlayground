@@ -183,13 +183,16 @@ fragment half4 gbuffer_light_frag(ScreenFragment in [[stage_in]],
     
     // calculate lights
     for(uint i = 0; i < light_global.num_light; i++) {
-        float4 light_view_pos = lights[i].light_view * world_pos;
-        float4 light_clip_pos = light_global.light_projection * light_view_pos;
-        float2 light_screen_uv = (light_clip_pos.xy / max(0.001, light_clip_pos.w)) * 0.5 + 0.5;
-        light_screen_uv.y = 1.0 - light_screen_uv.y;
-        
-        float depth_value = shadow_maps[i].sample(linear_clamp_to_edge, light_screen_uv).r;
-        bool lit = depth_value < light_view_pos.z - lights[i].shadow_bias;
+        bool lit = true;
+        if(lights[i].cast_shadow) {
+            float4 light_view_pos = lights[i].light_view * world_pos;
+            float4 light_clip_pos = light_global.light_projection * light_view_pos;
+            float2 light_screen_uv = (light_clip_pos.xy / max(0.001, light_clip_pos.w)) * 0.5 + 0.5;
+            light_screen_uv.y = 1.0 - light_screen_uv.y;
+            
+            float depth_value = shadow_maps[i].sample(linear_clamp_to_edge, light_screen_uv).r;
+            lit = depth_value < light_view_pos.z - lights[i].shadow_bias;
+        }
         if(lit) {
             float3 light_dir = lights[i].light_view[2].xyz;
             float3 light_color = lights[i].color;

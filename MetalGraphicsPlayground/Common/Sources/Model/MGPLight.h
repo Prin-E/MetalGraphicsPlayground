@@ -25,7 +25,7 @@ typedef NS_ENUM(NSUInteger, MGPLightType) {
 @property (nonatomic) simd_float3 position;
 @property (nonatomic) simd_float3 color;
 @property (nonatomic) float intensity;
-@property (nonatomic) BOOL hasShadow;
+@property (nonatomic) BOOL castShadows;
 
 - (light_t)shaderLightProperties;
 

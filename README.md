@@ -67,9 +67,9 @@ Requires Xcode 9 or later.
 <img src="./Screenshots/MetalPostProcessing.png" alt="MetalPostProcessing.png" width="592" height="494">
 
 * Under construction!
+* Shadow-mapping
+* SSAO
 * TODO
-  * Shadow-mapping
-  * SSAO
-  * Color grading (Tone mapping))
+  * Color grading (Tone mapping)
   * Depth of Field
   * Screen-space Reflection

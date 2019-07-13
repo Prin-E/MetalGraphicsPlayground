@@ -54,14 +54,18 @@ NSString * const MGPShadowManagerErrorDoamin = @"MGPShadowManagerError";
 - (MGPShadowBuffer *)newShadowBufferForLight:(MGPLight *)light
                                   resolution:(NSUInteger)resolution
                                cascadeLevels:(NSUInteger)cascadeLevels {
-    if(![_shadowBufferDict objectForKey: light]) {
-        MGPShadowBuffer *buffer = [[MGPShadowBuffer alloc] initWithDevice: _device
-                                                                    light: light
-                                                               resolution: resolution
-                                                            cascadeLevels: cascadeLevels];
-        _shadowBufferDict[light] = buffer;
+    MGPShadowBuffer *buffer = nil;
+    if(light.castShadows) {
+        buffer = [_shadowBufferDict objectForKey: light];
+        if(buffer == nil) {
+            buffer = [[MGPShadowBuffer alloc] initWithDevice: _device
+                                                       light: light
+                                                  resolution: resolution
+                                               cascadeLevels: cascadeLevels];
+            _shadowBufferDict[light] = buffer;
+        }
     }
-    return [_shadowBufferDict objectForKey: light];
+    return buffer;
 }
 
 - (void)removeShadowBufferForLight:(MGPLight *)light {

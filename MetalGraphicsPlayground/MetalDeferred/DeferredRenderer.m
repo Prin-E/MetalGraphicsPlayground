@@ -72,7 +72,7 @@ const float kLightIntensityVariation = 3.0;
     
     // render pass, pipeline states
     id<MTLRenderPipelineState> _renderPipelineSkybox;
-    id<MTLRenderPipelineState> _renderPipelineGBuffer;
+    id<MTLRenderPipelineState> _renderPipelinePrepass;
     id<MTLRenderPipelineState> _renderPipelineGBufferTest;
     id<MTLRenderPipelineState> _renderPipelineLighting;
     id<MTLRenderPipelineState> _renderPipelinePresent;
@@ -184,6 +184,7 @@ const float kLightIntensityVariation = 3.0;
 - (instancetype)init {
     self = [super init];
     if(self) {
+        _numLights = 1;
         _animate = YES;
         _cameraPos = vector3(0.0f, 0.0f, -60.0f);
         [self initUniformBuffers];
@@ -624,7 +625,7 @@ const float kLightIntensityVariation = 3.0;
         meshes = _testObjects;
     }
     else {
-        [encoder setRenderPipelineState: _renderPipelineGBuffer];
+        [encoder setRenderPipelineState: _renderPipelinePrepass];
     }
     [encoder setDepthStencilState: _depthStencil];
     [encoder setCullMode: MTLCullModeBack];
@@ -715,7 +716,7 @@ const float kLightIntensityVariation = 3.0;
     [encoder setVertexBuffer: _commonVertexBuffer
                       offset: 0
                      atIndex: 0];
-    [encoder setFragmentTexture: _gBuffer.lighting
+    [encoder setFragmentTexture: _gBuffer.output
                         atIndex: 0];
     [encoder drawPrimitives: MTLPrimitiveTypeTriangle
                 vertexStart: 0
