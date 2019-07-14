@@ -75,7 +75,7 @@ NSString * const MGPShadowBufferErrorDoamin = @"MGPShadowBufferError";
 
 - (void)_makeShadowPass {
     _shadowPass = [[MTLRenderPassDescriptor alloc] init];
-    _shadowPass.depthAttachment.loadAction = MTLLoadActionDontCare;
+    _shadowPass.depthAttachment.loadAction = MTLLoadActionClear;
     _shadowPass.depthAttachment.storeAction = MTLStoreActionStore;
     _shadowPass.depthAttachment.texture = _texture;
 }

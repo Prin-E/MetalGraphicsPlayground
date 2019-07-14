@@ -7,6 +7,7 @@
 //
 
 #import "MGPLight.h"
+#import "../Utility/MetalMath.h"
 
 @implementation MGPLight
 
@@ -32,14 +33,12 @@
         up = vector3(0.0f, 0.0f, -1.0f);
     vector_float3 right = simd_cross(up, forward);
     up = simd_cross(forward, right);
-
-    light.light_view = simd_matrix(simd_make_float4(right),
-                                   simd_make_float4(up),
-                                   simd_make_float4(forward),
-                                   vector4(-_position.x, -_position.y, -_position.z, 1.0f));
+    
+    light.light_view = matrix_lookat(_position + forward, _position, up);
     light.intensity = _intensity;
     light.color = _color;
     light.cast_shadow = _castShadows;
+    light.shadow_bias = _shadowBias;
     return light;
 }
 

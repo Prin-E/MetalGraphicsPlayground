@@ -178,9 +178,6 @@ fragment half4 gbuffer_light_frag(ScreenFragment in [[stage_in]],
     // world-space pos
     float4 world_pos = pos.sample(linear_clamp_to_edge, in.uv);
     
-    // global ambient color
-    out_color.xyz += light_global.ambient_color;
-    
     // calculate lights
     for(uint i = 0; i < light_global.num_light; i++) {
         bool lit = true;
@@ -241,6 +238,7 @@ vertex ScreenFragment gbuffer_shade_vert(constant ScreenVertex *in [[buffer(0)]]
 
 fragment half4 gbuffer_shade_frag(ScreenFragment in [[stage_in]],
                                   constant camera_props_t &cameraProps [[buffer(1)]],
+                                  constant light_global_t &light_global [[buffer(2)]],
                                   texture2d<half> albedo [[texture(attachment_albedo)]],
                                   texture2d<half> normal [[texture(attachment_normal)]],
                                   texture2d<float> pos [[texture(attachment_pos)]],
@@ -270,6 +268,9 @@ fragment half4 gbuffer_shade_frag(ScreenFragment in [[stage_in]],
     if(uses_ssao_map) {
         ao = 1.0 - ssao.sample(linear, in.uv).r;
     }
+    
+    // global ambient color
+    out_color.xyz += ao * light_global.ambient_color * albedo_color * occlusion;
     
     // irradiance
     float3 k_s = float3(0);

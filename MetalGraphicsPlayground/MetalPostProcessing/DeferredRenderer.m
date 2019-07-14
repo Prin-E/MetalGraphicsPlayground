@@ -176,9 +176,9 @@ const float kLightIntensityVariation = 3.0;
 - (instancetype)init {
     self = [super init];
     if(self) {
-        _animate = YES;
+        _animate = NO;
         _cameraPos = vector3(0.0f, 50.0f, -60.0f);
-        _numLights = 1;
+        _numLights = 2;
         _roughness = 1.0f;
         _metalic = 0.0f;
         [self initUniformBuffers];
@@ -214,6 +214,7 @@ const float kLightIntensityVariation = 3.0;
     
     // IBL
     _IBLs = [NSMutableArray array];
+    
     NSArray<NSString*> *skyboxNames = @[@"Tropical_Beach_3k"];
     for(NSInteger i = 0; i < skyboxNames.count; i++) {
         NSString *skyboxImagePath = [[NSBundle mainBundle] pathForResource:skyboxNames[i]
@@ -435,7 +436,8 @@ const float kLightIntensityVariation = 3.0;
         for(int i = 0; i < kNumLight; i++) {
             light_colors[i] = vector3(rand() / (float)RAND_MAX, rand() / (float)RAND_MAX, rand() / (float)RAND_MAX);
             light_intensities[i] = kLightIntensityBase + rand() / (float)RAND_MAX * kLightIntensityVariation;
-            light_dirs[i] = simd_normalize(vector4(rand() / (float)RAND_MAX - 0.5f, rand() / (float)RAND_MAX - 0.5f,
+            light_dirs[i] = simd_normalize(vector4(rand() / (float)RAND_MAX - 0.5f,
+                                                   -rand() / (float)RAND_MAX - 0.25f,
                                                    rand() / (float)RAND_MAX - 0.5f, 0.0f));
         }
     }
@@ -451,6 +453,7 @@ const float kLightIntensityVariation = 3.0;
         light.direction = vector3(dir.x, dir.y, dir.z);
         light.position = -light.direction * 1000.0f;
         light.castShadows = YES;
+        light.shadowBias = 0.1f;
         
         // light properties -> buffer
         light_t *light_props_ptr = &light_props[_currentBufferIndex * kNumLight + i];
@@ -488,11 +491,13 @@ const float kLightIntensityVariation = 3.0;
 - (void)render {
     [self beginFrame];
     
-    if(_IBLs[_currentIBLIndex].isAnyRenderingRequired) {
-        [self performPrefilterPass];
-    }
-    else {
-        _renderingIBLIndex = _currentIBLIndex;
+    if(_IBLs.count > 0) {
+        if(_IBLs[_currentIBLIndex].isAnyRenderingRequired) {
+            [self performPrefilterPass];
+        }
+        else {
+            _renderingIBLIndex = _currentIBLIndex;
+        }
     }
     
     [self performRenderingPassWithCompletionHandler:^{
@@ -518,7 +523,7 @@ const float kLightIntensityVariation = 3.0;
     // begin
     id<MTLCommandBuffer> commandBuffer = [self.queue commandBuffer];
     commandBuffer.label = @"Render";
-    /*
+    
     // skybox pass
     _renderPassSkybox.colorAttachments[0].texture = self.view.currentDrawable.texture;
     _renderPassSkybox.depthAttachment.texture = _skyboxDepthTexture;
@@ -532,10 +537,10 @@ const float kLightIntensityVariation = 3.0;
     // G-buffer prepass
     id<MTLRenderCommandEncoder> prepassEncoder = [commandBuffer renderCommandEncoderWithDescriptor: _gBuffer.renderPassDescriptor];
     [self renderGBuffer:prepassEncoder];
-    */
+     
     // Shadowmap Passes
     [self renderShadows: commandBuffer];
-    /*
+    
     // Post-process before light pass
     [_postProcess render: commandBuffer
        forRenderingOrder: MGPPostProcessingRenderingOrderBeforeLightPass];
@@ -560,7 +565,7 @@ const float kLightIntensityVariation = 3.0;
     _renderPassPresent.colorAttachments[0].texture = self.view.currentDrawable.texture;
     id<MTLRenderCommandEncoder> presentCommandEncoder = [commandBuffer renderCommandEncoderWithDescriptor: _renderPassPresent];
     [self renderFramebuffer:presentCommandEncoder];
-    */
+    
     // present
     [commandBuffer presentDrawable: self.view.currentDrawable];
     [commandBuffer addCompletedHandler:^(id<MTLCommandBuffer> buffer) {
@@ -576,17 +581,19 @@ const float kLightIntensityVariation = 3.0;
     [encoder setDepthStencilState: _depthStencil];
     [encoder setCullMode: MTLCullModeBack];
     
-    [encoder setVertexBuffer: _commonVertexBuffer
-                      offset: 256
-                     atIndex: 0];
-    [encoder setVertexBuffer: _cameraPropsBuffer
-                      offset: _currentBufferIndex * sizeof(camera_props_t)
-                     atIndex: 1];
-    [encoder setFragmentTexture: _IBLs[_renderingIBLIndex].environmentMap
-                        atIndex: 0];
-    [encoder drawPrimitives: MTLPrimitiveTypeTriangle
-                vertexStart: 0
-                vertexCount: 36];
+    if(_IBLs.count > 0) {
+        [encoder setVertexBuffer: _commonVertexBuffer
+                          offset: 256
+                         atIndex: 0];
+        [encoder setVertexBuffer: _cameraPropsBuffer
+                          offset: _currentBufferIndex * sizeof(camera_props_t)
+                         atIndex: 1];
+        [encoder setFragmentTexture: _IBLs[_renderingIBLIndex].environmentMap
+                            atIndex: 0];
+        [encoder drawPrimitives: MTLPrimitiveTypeTriangle
+                    vertexStart: 0
+                    vertexCount: 36];
+    }
     [encoder endEncoding];
 }
 
@@ -683,15 +690,12 @@ const float kLightIntensityVariation = 3.0;
     [encoder setVertexBuffer: _commonVertexBuffer
                       offset: 0
                      atIndex: 0];
-    [encoder setFragmentBuffer: _cameraPropsBuffer
-                        offset: _currentBufferIndex * sizeof(camera_props_t)
-                       atIndex: 1];
     [encoder setFragmentBuffer: _lightPropsBuffer
                         offset: _currentBufferIndex * sizeof(light_t) * kNumLight
-                       atIndex: 2];
+                       atIndex: 1];
     [encoder setFragmentBuffer: _lightGlobalBuffer
                         offset: _currentBufferIndex * sizeof(light_global_t)
-                       atIndex: 3];
+                       atIndex: 2];
     [encoder setFragmentTexture: _gBuffer.normal
                         atIndex: attachment_normal];
     [encoder setFragmentTexture: _gBuffer.pos
@@ -718,7 +722,7 @@ const float kLightIntensityVariation = 3.0;
 
 - (void)renderShading:(id<MTLRenderCommandEncoder>)encoder {
     encoder.label = @"Shading";
-    [encoder setRenderPipelineState: _renderPipelineLighting];
+    [encoder setRenderPipelineState: _renderPipelineShading];
     [encoder setCullMode: MTLCullModeBack];
     [encoder setVertexBuffer: _commonVertexBuffer
                       offset: 0
@@ -726,12 +730,9 @@ const float kLightIntensityVariation = 3.0;
     [encoder setFragmentBuffer: _cameraPropsBuffer
                         offset: _currentBufferIndex * sizeof(camera_props_t)
                        atIndex: 1];
-    [encoder setFragmentBuffer: _lightPropsBuffer
-                        offset: _currentBufferIndex * sizeof(light_t) * kNumLight
-                       atIndex: 2];
     [encoder setFragmentBuffer: _lightGlobalBuffer
                         offset: _currentBufferIndex * sizeof(light_global_t)
-                       atIndex: 3];
+                       atIndex: 2];
     [encoder setFragmentTexture: _gBuffer.albedo
                         atIndex: attachment_albedo];
     [encoder setFragmentTexture: _gBuffer.normal
@@ -766,7 +767,7 @@ const float kLightIntensityVariation = 3.0;
     [encoder setVertexBuffer: _commonVertexBuffer
                       offset: 0
                      atIndex: 0];
-    [encoder setFragmentTexture: _gBuffer.lighting
+    [encoder setFragmentTexture: _gBuffer.output
                         atIndex: 0];
     [encoder drawPrimitives: MTLPrimitiveTypeTriangle
                 vertexStart: 0
