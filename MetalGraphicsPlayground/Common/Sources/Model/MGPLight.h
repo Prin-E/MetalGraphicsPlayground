@@ -20,6 +20,8 @@ typedef NS_ENUM(NSUInteger, MGPLightType) {
 
 @interface MGPLight : NSObject <NSCopying>
 
+@property (nonatomic, readonly) NSUInteger identifier;
+
 @property (nonatomic) MGPLightType type;
 @property (nonatomic) simd_float3 direction;
 @property (nonatomic) simd_float3 position;

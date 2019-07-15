@@ -47,6 +47,7 @@ NSString * const MGPShadowManagerErrorDoamin = @"MGPShadowManagerError";
     desc.depthAttachmentPixelFormat = MTLPixelFormatDepth32Float;
     desc.vertexDescriptor = _vertexDescriptor;
     desc.vertexFunction = [_library newFunctionWithName: @"shadow_vert"];
+    
     _shadowPipeline = [_device newRenderPipelineStateWithDescriptor: desc
                                                               error: nil];
 }

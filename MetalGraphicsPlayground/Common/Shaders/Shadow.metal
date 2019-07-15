@@ -8,6 +8,7 @@
 
 #include <metal_stdlib>
 #include "SharedStructures.h"
+#include "CommonVariables.h"
 
 using namespace metal;
 
@@ -21,7 +22,10 @@ typedef struct {
 
 typedef struct {
     float4 clipPos      [[position]];
+    float2 uv;
 } ShadowFragment;
+
+
 
 vertex ShadowFragment shadow_vert(ShadowVertex in [[stage_in]],
                                   constant light_t &light [[buffer(1)]],
@@ -31,5 +35,12 @@ vertex ShadowFragment shadow_vert(ShadowVertex in [[stage_in]],
     ShadowFragment out;
     float4 v = float4(in.pos, 1.0);
     out.clipPos = light_global.light_projection * light.light_view * instanceProps[iid].model * v;
+    out.uv = in.uv;
     return out;
+}
+
+// for Debug only
+fragment half4 shadow_frag(ShadowFragment in [[stage_in]],
+                           texture2d<half> albedo [[texture(0)]]) {
+    return albedo.sample(linear, in.uv);
 }

@@ -435,6 +435,7 @@
 		95A4D93722847214004653B6 /* CommonMath.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CommonMath.h; sourceTree = "<group>"; };
 		95B39E04228E4DD9003358D9 /* AnisoDirection1.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = AnisoDirection1.jpg; sourceTree = "<group>"; };
 		95B39E06228E51EC003358D9 /* teapot.obj */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = teapot.obj; sourceTree = "<group>"; };
+		95B7662022DCE06D001FA4E7 /* Shadow.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Shadow.h; sourceTree = "<group>"; };
 		95B9508B22808F5400E45D08 /* BRDF.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BRDF.h; sourceTree = "<group>"; };
 		95BED31B2286746B006E5C2F /* CommonMath.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = CommonMath.metal; sourceTree = "<group>"; };
 		95C42C531D29501F00806E15 /* Shadow.metal */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.metal; path = Shadow.metal; sourceTree = "<group>"; };
@@ -1060,6 +1061,7 @@
 				95BED31B2286746B006E5C2F /* CommonMath.metal */,
 				95F0F94422C1FEA6002AF368 /* SSAO.metal */,
 				95F6725622D7867300B630A7 /* Shadow.metal */,
+				95B7662022DCE06D001FA4E7 /* Shadow.h */,
 			);
 			path = Shaders;
 			sourceTree = "<group>";

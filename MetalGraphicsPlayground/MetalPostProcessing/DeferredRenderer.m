@@ -32,8 +32,8 @@
 const size_t kMaxBuffersInFlight = 3;
 const size_t kNumInstance = 1;
 const uint32_t kNumLight = 128;
-const float kLightIntensityBase = 0.25;
-const float kLightIntensityVariation = 3.0;
+const float kLightIntensityBase = 1.0f;
+const float kLightIntensityVariation = 1.0f;
 
 #define DEG_TO_RAD(x) ((x)*0.0174532925)
 
@@ -215,6 +215,7 @@ const float kLightIntensityVariation = 3.0;
     // IBL
     _IBLs = [NSMutableArray array];
     
+    /*
     NSArray<NSString*> *skyboxNames = @[@"Tropical_Beach_3k"];
     for(NSInteger i = 0; i < skyboxNames.count; i++) {
         NSString *skyboxImagePath = [[NSBundle mainBundle] pathForResource:skyboxNames[i]
@@ -239,6 +240,7 @@ const float kLightIntensityVariation = 3.0;
                                                                 equirectangularMap: skyboxTexture];
         [_IBLs addObject: IBL];
     }
+    */
     
     // vertex descriptor
     MDLVertexDescriptor *mdlVertexDescriptor = MTKModelIOVertexDescriptorFromMetal(_gBuffer.baseVertexDescriptor);
@@ -443,25 +445,25 @@ const float kLightIntensityVariation = 3.0;
     }
     
     for(NSInteger i = 0; i < _numLights; i++) {
-        simd_float3 rot_dir = simd_cross(vector3(light_dirs[i].x, light_dirs[i].y, light_dirs[i].z), vector3(0.0f, 1.0f, 0.0f));
+        simd_float3 rot_dir = vector3(0.0f, 1.0f, 0.0f);
         simd_float4 dir = matrix_multiply(matrix_from_rotation(_animationTime * 3.0f, rot_dir.x, rot_dir.y, rot_dir.z), light_dirs[i]);
         
         // set light properties
         MGPLight *light = _lights[i];
         light.color = light_colors[i];
         light.intensity = light_intensities[i];
-        light.direction = vector3(dir.x, dir.y, dir.z);
-        light.position = -light.direction * 1000.0f;
+        light.direction = simd_make_float3(dir);
+        light.position = -light.direction * 3000.0f;
         light.castShadows = YES;
-        light.shadowBias = 0.1f;
+        light.shadowBias = 0.00001f;
         
         // light properties -> buffer
         light_t *light_props_ptr = &light_props[_currentBufferIndex * kNumLight + i];
         *light_props_ptr = light.shaderLightProperties;
     }
     light_globals[_currentBufferIndex].num_light = _numLights;
-    light_globals[_currentBufferIndex].ambient_color = vector3(0.2f, 0.2f, 0.2f);
-    light_globals[_currentBufferIndex].light_projection = matrix_from_perspective_fov_aspectLH(DEG_TO_RAD(60.0f), _gBuffer.size.width / _gBuffer.size.height, 1.0f, 3500.0f);
+    light_globals[_currentBufferIndex].ambient_color = vector3(0.1f, 0.1f, 0.1f);
+    light_globals[_currentBufferIndex].light_projection = matrix_from_perspective_fov_aspectLH(DEG_TO_RAD(60.0f), _gBuffer.size.width / _gBuffer.size.height, 1.0f, 5000.0f);
     
     // Synchronize buffers
     memcpy(_cameraPropsBuffer.contents + _currentBufferIndex * sizeof(camera_props_t),
@@ -656,7 +658,7 @@ const float kLightIntensityVariation = 3.0;
 - (void)renderShadows:(id<MTLCommandBuffer>)buffer {
     for(int i = 0; i < _numLights; i++) {
         MGPShadowBuffer *shadowBuffer = [_shadowManager newShadowBufferForLight: _lights[i]
-                                                                     resolution: 512
+                                                                     resolution: 1024
                                                                   cascadeLevels: 1];
         
         if(shadowBuffer != nil) {
@@ -762,6 +764,7 @@ const float kLightIntensityVariation = 3.0;
 
 - (void)renderFramebuffer:(id<MTLRenderCommandEncoder>)encoder {
     encoder.label = @"Present";
+    
     [encoder setRenderPipelineState: _renderPipelinePresent];
     [encoder setCullMode: MTLCullModeBack];
     [encoder setVertexBuffer: _commonVertexBuffer

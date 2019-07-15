@@ -184,25 +184,31 @@ fragment half4 gbuffer_light_frag(ScreenFragment in [[stage_in]],
         if(lights[i].cast_shadow) {
             float4 light_view_pos = lights[i].light_view * world_pos;
             float4 light_clip_pos = light_global.light_projection * light_view_pos;
-            float2 light_screen_uv = (light_clip_pos.xy / max(0.001, light_clip_pos.w)) * 0.5 + 0.5;
+            light_clip_pos /= max(0.001, light_clip_pos.w);
+            float2 light_screen_uv = light_clip_pos.xy * 0.5 + 0.5;
             light_screen_uv.y = 1.0 - light_screen_uv.y;
             
-            float depth_value = shadow_maps[i].sample(linear_clamp_to_edge, light_screen_uv).r;
-            lit = depth_value < light_view_pos.z - lights[i].shadow_bias;
+            float depth_value = shadow_maps[i].sample(nearest_clamp_to_edge, light_screen_uv).r;
+            lit = depth_value > light_clip_pos.z - lights[i].shadow_bias;
         }
         if(lit) {
-            float3 light_dir = lights[i].light_view[2].xyz;
+            // query light direction from view matrix
+            float3 light_dir_invert = -float3(lights[i].light_view[0].z,
+                                              lights[i].light_view[1].z,
+                                              lights[i].light_view[2].z);
+            // world-space pos
+            float3 light_pos = -lights[i].light_view[3].xyz;
             float3 light_color = lights[i].color;
             float light_intensity = lights[i].intensity;
-            float3 v = normalize(lights[i].light_view[3].xyz - world_pos.xyz);
-            float3 h = normalize(light_dir + v);
+            float3 v = normalize(light_pos - world_pos.xyz);
+            float3 h = normalize(light_dir_invert + v);
             float h_v = max(0.001, saturate(dot(h, v)));
             float n_h = dot(n, h);
             float t_h = dot(t, h);
             float b_h = dot(b, h);
-            float n_l = max(0.001, saturate(dot(n, light_dir)));
-            float t_l = max(0.001, saturate(dot(t, light_dir)));
-            float b_l = max(0.001, saturate(dot(b, light_dir)));
+            float n_l = max(0.001, saturate(dot(n, light_dir_invert)));
+            float t_l = max(0.001, saturate(dot(t, light_dir_invert)));
+            float b_l = max(0.001, saturate(dot(b, light_dir_invert)));
             float n_v = max(0.001, saturate(dot(n, v)));
             float t_v = max(0.001, saturate(dot(t, v)));
             float b_v = max(0.001, saturate(dot(b, v)));
