@@ -14,6 +14,9 @@
 #import "../Common/Sources/Utility/MetalMath.h"
 #import "../Common/Sources/Utility/MGPCommonVertices.h"
 #import "../Common/Sources/Utility/MGPTextureLoader.h"
+#import "../Common/Sources/Model/MGPShadowBuffer.h"
+#import "../Common/Sources/Model/MGPShadowManager.h"
+#import "../Common/Sources/Model/MGPLight.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #import "../Common/STB/stb_image.h"
@@ -73,8 +76,9 @@ const float kLightIntensityVariation = 3.0;
     // render pass, pipeline states
     id<MTLRenderPipelineState> _renderPipelineSkybox;
     id<MTLRenderPipelineState> _renderPipelinePrepass;
-    id<MTLRenderPipelineState> _renderPipelineGBufferTest;
+    id<MTLRenderPipelineState> _renderPipelinePrepassTest;
     id<MTLRenderPipelineState> _renderPipelineLighting;
+    id<MTLRenderPipelineState> _renderPipelineShading;
     id<MTLRenderPipelineState> _renderPipelinePresent;
     MTLRenderPassDescriptor *_renderPassSkybox;
     MTLRenderPassDescriptor *_renderPassPresent;
@@ -88,6 +92,12 @@ const float kLightIntensityVariation = 3.0;
     // Meshes
     NSArray<MGPMesh *> *_meshes;
     NSArray<MGPMesh *> *_testObjects;
+    
+    // Lights
+    NSMutableArray<MGPLight *> *_lights;
+    
+    // Shadow
+    MGPShadowManager *_shadowManager;
 }
 
 - (void)setView:(MGPView *)view {
@@ -308,44 +318,34 @@ const float kLightIntensityVariation = 3.0;
     _testObjects = @[ mesh ];
     
     // build render pipeline
-    MTLFunctionConstantValues *constantValues = [[MTLFunctionConstantValues alloc] init];
-    BOOL hasAlbedoMap = _meshes[0].submeshes[0].textures[tex_albedo] != NSNull.null;
-    BOOL hasNormalMap = _meshes[0].submeshes[0].textures[tex_normal] != NSNull.null;
-    BOOL hasRoughnessMap = _meshes[0].submeshes[0].textures[tex_roughness] != NSNull.null;
-    BOOL hasMetalicMap = _meshes[0].submeshes[0].textures[tex_metalic] != NSNull.null;
-    BOOL hasOcculusionMap = _meshes[0].submeshes[0].textures[tex_occlusion] != NSNull.null;
-    BOOL hasAnisotropicMap = _meshes[0].submeshes[0].textures[tex_anisotropic] != NSNull.null;
-    BOOL flipVertically = NO;
-    [constantValues setConstantValue: &hasAlbedoMap type: MTLDataTypeBool atIndex: fcv_albedo];
-    [constantValues setConstantValue: &hasNormalMap type: MTLDataTypeBool atIndex: fcv_normal];
-    [constantValues setConstantValue: &hasRoughnessMap type: MTLDataTypeBool atIndex: fcv_roughness];
-    [constantValues setConstantValue: &hasMetalicMap type: MTLDataTypeBool atIndex: fcv_metalic];
-    [constantValues setConstantValue: &hasOcculusionMap type: MTLDataTypeBool atIndex: fcv_occlusion];
-    [constantValues setConstantValue: &hasAnisotropicMap type: MTLDataTypeBool atIndex: fcv_anisotropic];
-    [constantValues setConstantValue: &flipVertically type: MTLDataTypeBool atIndex: fcv_flip_vertically];
-    _renderPipelineGBuffer = [_gBuffer renderPipelineStateWithConstants: constantValues error: nil];
-    
-    hasAlbedoMap = _testObjects[0].submeshes[0].textures[tex_albedo] != NSNull.null;
-    hasNormalMap = _testObjects[0].submeshes[0].textures[tex_normal] != NSNull.null;
-    hasRoughnessMap = _testObjects[0].submeshes[0].textures[tex_roughness] != NSNull.null;
-    hasMetalicMap = _testObjects[0].submeshes[0].textures[tex_metalic] != NSNull.null;
-    hasOcculusionMap = _testObjects[0].submeshes[0].textures[tex_occlusion] != NSNull.null;
-    hasAnisotropicMap = _testObjects[0].submeshes[0].textures[tex_anisotropic] != NSNull.null;
-    hasAlbedoMap = false;
-    hasNormalMap = true;
-    hasRoughnessMap = false;
-    hasMetalicMap = false;
-    hasOcculusionMap = false;
-    hasAnisotropicMap = false;
-    [constantValues setConstantValue: &hasAlbedoMap type: MTLDataTypeBool atIndex: fcv_albedo];
-    [constantValues setConstantValue: &hasNormalMap type: MTLDataTypeBool atIndex: fcv_normal];
-    [constantValues setConstantValue: &hasRoughnessMap type: MTLDataTypeBool atIndex: fcv_roughness];
-    [constantValues setConstantValue: &hasMetalicMap type: MTLDataTypeBool atIndex: fcv_metalic];
-    [constantValues setConstantValue: &hasOcculusionMap type: MTLDataTypeBool atIndex: fcv_occlusion];
-    [constantValues setConstantValue: &hasAnisotropicMap type: MTLDataTypeBool atIndex: fcv_anisotropic];
-    _renderPipelineGBufferTest = [_gBuffer renderPipelineStateWithConstants: constantValues error: nil];
-    
+    MGPGBufferPrepassFunctionConstants prepassConstants = {};
+    prepassConstants.hasAlbedoMap = _meshes[0].submeshes[0].textures[tex_albedo] != NSNull.null;
+    prepassConstants.hasNormalMap = NO;
+    prepassConstants.hasRoughnessMap = _meshes[0].submeshes[0].textures[tex_roughness] != NSNull.null;
+    prepassConstants.hasMetalicMap = _meshes[0].submeshes[0].textures[tex_metalic] != NSNull.null;
+    prepassConstants.hasOcclusionMap = _meshes[0].submeshes[0].textures[tex_occlusion] != NSNull.null;
+    prepassConstants.hasAnisotropicMap = _meshes[0].submeshes[0].textures[tex_anisotropic] != NSNull.null;
+    prepassConstants.flipVertically = NO;
+    MGPGBufferShadingFunctionConstants shadingConstants = {};
+    shadingConstants.hasIBLIrradianceMap = _IBLs.count > 0;
+    shadingConstants.hasIBLSpecularMap = _IBLs.count > 0;
+    shadingConstants.hasSSAOMap = NO;
+    _renderPipelinePrepass = [_gBuffer renderPipelineStateWithConstants: prepassConstants
+                                                                  error: nil];
     _renderPipelineLighting = [_gBuffer lightingPipelineStateWithError: nil];
+    _renderPipelineShading = [_gBuffer shadingPipelineStateWithConstants: shadingConstants
+                                                                   error: nil];
+    
+    MGPGBufferPrepassFunctionConstants prepassTestConstants = {};
+    prepassTestConstants.hasAlbedoMap = _testObjects[0].submeshes[0].textures[tex_albedo] != NSNull.null;
+    prepassTestConstants.hasNormalMap = _testObjects[0].submeshes[0].textures[tex_normal] != NSNull.null;
+    prepassTestConstants.hasRoughnessMap = _testObjects[0].submeshes[0].textures[tex_roughness] != NSNull.null;
+    prepassTestConstants.hasMetalicMap = _testObjects[0].submeshes[0].textures[tex_metalic] != NSNull.null;
+    prepassTestConstants.hasOcclusionMap = _testObjects[0].submeshes[0].textures[tex_occlusion] != NSNull.null;
+    prepassTestConstants.hasAnisotropicMap = _testObjects[0].submeshes[0].textures[tex_anisotropic] != NSNull.null;
+    prepassTestConstants.flipVertically = NO;
+    _renderPipelinePrepassTest = [_gBuffer renderPipelineStateWithConstants: prepassTestConstants
+                                                                      error: nil];
     
     MTLRenderPipelineDescriptor *renderPipelineDescriptorPresent = [[MTLRenderPipelineDescriptor alloc] init];
     renderPipelineDescriptorPresent.colorAttachments[0].pixelFormat = MTLPixelFormatBGRA8Unorm_sRGB;
@@ -384,6 +384,17 @@ const float kLightIntensityVariation = 3.0;
     depthStencilDescriptor.depthWriteEnabled = YES;
     depthStencilDescriptor.depthCompareFunction = MTLCompareFunctionLess;
     _depthStencil = [self.device newDepthStencilStateWithDescriptor: depthStencilDescriptor];
+    
+    // lights
+    _lights = [[NSMutableArray alloc] initWithCapacity: kNumLight];
+    for(int i = 0; i < kNumLight; i++) {
+        [_lights addObject: [[MGPLight alloc] init]];
+    }
+    
+    // shadow
+    _shadowManager = [[MGPShadowManager alloc] initWithDevice: self.device
+                                                      library: self.defaultLibrary
+                                             vertexDescriptor: _gBuffer.baseVertexDescriptor];
 }
 
 - (void)_initSkyboxDepthTexture {
@@ -489,12 +500,21 @@ const float kLightIntensityVariation = 3.0;
     }
     
     for(NSInteger i = 0; i < _numLights; i++) {
-        light_t *l = &light_props[_currentBufferIndex * kNumLight + i];
-        l->color = light_colors[i];
-        l->intensity = light_intensities[i];
         simd_float3 rot_dir = simd_cross(vector3(light_dirs[i].x, light_dirs[i].y, light_dirs[i].z), vector3(0.0f, 1.0f, 0.0f));
         simd_float4 dir = matrix_multiply(matrix_from_rotation(_animationTime * 3.0f, rot_dir.x, rot_dir.y, rot_dir.z), light_dirs[i]);
-        l->direction = vector3(dir.x, dir.y, dir.z);
+        simd_float3 eye = -simd_make_float3(dir);
+        
+        // set light properties
+        MGPLight *light = _lights[i];
+        light.color = light_colors[i];
+        light.intensity = light_intensities[i];
+        light.direction = simd_make_float3(dir);
+        light.position = eye;
+        light.castShadows = NO;
+        
+        // light properties -> buffer
+        light_t *light_props_ptr = &light_props[_currentBufferIndex * kNumLight + i];
+        *light_props_ptr = light.shaderLightProperties;
     }
     
     light_globals[_currentBufferIndex].num_light = _numLights;
@@ -527,11 +547,13 @@ const float kLightIntensityVariation = 3.0;
 - (void)render {
     [self beginFrame];
     
-    if(_IBLs[_currentIBLIndex].isAnyRenderingRequired) {
-        [self performPrefilterPass];
-    }
-    else {
-        _renderingIBLIndex = _currentIBLIndex;
+    if(_IBLs.count > 0) {
+        if(_IBLs[_currentIBLIndex].isAnyRenderingRequired) {
+            [self performPrefilterPass];
+        }
+        else {
+            _renderingIBLIndex = _currentIBLIndex;
+        }
     }
     
     [self performRenderingPassWithCompletionHandler:^{
@@ -568,9 +590,6 @@ const float kLightIntensityVariation = 3.0;
     id<MTLRenderCommandEncoder> prepassEncoder = [commandBuffer renderCommandEncoderWithDescriptor: _gBuffer.renderPassDescriptor];
     [self renderGBuffer:prepassEncoder];
     
-    // Shadowmap Passes
-    [self renderShadows: commandBuffer];
-    
     // G-buffer light-accumulation pass
     id<MTLRenderCommandEncoder> lightingPassEncoder = [commandBuffer renderCommandEncoderWithDescriptor: _gBuffer.lightingPassDescriptor];
     [self renderLighting:lightingPassEncoder];
@@ -599,60 +618,44 @@ const float kLightIntensityVariation = 3.0;
     [encoder setDepthStencilState: _depthStencil];
     [encoder setCullMode: MTLCullModeBack];
     
-    [encoder setVertexBuffer: _commonVertexBuffer
-                      offset: 256
-                     atIndex: 0];
-    [encoder setVertexBuffer: _cameraPropsBuffer
-                      offset: _currentBufferIndex * sizeof(camera_props_t)
-                     atIndex: 1];
-    [encoder setFragmentTexture: _IBLs[_renderingIBLIndex].environmentMap
-                        atIndex: 0];
-    [encoder drawPrimitives: MTLPrimitiveTypeTriangle
-                vertexStart: 0
-                vertexCount: 36];
+    if(_IBLs.count > 0) {
+        [encoder setVertexBuffer: _commonVertexBuffer
+                          offset: 256
+                         atIndex: 0];
+        [encoder setVertexBuffer: _cameraPropsBuffer
+                          offset: _currentBufferIndex * sizeof(camera_props_t)
+                         atIndex: 1];
+        [encoder setFragmentTexture: _IBLs[_renderingIBLIndex].environmentMap
+                            atIndex: 0];
+        [encoder drawPrimitives: MTLPrimitiveTypeTriangle
+                    vertexStart: 0
+                    vertexCount: 36];
+    }
     [encoder endEncoding];
 }
 
-- (void)renderShadows:(id<MTLCommandBuffer>)buffer {
-}
-
-- (void)renderGBuffer:(id<MTLRenderCommandEncoder>)encoder {
+- (void)renderObjects:(id<MTLRenderCommandEncoder>)encoder
+         bindTextures:(BOOL)bindTextures {
     NSArray<MGPMesh *> *meshes = _meshes;
-    
-    encoder.label = @"G-buffer";
-    if(_showsTestObjects) {
-        [encoder setRenderPipelineState: _renderPipelineGBufferTest];
+    if(_showsTestObjects)
         meshes = _testObjects;
-    }
-    else {
-        [encoder setRenderPipelineState: _renderPipelinePrepass];
-    }
-    [encoder setDepthStencilState: _depthStencil];
-    [encoder setCullMode: MTLCullModeBack];
     
     for(MGPMesh *mesh in meshes) {
         for(MGPSubmesh *submesh in mesh.submeshes) {
             [encoder setVertexBuffer: mesh.metalKitMesh.vertexBuffers[0].buffer
                               offset: 0
                              atIndex: 0];
-            [encoder setVertexBuffer: _cameraPropsBuffer
-                              offset: _currentBufferIndex * sizeof(camera_props_t)
-                             atIndex: 1];
-            [encoder setVertexBuffer: _instancePropsBuffer
-                              offset: _currentBufferIndex * sizeof(instance_props_t) * kNumInstance
-                             atIndex: 2];
             
-            for(int i = 0; i < tex_total; i++) {
-                if(submesh.textures[i] != NSNull.null) {
-                    [encoder setFragmentTexture: submesh.textures[i] atIndex: i];
+            if(bindTextures) {
+                for(int i = 0; i < tex_total; i++) {
+                    if(submesh.textures[i] != NSNull.null) {
+                        [encoder setFragmentTexture: submesh.textures[i] atIndex: i];
+                    }
+                    else {
+                        [encoder setFragmentTexture: nil atIndex: i];
+                    }
                 }
             }
-            [encoder setFragmentBuffer: _cameraPropsBuffer
-                                offset: _currentBufferIndex * sizeof(camera_props_t)
-                               atIndex: 1];
-            [encoder setFragmentBuffer: _instancePropsBuffer
-                                offset: _currentBufferIndex * sizeof(instance_props_t) * kNumInstance
-                               atIndex: 2];
             
             [encoder drawIndexedPrimitives: submesh.metalKitSubmesh.primitiveType
                                 indexCount: submesh.metalKitSubmesh.indexCount
@@ -662,7 +665,32 @@ const float kLightIntensityVariation = 3.0;
                              instanceCount: kNumInstance];
         }
     }
+}
+
+- (void)renderGBuffer:(id<MTLRenderCommandEncoder>)encoder {
+    encoder.label = @"G-buffer";
+    [encoder setRenderPipelineState: _renderPipelinePrepass];
+    [encoder setDepthStencilState: _depthStencil];
+    [encoder setCullMode: MTLCullModeBack];
     
+    // camera
+    [encoder setVertexBuffer: _cameraPropsBuffer
+                      offset: _currentBufferIndex * sizeof(camera_props_t)
+                     atIndex: 1];
+    [encoder setFragmentBuffer: _cameraPropsBuffer
+                        offset: _currentBufferIndex * sizeof(camera_props_t)
+                       atIndex: 1];
+    
+    // instance
+    [encoder setVertexBuffer: _instancePropsBuffer
+                      offset: _currentBufferIndex * sizeof(instance_props_t) * kNumInstance
+                     atIndex: 2];
+    [encoder setFragmentBuffer: _instancePropsBuffer
+                        offset: _currentBufferIndex * sizeof(instance_props_t) * kNumInstance
+                       atIndex: 2];
+    
+    [self renderObjects: encoder
+           bindTextures: YES];
     [encoder endEncoding];
 }
 
@@ -673,17 +701,12 @@ const float kLightIntensityVariation = 3.0;
     [encoder setVertexBuffer: _commonVertexBuffer
                       offset: 0
                      atIndex: 0];
-    [encoder setFragmentBuffer: _cameraPropsBuffer
-                        offset: _currentBufferIndex * sizeof(camera_props_t)
-                       atIndex: 1];
     [encoder setFragmentBuffer: _lightPropsBuffer
                         offset: _currentBufferIndex * sizeof(light_t) * kNumLight
-                       atIndex: 2];
+                       atIndex: 1];
     [encoder setFragmentBuffer: _lightGlobalBuffer
                         offset: _currentBufferIndex * sizeof(light_global_t)
-                       atIndex: 3];
-    [encoder setFragmentTexture: _gBuffer.albedo
-                        atIndex: attachment_albedo];
+                       atIndex: 2];
     [encoder setFragmentTexture: _gBuffer.normal
                         atIndex: attachment_normal];
     [encoder setFragmentTexture: _gBuffer.pos
@@ -692,12 +715,15 @@ const float kLightIntensityVariation = 3.0;
                         atIndex: attachment_shading];
     [encoder setFragmentTexture: _gBuffer.tangent
                         atIndex: attachment_tangent];
-    [encoder setFragmentTexture: _IBLs[_renderingIBLIndex].irradianceMap
-                        atIndex: attachment_irradiance];
-    [encoder setFragmentTexture: _IBLs[_renderingIBLIndex].prefilteredSpecularMap
-                        atIndex: attachment_prefiltered_specular];
-    [encoder setFragmentTexture: _IBLs[_renderingIBLIndex].BRDFLookupTexture
-                        atIndex: attachment_brdf_lookup];
+    for(int i = 0; i < _numLights; i++) {
+        if(_lights[i].castShadows) {
+            MGPShadowBuffer *shadowBuffer = [_shadowManager newShadowBufferForLight: _lights[i]
+                                                                         resolution: 512
+                                                                      cascadeLevels: 1];
+            [encoder setFragmentTexture: shadowBuffer.texture
+                                atIndex: i+11];
+        }
+    }
     [encoder drawPrimitives: MTLPrimitiveTypeTriangle
                 vertexStart: 0
                 vertexCount: 6];
@@ -706,7 +732,41 @@ const float kLightIntensityVariation = 3.0;
 }
 
 - (void)renderShading:(id<MTLRenderCommandEncoder>)encoder {
-    // TODO
+    encoder.label = @"Shading";
+    [encoder setRenderPipelineState: _renderPipelineShading];
+    [encoder setCullMode: MTLCullModeBack];
+    [encoder setVertexBuffer: _commonVertexBuffer
+                      offset: 0
+                     atIndex: 0];
+    [encoder setFragmentBuffer: _cameraPropsBuffer
+                        offset: _currentBufferIndex * sizeof(camera_props_t)
+                       atIndex: 1];
+    [encoder setFragmentBuffer: _lightGlobalBuffer
+                        offset: _currentBufferIndex * sizeof(light_global_t)
+                       atIndex: 2];
+    [encoder setFragmentTexture: _gBuffer.albedo
+                        atIndex: attachment_albedo];
+    [encoder setFragmentTexture: _gBuffer.normal
+                        atIndex: attachment_normal];
+    [encoder setFragmentTexture: _gBuffer.pos
+                        atIndex: attachment_pos];
+    [encoder setFragmentTexture: _gBuffer.shading
+                        atIndex: attachment_shading];
+    [encoder setFragmentTexture: _gBuffer.lighting
+                        atIndex: attachment_light];
+    if(_IBLs.count > 0) {
+        [encoder setFragmentTexture: _IBLs[_renderingIBLIndex].irradianceMap
+                            atIndex: attachment_irradiance];
+        [encoder setFragmentTexture: _IBLs[_renderingIBLIndex].prefilteredSpecularMap
+                            atIndex: attachment_prefiltered_specular];
+        [encoder setFragmentTexture: _IBLs[_renderingIBLIndex].BRDFLookupTexture
+                            atIndex: attachment_brdf_lookup];
+    }
+    [encoder drawPrimitives: MTLPrimitiveTypeTriangle
+                vertexStart: 0
+                vertexCount: 6];
+    
+    [encoder endEncoding];
 }
 
 - (void)renderFramebuffer:(id<MTLRenderCommandEncoder>)encoder {
