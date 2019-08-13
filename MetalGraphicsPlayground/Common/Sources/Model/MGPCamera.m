@@ -21,6 +21,10 @@
         _cameraInverseMatrix = matrix_identity_float4x4;
         _rotationInverseMatrix = matrix_identity_float4x4;
         _projectionMatrix = matrix_identity_float4x4;
+        
+        _fStop = 1.4f;
+        _shutterSpeed = 1.0f / 60.0f;
+        _ISO = 100;
     }
     return self;
 }
@@ -32,6 +36,15 @@
 - (void)setProjectionState:(MGPProjectionState)projectionState {
     _projectionState = projectionState;
     _projectionMatrix = matrix_from_perspective_fov_aspectLH(_projectionState.fieldOfView, _projectionState.aspectRatio, _projectionState.nearPlane, _projectionState.farPlane);
+}
+
+- (float)exposureValue {
+    float ev = log2(_fStop * _fStop / _shutterSpeed);
+    if(_ISO != 100) {
+        float ec = log2(_ISO);
+        ev -= ec;
+    }
+    return ev;
 }
 
 @end

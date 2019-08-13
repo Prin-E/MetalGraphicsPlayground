@@ -42,6 +42,8 @@ typedef struct _MGPProjectionState {
 @property float shutterSpeed;
 @property NSUInteger ISO;
 
+- (float)exposureValue;
+
 @end
 
 NS_ASSUME_NONNULL_END
