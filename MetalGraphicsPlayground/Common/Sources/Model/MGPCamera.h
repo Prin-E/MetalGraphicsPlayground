@@ -15,7 +15,7 @@ typedef struct _MGPProjectionState {
     BOOL isOrthographic;
     float aspectRatio;
     float orthographicSize;
-    float fieldOfView;
+    float fieldOfView;              // radian
     float nearPlane, farPlane;
 } MGPProjectionState;
 

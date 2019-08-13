@@ -89,6 +89,10 @@
 		957E3C031E4B658300C10FB2 /* BRDF.metal in Sources */ = {isa = PBXBuildFile; fileRef = 957E3C021E4B658300C10FB2 /* BRDF.metal */; };
 		957ED55B1EF9810100F15B76 /* CoreML.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 957ED55A1EF980F900F15B76 /* CoreML.framework */; };
 		958648881F0E7B8000CF98A5 /* Shaders.metal in Sources */ = {isa = PBXBuildFile; fileRef = 958648871F0E7B8000CF98A5 /* Shaders.metal */; };
+		958852D523029A16005218C8 /* MGPPlane.m in Sources */ = {isa = PBXBuildFile; fileRef = 958852D423029A16005218C8 /* MGPPlane.m */; };
+		958852D623029A16005218C8 /* MGPPlane.m in Sources */ = {isa = PBXBuildFile; fileRef = 958852D423029A16005218C8 /* MGPPlane.m */; };
+		958852D92302C3DC005218C8 /* MGPFrustum.m in Sources */ = {isa = PBXBuildFile; fileRef = 958852D82302C3DC005218C8 /* MGPFrustum.m */; };
+		958852DA2302C3DC005218C8 /* MGPFrustum.m in Sources */ = {isa = PBXBuildFile; fileRef = 958852D82302C3DC005218C8 /* MGPFrustum.m */; };
 		958955C82277369B00414591 /* MGPView.m in Sources */ = {isa = PBXBuildFile; fileRef = 958955C72277369B00414591 /* MGPView.m */; };
 		958955CB227736F700414591 /* MGPRenderer.m in Sources */ = {isa = PBXBuildFile; fileRef = 958955CA227736F700414591 /* MGPRenderer.m */; };
 		958A9C1E1D16D0F600021744 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 958A9C1D1D16D0F600021744 /* AppDelegate.m */; };
@@ -338,6 +342,10 @@
 		957E3C041E4B671A00C10FB2 /* BRDF.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BRDF.h; sourceTree = "<group>"; };
 		957ED55A1EF980F900F15B76 /* CoreML.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreML.framework; path = System/Library/Frameworks/CoreML.framework; sourceTree = SDKROOT; };
 		958648871F0E7B8000CF98A5 /* Shaders.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = Shaders.metal; sourceTree = "<group>"; };
+		958852D323029A16005218C8 /* MGPPlane.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MGPPlane.h; sourceTree = "<group>"; };
+		958852D423029A16005218C8 /* MGPPlane.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MGPPlane.m; sourceTree = "<group>"; };
+		958852D72302C3DC005218C8 /* MGPFrustum.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MGPFrustum.h; sourceTree = "<group>"; };
+		958852D82302C3DC005218C8 /* MGPFrustum.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MGPFrustum.m; sourceTree = "<group>"; };
 		958955C62277369B00414591 /* MGPView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MGPView.h; sourceTree = "<group>"; };
 		958955C72277369B00414591 /* MGPView.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MGPView.m; sourceTree = "<group>"; };
 		958955C9227736F700414591 /* MGPRenderer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MGPRenderer.h; sourceTree = "<group>"; };
@@ -1026,6 +1034,10 @@
 				95EFB7D122C7AD5A00813903 /* MGPShadowManager.m */,
 				95F002A922CCEEFF000A951B /* MGPScene.h */,
 				95F002AA22CCEEFF000A951B /* MGPScene.m */,
+				958852D323029A16005218C8 /* MGPPlane.h */,
+				958852D423029A16005218C8 /* MGPPlane.m */,
+				958852D72302C3DC005218C8 /* MGPFrustum.h */,
+				958852D82302C3DC005218C8 /* MGPFrustum.m */,
 			);
 			path = Model;
 			sourceTree = "<group>";
@@ -1708,6 +1720,7 @@
 				95EFB7D222C7AD5A00813903 /* MGPShadowManager.m in Sources */,
 				959C8303227F424900C2C245 /* BRDF.metal in Sources */,
 				95A4D93022840E5B004653B6 /* Skybox.metal in Sources */,
+				958852D523029A16005218C8 /* MGPPlane.m in Sources */,
 				95F4CB2D22799BFF00F51454 /* GBuffer.metal in Sources */,
 				950C345822C5B05D004C32CA /* MGPShadowBuffer.m in Sources */,
 				95FBFD56229466DC002BA1E0 /* MGPCamera.m in Sources */,
@@ -1725,6 +1738,7 @@
 				958955C82277369B00414591 /* MGPView.m in Sources */,
 				95A4D9292283F1E0004653B6 /* MGPImageBasedLighting.m in Sources */,
 				95F4CB2A2279937200F51454 /* MGPGBuffer.m in Sources */,
+				958852D92302C3DC005218C8 /* MGPFrustum.m in Sources */,
 				959A344E227B59750034AA82 /* DeferredRenderer.m in Sources */,
 				958955CB227736F700414591 /* MGPRenderer.m in Sources */,
 				95EFD8DD22AF958500D4C0F5 /* MGPTextureLoader.m in Sources */,
@@ -1740,6 +1754,7 @@
 				95F002AE22CD0841000A951B /* MGPPostProcessing.m in Sources */,
 				95F002AF22CD0841000A951B /* MGPPostProcessingLayer.m in Sources */,
 				95F40BC122AD76EA00F747D2 /* GBuffer.metal in Sources */,
+				958852D623029A16005218C8 /* MGPPlane.m in Sources */,
 				95F6725822D7867300B630A7 /* Shadow.metal in Sources */,
 				95F40BC222AD76EA00F747D2 /* BRDF.metal in Sources */,
 				95F002AB22CCEEFF000A951B /* MGPScene.m in Sources */,
@@ -1761,6 +1776,7 @@
 				95F40BCC22AD76EA00F747D2 /* MGPImageBasedLighting.m in Sources */,
 				95FBFD4F229465ED002BA1E0 /* main.m in Sources */,
 				95FBFD57229466DC002BA1E0 /* MGPCamera.m in Sources */,
+				958852DA2302C3DC005218C8 /* MGPFrustum.m in Sources */,
 				95FBFD47229465EB002BA1E0 /* AppDelegate.m in Sources */,
 				95F0F94622C1FEA6002AF368 /* SSAO.metal in Sources */,
 			);
