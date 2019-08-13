@@ -93,6 +93,8 @@
 		958852D623029A16005218C8 /* MGPPlane.m in Sources */ = {isa = PBXBuildFile; fileRef = 958852D423029A16005218C8 /* MGPPlane.m */; };
 		958852D92302C3DC005218C8 /* MGPFrustum.m in Sources */ = {isa = PBXBuildFile; fileRef = 958852D82302C3DC005218C8 /* MGPFrustum.m */; };
 		958852DA2302C3DC005218C8 /* MGPFrustum.m in Sources */ = {isa = PBXBuildFile; fileRef = 958852D82302C3DC005218C8 /* MGPFrustum.m */; };
+		958852DD23032798005218C8 /* MGPBoundingVolume.m in Sources */ = {isa = PBXBuildFile; fileRef = 958852DC23032798005218C8 /* MGPBoundingVolume.m */; };
+		958852DE23032798005218C8 /* MGPBoundingVolume.m in Sources */ = {isa = PBXBuildFile; fileRef = 958852DC23032798005218C8 /* MGPBoundingVolume.m */; };
 		958955C82277369B00414591 /* MGPView.m in Sources */ = {isa = PBXBuildFile; fileRef = 958955C72277369B00414591 /* MGPView.m */; };
 		958955CB227736F700414591 /* MGPRenderer.m in Sources */ = {isa = PBXBuildFile; fileRef = 958955CA227736F700414591 /* MGPRenderer.m */; };
 		958A9C1E1D16D0F600021744 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 958A9C1D1D16D0F600021744 /* AppDelegate.m */; };
@@ -346,6 +348,8 @@
 		958852D423029A16005218C8 /* MGPPlane.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MGPPlane.m; sourceTree = "<group>"; };
 		958852D72302C3DC005218C8 /* MGPFrustum.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MGPFrustum.h; sourceTree = "<group>"; };
 		958852D82302C3DC005218C8 /* MGPFrustum.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MGPFrustum.m; sourceTree = "<group>"; };
+		958852DB23032798005218C8 /* MGPBoundingVolume.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MGPBoundingVolume.h; sourceTree = "<group>"; };
+		958852DC23032798005218C8 /* MGPBoundingVolume.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MGPBoundingVolume.m; sourceTree = "<group>"; };
 		958955C62277369B00414591 /* MGPView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MGPView.h; sourceTree = "<group>"; };
 		958955C72277369B00414591 /* MGPView.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MGPView.m; sourceTree = "<group>"; };
 		958955C9227736F700414591 /* MGPRenderer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MGPRenderer.h; sourceTree = "<group>"; };
@@ -1038,6 +1042,8 @@
 				958852D423029A16005218C8 /* MGPPlane.m */,
 				958852D72302C3DC005218C8 /* MGPFrustum.h */,
 				958852D82302C3DC005218C8 /* MGPFrustum.m */,
+				958852DB23032798005218C8 /* MGPBoundingVolume.h */,
+				958852DC23032798005218C8 /* MGPBoundingVolume.m */,
 			);
 			path = Model;
 			sourceTree = "<group>";
@@ -1741,6 +1747,7 @@
 				958852D92302C3DC005218C8 /* MGPFrustum.m in Sources */,
 				959A344E227B59750034AA82 /* DeferredRenderer.m in Sources */,
 				958955CB227736F700414591 /* MGPRenderer.m in Sources */,
+				958852DD23032798005218C8 /* MGPBoundingVolume.m in Sources */,
 				95EFD8DD22AF958500D4C0F5 /* MGPTextureLoader.m in Sources */,
 				95EFD8DB22AF941800D4C0F5 /* DDSTextureLoader.mm in Sources */,
 				95F002AC22CCEFB5000A951B /* MGPPostProcessing.m in Sources */,
@@ -1778,6 +1785,7 @@
 				95FBFD57229466DC002BA1E0 /* MGPCamera.m in Sources */,
 				958852DA2302C3DC005218C8 /* MGPFrustum.m in Sources */,
 				95FBFD47229465EB002BA1E0 /* AppDelegate.m in Sources */,
+				958852DE23032798005218C8 /* MGPBoundingVolume.m in Sources */,
 				95F0F94622C1FEA6002AF368 /* SSAO.metal in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

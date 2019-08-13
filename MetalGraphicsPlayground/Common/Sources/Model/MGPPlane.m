@@ -14,7 +14,7 @@
     self = [super init];
     if(self) {
         _center = center;
-        _normal = normal;
+        _normal = simd_normalize(normal);
     }
     return self;
 }
@@ -24,6 +24,15 @@
     MGPPlane *plane = [[self.class alloc] initWithCenter: center
                                                   normal: normal];
     return plane;
+}
+
+- (simd_float4)equation {
+    return simd_make_float4(_normal.x, _normal.y, _normal.z, -simd_dot(_normal, _center));
+}
+
+- (float)distanceToPosition:(simd_float3)position {
+    float distance = simd_dot(_normal, position - _center);
+    return distance;
 }
 
 @end

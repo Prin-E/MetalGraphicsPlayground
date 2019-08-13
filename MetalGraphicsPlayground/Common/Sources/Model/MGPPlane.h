@@ -22,6 +22,9 @@ NS_ASSUME_NONNULL_BEGIN
 @property simd_float3 center;
 @property simd_float3 normal;
 
+- (simd_float4)equation; // <A,B,C,D> a.k.a. Ax+By+Cz+D=0
+- (float)distanceToPosition: (simd_float3)position;
+
 @end
 
 NS_ASSUME_NONNULL_END
