@@ -8,6 +8,7 @@
 
 #import <Foundation/Foundation.h>
 #import <simd/simd.h>
+#import "../../Shaders/SharedStructures.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -19,15 +20,16 @@ typedef struct _MGPProjectionState {
     float nearPlane, farPlane;
 } MGPProjectionState;
 
+@class MGPFrustum;
 @interface MGPCamera : NSObject
 
 // world to camera
-@property (readonly) matrix_float4x4 cameraMatrix;
-@property (readonly) matrix_float4x4 rotationMatrix;
+@property (readonly) matrix_float4x4 worldToCameraMatrix;
+@property (readonly) matrix_float4x4 worldToCameraRotationMatrix;
 
 // camera to world
-@property (readonly) matrix_float4x4 cameraInverseMatrix;
-@property (readonly) matrix_float4x4 rotationInverseMatrix;
+@property (readonly) matrix_float4x4 cameraToWorldMatrix;
+@property (readonly) matrix_float4x4 cameraToWorldRotationMatrix;
 
 // projection
 @property (readonly) matrix_float4x4 projectionMatrix;
@@ -37,10 +39,18 @@ typedef struct _MGPProjectionState {
 @property simd_float3 position;
 @property simd_float3 rotation;     // euler xyz
 
+// basis vectors
+- (simd_float3)right;
+- (simd_float3)up;
+- (simd_float3)forward;
+
 // camera setup
 @property float fStop;
 @property float shutterSpeed;
 @property NSUInteger ISO;
+
+@property (nonatomic, readonly) MGPFrustum *frustum;
+@property (nonatomic, readonly) camera_props_t shaderProperties;
 
 - (float)exposureValue;
 

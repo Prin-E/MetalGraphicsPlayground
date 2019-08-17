@@ -25,8 +25,6 @@ typedef struct {
     float2 uv;
 } ShadowFragment;
 
-
-
 vertex ShadowFragment shadow_vert(ShadowVertex in [[stage_in]],
                                   constant light_t &light [[buffer(1)]],
                                   constant light_global_t &light_global [[buffer(2)]],

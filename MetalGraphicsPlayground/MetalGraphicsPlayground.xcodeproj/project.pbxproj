@@ -285,6 +285,7 @@
 		953EAB911B9B5EB80024994F /* SharedStructures.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SharedStructures.h; sourceTree = "<group>"; };
 		954A2C381C14400000EB58E3 /* lego.mtl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = lego.mtl; sourceTree = "<group>"; };
 		954A2C391C14400000EB58E3 /* lego.obj */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = lego.obj; sourceTree = "<group>"; };
+		954C17182306802A0049FF79 /* ColorSpace.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ColorSpace.h; sourceTree = "<group>"; };
 		954F28B51C1452A700D4D915 /* MetalShadowMapping.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MetalShadowMapping.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		954F28B71C1452A700D4D915 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		954F28B81C1452A700D4D915 /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
@@ -1080,6 +1081,7 @@
 				95F0F94422C1FEA6002AF368 /* SSAO.metal */,
 				95F6725622D7867300B630A7 /* Shadow.metal */,
 				95B7662022DCE06D001FA4E7 /* Shadow.h */,
+				954C17182306802A0049FF79 /* ColorSpace.h */,
 			);
 			path = Shaders;
 			sourceTree = "<group>";

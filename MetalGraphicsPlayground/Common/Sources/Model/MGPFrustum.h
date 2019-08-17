@@ -18,6 +18,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (readonly) NSArray<MGPPlane*> *planes;
 
 - (instancetype)initWithCamera: (MGPCamera *)camera;
+- (void)setPlanesForCamera: (MGPCamera *)camera;
 
 @end
 

@@ -15,15 +15,27 @@
 - (instancetype)initWithCamera:(MGPCamera *)camera {
     self = [super init];
     if(self) {
-        [self _makePlanesWithCamera: camera];
+        [self _makePlanes];
+        [self setPlanesForCamera: camera];
     }
     return self;
 }
 
-- (void)_makePlanesWithCamera: (MGPCamera *)camera {
+- (void)_makePlanes {
+    // make 6 planes!
+    MGPPlane *nearPlane = [[MGPPlane alloc] init];
+    MGPPlane *farPlane = [[MGPPlane alloc] init];
+    MGPPlane *leftPlane = [[MGPPlane alloc] init];
+    MGPPlane *rightPlane = [[MGPPlane alloc] init];
+    MGPPlane *bottomPlane = [[MGPPlane alloc] init];
+    MGPPlane *topPlane = [[MGPPlane alloc] init];
+    _planes = @[ nearPlane, farPlane, leftPlane, rightPlane, bottomPlane, topPlane ];
+}
+
+- (void)setPlanesForCamera:(MGPCamera *)camera {
     MGPProjectionState proj = camera.projectionState;
     simd_float3 cameraPos = camera.position;
-    simd_float4x4 cameraMatrix = camera.cameraMatrix;
+    simd_float4x4 cameraMatrix = camera.worldToCameraMatrix;
     
     // TODO: implement orthographic view frustum
     
@@ -35,20 +47,25 @@
     float tanHalfFov = tanf(proj.fieldOfView * 0.5f);
     float tanHalfFovAspectRatio = tanHalfFov * proj.aspectRatio;
     
-    // make 6 planes!
-    MGPPlane *nearPlane = [MGPPlane planeWithCenter: cameraPos + forward * proj.nearPlane
-                                        normal: forward];
-    MGPPlane *farPlane = [MGPPlane planeWithCenter: cameraPos + forward * proj.farPlane
-                                       normal: -forward];
-    MGPPlane *leftPlane = [MGPPlane planeWithCenter: cameraPos - right * tanHalfFovAspectRatio
-                                             normal: simd_cross(up, simd_normalize(-right * tanHalfFovAspectRatio))];
-    MGPPlane *rightPlane = [MGPPlane planeWithCenter: cameraPos + right * tanHalfFovAspectRatio
-                                         normal: simd_cross(simd_normalize(right * tanHalfFovAspectRatio), up)];
-    MGPPlane *bottomPlane = [MGPPlane planeWithCenter: cameraPos + centerZ * forward - tanHalfFov * up
-                                               normal: simd_cross(simd_normalize(centerZ * forward - tanHalfFov * up), right)];
-    MGPPlane *topPlane = [MGPPlane planeWithCenter: cameraPos + centerZ * forward + tanHalfFov * up
-                                            normal: simd_cross(right, simd_normalize(centerZ * forward + tanHalfFov * up))];
-    _planes = @[ nearPlane, farPlane, leftPlane, rightPlane, bottomPlane, topPlane ];
+    // apply center, normal of planes
+    MGPPlane *nearPlane = _planes[0];
+    MGPPlane *farPlane = _planes[1];
+    MGPPlane *leftPlane = _planes[2];
+    MGPPlane *rightPlane = _planes[3];
+    MGPPlane *bottomPlane = _planes[4];
+    MGPPlane *topPlane = _planes[5];
+    nearPlane.center = cameraPos + forward * proj.nearPlane;
+    nearPlane.normal = forward;
+    farPlane.center = cameraPos + forward * proj.farPlane;
+    farPlane.normal = -forward;
+    leftPlane.center = cameraPos - right * tanHalfFovAspectRatio;
+    leftPlane.normal = simd_cross(up, simd_normalize(-right * tanHalfFovAspectRatio));
+    rightPlane.center = cameraPos + right * tanHalfFovAspectRatio;
+    rightPlane.normal = simd_cross(simd_normalize(right * tanHalfFovAspectRatio), up);
+    bottomPlane.center = cameraPos + centerZ * forward - tanHalfFov * up;
+    bottomPlane.normal = simd_cross(simd_normalize(centerZ * forward - tanHalfFov * up), right);
+    topPlane.center = cameraPos + centerZ * forward + tanHalfFov * up;
+    topPlane.normal = simd_cross(right, simd_normalize(centerZ * forward + tanHalfFov * up));
 }
 
 @end

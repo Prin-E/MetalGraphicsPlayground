@@ -1,6 +1,6 @@
 //
 //  DeferredRenderer.m
-//  MetalDeferred
+//  MetalPostProcessing
 //
 //  Created by 이현우 on 03/05/2019.
 //  Copyright © 2019 Prin_E. All rights reserved.
@@ -19,6 +19,7 @@
 #import "../Common/Sources/Model/MGPShadowBuffer.h"
 #import "../Common/Sources/Model/MGPShadowManager.h"
 #import "../Common/Sources/Model/MGPLight.h"
+#import "../Common/Sources/Model/MGPCamera.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #import "../Common/STB/stb_image.h"
@@ -53,10 +54,7 @@ const float kLightIntensityVariation = 1.0f;
     NSPoint _mouseDelta, _prevMousePos;
     
     BOOL _mouseDown;
-    vector_float3 _cameraPos;
-    vector_float3 _cameraRot;
-    matrix_float4x4 _cameraRotationMatrix, _cameraRotationInverseMatrix;
-    matrix_float4x4 _cameraMatrix, _cameraInverseMatrix;
+    MGPCamera *_camera;
     
     // props
     id<MTLBuffer> _cameraPropsBuffer;
@@ -177,7 +175,6 @@ const float kLightIntensityVariation = 1.0f;
     self = [super init];
     if(self) {
         _animate = NO;
-        _cameraPos = vector3(0.0f, 50.0f, -60.0f);
         _numLights = 2;
         _roughness = 1.0f;
         _metalic = 0.0f;
@@ -320,6 +317,10 @@ const float kLightIntensityVariation = 1.0f;
         [_lights addObject: [[MGPLight alloc] init]];
     }
     
+    // camera
+    _camera = [[MGPCamera alloc] init];
+    _camera.position = simd_make_float3(0, 50, -60);
+    
     // shadow
     _shadowManager = [[MGPShadowManager alloc] initWithDevice: self.device
                                                       library: self.defaultLibrary
@@ -359,43 +360,45 @@ const float kLightIntensityVariation = 1.0f;
     _prevMousePos = mousePos;
     
     // camera
-    [self _updateCameraMatrix: deltaTime];
+    [self _updateCamera: deltaTime];
     [self _updateUniformBuffers: deltaTime];
     _postProcess.currentBufferIndex = _currentBufferIndex;
 }
 
-- (void)_updateCameraMatrix: (float)deltaTime {
-    // camera rotation
+- (void)_updateCamera: (float)deltaTime {
+    // rotation
     if(_mouseDown) {
         NSPoint pixelMouseDelta = [self.view convertPointToBacking: _mouseDelta];
-        _cameraRot.y = _cameraRot.y + pixelMouseDelta.x / (0.5f * _gBuffer.size.height) * M_PI_2;
-        _cameraRot.x = MIN(MAX(_cameraRot.x + pixelMouseDelta.y / (0.5f * _gBuffer.size.height) * M_PI_2, -M_PI*0.4), M_PI*0.4);
+        simd_float3 rot = _camera.rotation;
+        rot.y = rot.y + pixelMouseDelta.x / (0.5f * _gBuffer.size.height) * M_PI_2;
+        rot.x = MIN(MAX(rot.x - pixelMouseDelta.y / (0.5f * _gBuffer.size.height) * M_PI_2, -M_PI*0.4), M_PI*0.4);
+        _camera.rotation = rot;
     }
-    _cameraRotationMatrix = matrix_multiply(matrix_from_rotation(_cameraRot.y, 0, 1, 0),
-                                            matrix_from_rotation(-_cameraRot.x, 1, 0, 0));
-    _cameraRotationInverseMatrix = matrix_invert(_cameraRotationMatrix);
     
     // move
-    static int columnIndices[] = {
-        2,2,0,0,1,1
-    };
+    static int columnIndices[] = { 2, 2, 0, 0, 1, 1 };
+    simd_float4x4 rotationMatrix = _camera.cameraToWorldRotationMatrix;
     for(int i = 0; i < 6; i++) {
         float sign = (i % 2) ? -1.0f : 1.0f;
         _moveSpeeds[i] = LERP(_moveSpeeds[i], _moveFlags[i] ? 100.0f : 0.0f, deltaTime * 14);
-        _cameraPos = _cameraPos + _cameraRotationMatrix.columns[columnIndices[i]].xyz * deltaTime * _moveSpeeds[i] * sign;
+        if(_moveSpeeds[i] > 0.0001f) {
+            simd_float3 direction = rotationMatrix.columns[columnIndices[i]].xyz;
+            _camera.position += direction * deltaTime * _moveSpeeds[i] * sign;
+        }
     }
-    matrix_float4x4 cameraTranslationMatrix = matrix_from_translation(_cameraPos.x, _cameraPos.y, _cameraPos.z);
-    _cameraMatrix = matrix_multiply(cameraTranslationMatrix, _cameraRotationMatrix);
-    _cameraInverseMatrix = matrix_invert(_cameraMatrix);
+    
+    // projection
+    MGPProjectionState projection = _camera.projectionState;
+    projection.aspectRatio = _gBuffer.size.width / _gBuffer.size.height;
+    projection.fieldOfView = DEG_TO_RAD(60.0);
+    projection.nearPlane = 1.0f;
+    projection.farPlane = 5000.0f;
+    _camera.projectionState = projection;
 }
 
 - (void)_updateUniformBuffers: (float)deltaTime {
     // Update camera properties
-    camera_props[_currentBufferIndex].view = _cameraInverseMatrix;
-    camera_props[_currentBufferIndex].projection = matrix_from_perspective_fov_aspectLH(DEG_TO_RAD(60.0f), _gBuffer.size.width / _gBuffer.size.height, 1.0f, 5000.0f);
-    camera_props[_currentBufferIndex].viewProjection = matrix_multiply(camera_props[_currentBufferIndex].projection, camera_props[_currentBufferIndex].view);
-    camera_props[_currentBufferIndex].rotation = _cameraRotationInverseMatrix;
-    camera_props[_currentBufferIndex].position = _cameraPos;
+    camera_props[_currentBufferIndex] = _camera.shaderProperties;
     
     // Update per-instance properties
     static const simd_float3 instance_pos[] = {
