@@ -55,6 +55,7 @@ const float kLightIntensityVariation = 1.0f;
     
     BOOL _mouseDown;
     MGPCamera *_camera;
+    BOOL _isOrthographic;
     
     // props
     id<MTLBuffer> _cameraPropsBuffer;
@@ -133,6 +134,11 @@ const float kLightIntensityVariation = 1.0f;
     if(theEvent.keyCode == 14) {
         // a
         _moveFlags[5] = true;
+    }
+    if(theEvent.keyCode == 48) {
+        MGPProjectionState proj = _camera.projectionState;
+        _isOrthographic = !_isOrthographic;
+        _camera.projectionState = proj;
     }
 }
 
@@ -321,6 +327,15 @@ const float kLightIntensityVariation = 1.0f;
     _camera = [[MGPCamera alloc] init];
     _camera.position = simd_make_float3(0, 50, -60);
     
+    // projection
+    MGPProjectionState projection = _camera.projectionState;
+    projection.aspectRatio = _gBuffer.size.width / _gBuffer.size.height;
+    projection.fieldOfView = DEG_TO_RAD(60.0);
+    projection.nearPlane = 1.0f;
+    projection.farPlane = 5000.0f;
+    projection.orthographicSize = 500;
+    _camera.projectionState = projection;
+    
     // shadow
     _shadowManager = [[MGPShadowManager alloc] initWithDevice: self.device
                                                       library: self.defaultLibrary
@@ -387,13 +402,19 @@ const float kLightIntensityVariation = 1.0f;
         }
     }
     
-    // projection
-    MGPProjectionState projection = _camera.projectionState;
-    projection.aspectRatio = _gBuffer.size.width / _gBuffer.size.height;
-    projection.fieldOfView = DEG_TO_RAD(60.0);
-    projection.nearPlane = 1.0f;
-    projection.farPlane = 5000.0f;
-    _camera.projectionState = projection;
+    // update animated orthographic rate
+    MGPProjectionState proj = _camera.projectionState;
+    BOOL orthoRateIsChanged = NO;
+    if(_isOrthographic && proj.orthographicRate < 1.0f) {
+        proj.orthographicRate = simd_min(proj.orthographicRate + deltaTime * 2.0f, 1.0f);
+        orthoRateIsChanged = YES;
+    }
+    else if(!_isOrthographic && proj.orthographicRate > 0.0f) {
+        proj.orthographicRate = simd_max(proj.orthographicRate - deltaTime * 2.0f, 0.0f);
+        orthoRateIsChanged = YES;
+    }
+    if(orthoRateIsChanged)
+        _camera.projectionState = proj;
 }
 
 - (void)_updateUniformBuffers: (float)deltaTime {

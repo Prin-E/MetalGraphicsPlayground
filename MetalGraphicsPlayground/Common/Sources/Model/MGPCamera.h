@@ -13,8 +13,8 @@
 NS_ASSUME_NONNULL_BEGIN
 
 typedef struct _MGPProjectionState {
-    BOOL isOrthographic;
     float aspectRatio;
+    float orthographicRate;         // 0.0 : perspective, 1.0 : orthographic
     float orthographicSize;
     float fieldOfView;              // radian
     float nearPlane, farPlane;

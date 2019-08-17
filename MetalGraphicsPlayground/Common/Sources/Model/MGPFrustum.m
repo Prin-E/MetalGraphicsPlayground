@@ -37,14 +37,12 @@
     simd_float3 cameraPos = camera.position;
     simd_float4x4 cameraMatrix = camera.worldToCameraMatrix;
     
-    // TODO: implement orthographic view frustum
-    
     // basis vectors and related constants
     simd_float3 right = cameraMatrix.columns[0].xyz;
     simd_float3 forward = cameraMatrix.columns[1].xyz;
     simd_float3 up = cameraMatrix.columns[2].xyz;
     float centerZ = (proj.nearPlane + proj.farPlane) * 0.5f;
-    float tanHalfFov = tanf(proj.fieldOfView * 0.5f);
+    float tanHalfFov = proj.orthographicSize * 0.5f * proj.orthographicRate + tanf(proj.fieldOfView * 0.5f) * (1.0f - proj.orthographicRate);
     float tanHalfFovAspectRatio = tanHalfFov * proj.aspectRatio;
     
     // apply center, normal of planes
