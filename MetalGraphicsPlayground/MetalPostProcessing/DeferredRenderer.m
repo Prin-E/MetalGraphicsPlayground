@@ -806,6 +806,9 @@ const float kLightIntensityVariation = 1.0f;
 - (void)resize:(CGSize)newSize {
     [_gBuffer resize:newSize];
     [_postProcess resize:newSize];
+    MGPProjectionState proj = _camera.projectionState;
+    proj.aspectRatio = newSize.width / newSize.height;
+    _camera.projectionState = proj;
     [self _initSkyboxDepthTexture];
 }
 

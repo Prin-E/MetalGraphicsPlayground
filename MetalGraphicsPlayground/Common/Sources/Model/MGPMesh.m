@@ -9,20 +9,23 @@
 #import "MGPMesh.h"
 #import "../Utility/MGPCommonVertices.h"
 #import "../../Shaders/SharedStructures.h"
+#import "MGPBoundingVolume.h"
 
 @implementation MGPSubmesh {
     MTKSubmesh *_metalKitSubmesh;
     NSMutableArray *_textures;
+    id<MGPBoundingVolume> _boundingVolume;
 }
 
 @synthesize metalKitSubmesh = _metalKitSubmesh;
 @synthesize textures = _textures;
 
-- (instancetype)initWithModelIOSubmesh: (MDLSubmesh *)mdlSubmesh
-                       metalKitSubmesh: (MTKSubmesh *)mtkSubmesh
-                         textureLoader: (MGPTextureLoader *)textureLoader
-                           textureDict: (NSMutableDictionary *)textureDict
-                                 error: (NSError **)error {
+- (instancetype)initWithModelIOMesh: (MDLMesh *)mdlMesh
+                     modelIOSubmesh: (MDLSubmesh *)mdlSubmesh
+                    metalKitSubmesh: (MTKSubmesh *)mtkSubmesh
+                      textureLoader: (MGPTextureLoader *)textureLoader
+                        textureDict: (NSMutableDictionary *)textureDict
+                              error: (NSError **)error {
     self = [super init];
     if(self) {
         _metalKitSubmesh = mtkSubmesh;
@@ -50,8 +53,50 @@
                 [_textures addObject: NSNull.null];
             }
         }
+        
+        [self makeBoundingVolumeWithModelIOMesh:mdlMesh
+                                 modelIOSubmesh:mdlSubmesh];
     }
     return self;
+}
+
+- (void)makeBoundingVolumeWithModelIOMesh: (MDLMesh *)mdlMesh
+                           modelIOSubmesh: (MDLSubmesh *)mdlSubmesh {
+    MDLVertexAttributeData *attributeData = [mdlMesh vertexAttributeDataForAttributeNamed: MDLVertexAttributePosition];
+    void *posBytes = attributeData.dataStart;
+    size_t posStride = attributeData.stride;
+    size_t posSize = 0;
+    if(attributeData.format & MDLVertexFormatFloatBits)
+        posSize = sizeof(float) * (attributeData.format & ~(MDLVertexFormatFloatBits));
+    size_t indexSize = mdlSubmesh.indexType / 8;
+    void *indexBytes = mdlSubmesh.indexBuffer.map.bytes;
+    
+    void *posPtr = posBytes;
+    simd_float3 min = simd_make_float3(FLT_MAX, FLT_MAX, FLT_MAX);
+    simd_float3 max = simd_make_float3(FLT_MIN, FLT_MIN, FLT_MIN);
+    for(int i = 0; i < mdlSubmesh.indexCount; i++) {
+        size_t index = 0;
+        if(indexSize == 1)
+            index = ((uint8_t *)indexBytes)[i];
+        else if(indexSize == 2)
+            index = ((uint16_t *)indexBytes)[i];
+        else if(indexSize == 4)
+            index = ((uint32_t *)indexBytes)[i];
+        
+        float pos[3] = {};
+        memcpy(pos, posPtr, MIN(posSize, sizeof(pos)));
+        min = simd_make_float3(MIN(pos[0], min.x), MIN(pos[1], min.y), MIN(pos[2], min.z));
+        max = simd_make_float3(MAX(pos[0], max.x), MAX(pos[1], max.y), MAX(pos[2], max.z));
+        posPtr += posStride;
+    }
+    
+    simd_float3 center = (max-min)*0.5;
+    float radius = simd_length(simd_abs(max-center));
+    
+    MGPBoundingSphere *sphere = [MGPBoundingSphere new];
+    sphere.radius = radius;
+    sphere.position = center;
+    _boundingVolume = sphere;
 }
 
 + (nonnull id<MTLTexture>) createMetalTextureFromMaterial:(nonnull MDLMaterial *)material
@@ -197,11 +242,12 @@
         _textureDict = [NSMutableDictionary new];
         
         for(NSInteger i = 0; i < _metalKitMesh.submeshes.count; i++) {
-            MGPSubmesh *submesh = [[MGPSubmesh alloc] initWithModelIOSubmesh: mdlMesh.submeshes[i]
-                                                             metalKitSubmesh: mtkMesh.submeshes[i]
-                                                               textureLoader: textureLoader
-                                                                 textureDict: _textureDict
-                                                                       error: error];
+            MGPSubmesh *submesh = [[MGPSubmesh alloc] initWithModelIOMesh: mdlMesh
+                                                           modelIOSubmesh: mdlMesh.submeshes[i]
+                                                          metalKitSubmesh: mtkMesh.submeshes[i]
+                                                            textureLoader: textureLoader
+                                                              textureDict: _textureDict
+                                                                    error: error];
             [_submeshes addObject: submesh];
         }
     }

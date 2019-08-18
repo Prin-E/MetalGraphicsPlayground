@@ -37,7 +37,9 @@
 }
 
 - (MGPProjectionState)projectionState {
-    return _projectionState;
+    @synchronized (self) {
+        return _projectionState;
+    }
 }
 
 - (void)setProjectionState:(MGPProjectionState)projectionState {
@@ -66,7 +68,9 @@
 }
 
 - (simd_float3)position {
-    return _position;
+    @synchronized (self) {
+        return _position;
+    }
 }
 
 - (void)setPosition:(simd_float3)position {
@@ -80,7 +84,9 @@
 }
 
 - (simd_float3)rotation {
-    return _rotation;
+    @synchronized (self) {
+        return _rotation;
+    }
 }
 
 - (void)setRotation:(simd_float3)rotation {
@@ -101,25 +107,33 @@
 }
 
 - (simd_float3)right {
-    return _cameraToWorldRotationMatrix.columns[0].xyz;
+    @synchronized (self) {
+        return _cameraToWorldRotationMatrix.columns[0].xyz;
+    }
 }
 
 - (simd_float3)up {
-    return _cameraToWorldRotationMatrix.columns[1].xyz;
+    @synchronized (self) {
+        return _cameraToWorldRotationMatrix.columns[1].xyz;
+    }
 }
 
 - (simd_float3)forward {
-    return _cameraToWorldRotationMatrix.columns[2].xyz;
+    @synchronized (self) {
+        return _cameraToWorldRotationMatrix.columns[2].xyz;
+    }
 }
 
 - (camera_props_t)shaderProperties {
-    camera_props_t props = {};
-    props.position = _position;
-    props.rotation = _worldToCameraRotationMatrix;
-    props.view = _worldToCameraMatrix;
-    props.projection = _projectionMatrix;
-    props.viewProjection = simd_mul(_projectionMatrix, _worldToCameraMatrix);
-    return props;
+    @synchronized (self) {
+        camera_props_t props = {};
+        props.position = _position;
+        props.rotation = _worldToCameraRotationMatrix;
+        props.view = _worldToCameraMatrix;
+        props.projection = _projectionMatrix;
+        props.viewProjection = simd_mul(_projectionMatrix, _worldToCameraMatrix);
+        return props;
+    }
 }
 
 - (float)exposureValue {

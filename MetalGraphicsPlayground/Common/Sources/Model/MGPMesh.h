@@ -14,10 +14,12 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+@protocol MGPBoundingVolume;
 @interface MGPSubmesh : NSObject
 
 @property (readonly) MTKSubmesh *metalKitSubmesh;
 @property (readonly, nonnull) NSMutableArray *textures;
+@property (nonatomic, readonly) id<MGPBoundingVolume> volume;
 
 @end
 

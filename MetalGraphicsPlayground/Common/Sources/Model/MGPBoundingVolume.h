@@ -24,6 +24,7 @@ NS_ASSUME_NONNULL_BEGIN
 @interface MGPBoundingBox : NSObject <MGPBoundingVolume>
 
 @property simd_float3 extent;
+@property simd_float3x3 rotation;
 
 @end
 
