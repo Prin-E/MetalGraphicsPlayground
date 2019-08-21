@@ -71,6 +71,9 @@
 		955DA6B71F0E74E100464E54 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 955DA6B51F0E74E100464E54 /* Main.storyboard */; };
 		955DA6BA1F0E74E100464E54 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 955DA6B91F0E74E100464E54 /* main.m */; };
 		9561BB7522AE2998005ACC48 /* DeferredRenderer.m in Sources */ = {isa = PBXBuildFile; fileRef = 9561BB7422AE2998005ACC48 /* DeferredRenderer.m */; };
+		95644A4E230C39C700EA856C /* Gizmo.metal in Sources */ = {isa = PBXBuildFile; fileRef = 95644A4D230C39C700EA856C /* Gizmo.metal */; };
+		95644A51230C3B3400EA856C /* MGPGizmos.m in Sources */ = {isa = PBXBuildFile; fileRef = 95644A50230C3B3400EA856C /* MGPGizmos.m */; };
+		95644A52230C3B3400EA856C /* MGPGizmos.m in Sources */ = {isa = PBXBuildFile; fileRef = 95644A50230C3B3400EA856C /* MGPGizmos.m */; };
 		9564D3E71C1F17CC00C6E316 /* negx.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 9564D3E11C1F17CC00C6E316 /* negx.jpg */; };
 		9564D3E81C1F17CC00C6E316 /* negy.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 9564D3E21C1F17CC00C6E316 /* negy.jpg */; };
 		9564D3E91C1F17CC00C6E316 /* negz.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 9564D3E31C1F17CC00C6E316 /* negz.jpg */; };
@@ -181,6 +184,7 @@
 		95A4D93522846F99004653B6 /* CommonStages.metal in Sources */ = {isa = PBXBuildFile; fileRef = 95A4D93422846F99004653B6 /* CommonStages.metal */; };
 		95B39E05228E4DDA003358D9 /* AnisoDirection1.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 95B39E04228E4DD9003358D9 /* AnisoDirection1.jpg */; };
 		95B39E07228E51EC003358D9 /* teapot.obj in Resources */ = {isa = PBXBuildFile; fileRef = 95B39E06228E51EC003358D9 /* teapot.obj */; };
+		95B80A77230DC165006051B5 /* Gizmo.metal in Sources */ = {isa = PBXBuildFile; fileRef = 95644A4D230C39C700EA856C /* Gizmo.metal */; };
 		95BED31C2286746B006E5C2F /* CommonMath.metal in Sources */ = {isa = PBXBuildFile; fileRef = 95BED31B2286746B006E5C2F /* CommonMath.metal */; };
 		95C42C541D29501F00806E15 /* Shadow.metal in Sources */ = {isa = PBXBuildFile; fileRef = 95C42C531D29501F00806E15 /* Shadow.metal */; };
 		95D6C40E21DBA0470007BB90 /* SimpleMetalRenderer.m in Sources */ = {isa = PBXBuildFile; fileRef = 95D6C40D21DBA0470007BB90 /* SimpleMetalRenderer.m */; };
@@ -328,6 +332,9 @@
 		955DA6BB1F0E74E100464E54 /* MetalInstancing.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = MetalInstancing.entitlements; sourceTree = "<group>"; };
 		9561BB7322AE2998005ACC48 /* DeferredRenderer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DeferredRenderer.h; sourceTree = "<group>"; };
 		9561BB7422AE2998005ACC48 /* DeferredRenderer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DeferredRenderer.m; sourceTree = "<group>"; };
+		95644A4D230C39C700EA856C /* Gizmo.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = Gizmo.metal; sourceTree = "<group>"; };
+		95644A4F230C3B3400EA856C /* MGPGizmos.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MGPGizmos.h; sourceTree = "<group>"; };
+		95644A50230C3B3400EA856C /* MGPGizmos.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MGPGizmos.m; sourceTree = "<group>"; };
 		9564D3E11C1F17CC00C6E316 /* negx.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = negx.jpg; sourceTree = "<group>"; };
 		9564D3E21C1F17CC00C6E316 /* negy.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = negy.jpg; sourceTree = "<group>"; };
 		9564D3E31C1F17CC00C6E316 /* negz.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = negz.jpg; sourceTree = "<group>"; };
@@ -1060,6 +1067,8 @@
 				952C964822C0A1D9004C8C34 /* MGPPostProcessing.m */,
 				952C964A22C0A2E4004C8C34 /* MGPPostProcessingLayer.h */,
 				952C964B22C0A2E4004C8C34 /* MGPPostProcessingLayer.m */,
+				95644A4F230C3B3400EA856C /* MGPGizmos.h */,
+				95644A50230C3B3400EA856C /* MGPGizmos.m */,
 			);
 			path = Rendering;
 			sourceTree = "<group>";
@@ -1082,6 +1091,7 @@
 				95F6725622D7867300B630A7 /* Shadow.metal */,
 				95B7662022DCE06D001FA4E7 /* Shadow.h */,
 				954C17182306802A0049FF79 /* ColorSpace.h */,
+				95644A4D230C39C700EA856C /* Gizmo.metal */,
 			);
 			path = Shaders;
 			sourceTree = "<group>";
@@ -1658,6 +1668,7 @@
 			files = (
 				95FBA5DA22BC6A5300EC4417 /* MetalMath.c in Sources */,
 				950BEC641BA581B6006A4D3A /* MyView.m in Sources */,
+				95644A4E230C39C700EA856C /* Gizmo.metal in Sources */,
 				953EAB901B9B5E9B0024994F /* Shaders.metal in Sources */,
 				953EAB831B9B5AFC0024994F /* main.m in Sources */,
 				953EAB801B9B5AFC0024994F /* AppDelegate.m in Sources */,
@@ -1742,6 +1753,7 @@
 				95765E3F227D7EEA0053D66D /* MGPMesh.m in Sources */,
 				95F5E09D2276255900445BB0 /* main.m in Sources */,
 				95F5E0952276255600445BB0 /* AppDelegate.m in Sources */,
+				95644A51230C3B3400EA856C /* MGPGizmos.m in Sources */,
 				959F3A4C22BFA6D300D1F4D4 /* MGPLight.m in Sources */,
 				958955C82277369B00414591 /* MGPView.m in Sources */,
 				95A4D9292283F1E0004653B6 /* MGPImageBasedLighting.m in Sources */,
@@ -1760,6 +1772,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				95B80A77230DC165006051B5 /* Gizmo.metal in Sources */,
 				95F002AE22CD0841000A951B /* MGPPostProcessing.m in Sources */,
 				95F002AF22CD0841000A951B /* MGPPostProcessingLayer.m in Sources */,
 				95F40BC122AD76EA00F747D2 /* GBuffer.metal in Sources */,
@@ -1785,6 +1798,7 @@
 				95F40BCC22AD76EA00F747D2 /* MGPImageBasedLighting.m in Sources */,
 				95FBFD4F229465ED002BA1E0 /* main.m in Sources */,
 				95FBFD57229466DC002BA1E0 /* MGPCamera.m in Sources */,
+				95644A52230C3B3400EA856C /* MGPGizmos.m in Sources */,
 				958852DA2302C3DC005218C8 /* MGPFrustum.m in Sources */,
 				95FBFD47229465EB002BA1E0 /* AppDelegate.m in Sources */,
 				958852DE23032798005218C8 /* MGPBoundingVolume.m in Sources */,

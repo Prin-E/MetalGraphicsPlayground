@@ -514,7 +514,7 @@ const float kLightIntensityVariation = 3.0;
         
         // light properties -> buffer
         light_t *light_props_ptr = &light_props[_currentBufferIndex * kNumLight + i];
-        *light_props_ptr = light.shaderLightProperties;
+        *light_props_ptr = light.shaderProperties;
     }
     
     light_globals[_currentBufferIndex].num_light = _numLights;

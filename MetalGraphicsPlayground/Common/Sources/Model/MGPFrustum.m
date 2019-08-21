@@ -39,8 +39,8 @@
     
     // basis vectors and related constants
     simd_float3 right = cameraMatrix.columns[0].xyz;
-    simd_float3 forward = cameraMatrix.columns[1].xyz;
-    simd_float3 up = cameraMatrix.columns[2].xyz;
+    simd_float3 up = cameraMatrix.columns[1].xyz;
+    simd_float3 forward = cameraMatrix.columns[2].xyz;
     float centerZ = (proj.nearPlane + proj.farPlane) * 0.5f;
     float tanHalfFov = proj.orthographicSize * 0.5f * proj.orthographicRate + tanf(proj.fieldOfView * 0.5f) * (1.0f - proj.orthographicRate);
     float tanHalfFovAspectRatio = tanHalfFov * proj.aspectRatio;
@@ -56,14 +56,14 @@
     nearPlane.normal = forward;
     farPlane.center = cameraPos + forward * proj.farPlane;
     farPlane.normal = -forward;
-    leftPlane.center = cameraPos - right * tanHalfFovAspectRatio;
-    leftPlane.normal = simd_cross(up, simd_normalize(-right * tanHalfFovAspectRatio));
-    rightPlane.center = cameraPos + right * tanHalfFovAspectRatio;
-    rightPlane.normal = simd_cross(simd_normalize(right * tanHalfFovAspectRatio), up);
-    bottomPlane.center = cameraPos + centerZ * forward - tanHalfFov * up;
-    bottomPlane.normal = simd_cross(simd_normalize(centerZ * forward - tanHalfFov * up), right);
-    topPlane.center = cameraPos + centerZ * forward + tanHalfFov * up;
-    topPlane.normal = simd_cross(right, simd_normalize(centerZ * forward + tanHalfFov * up));
+    leftPlane.center = cameraPos + centerZ * (forward - right * tanHalfFovAspectRatio);
+    leftPlane.normal = simd_cross(up, simd_normalize(forward - right * tanHalfFovAspectRatio));
+    rightPlane.center = cameraPos + centerZ * (forward + right * tanHalfFovAspectRatio);
+    rightPlane.normal = simd_cross(simd_normalize(forward + right * tanHalfFovAspectRatio), up);
+    bottomPlane.center = cameraPos + centerZ * (forward - tanHalfFov * up);
+    bottomPlane.normal = simd_cross(simd_normalize(forward - tanHalfFov * up), right);
+    topPlane.center = cameraPos + centerZ * (forward + tanHalfFov * up);
+    topPlane.normal = simd_cross(right, simd_normalize(forward + tanHalfFov * up));
 }
 
 @end

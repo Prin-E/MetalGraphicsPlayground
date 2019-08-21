@@ -18,6 +18,7 @@ typedef NS_ENUM(NSUInteger, MGPLightType) {
     // TODO: spot-light
 };
 
+@class MGPFrustum;
 @interface MGPLight : NSObject <NSCopying>
 
 @property (nonatomic, readonly) NSUInteger identifier;
@@ -30,7 +31,9 @@ typedef NS_ENUM(NSUInteger, MGPLightType) {
 @property (nonatomic) BOOL castShadows;
 @property (nonatomic) float shadowBias;
 
-- (light_t)shaderLightProperties;
+@property (nonatomic) MGPFrustum *frustum;
+
+- (light_t)shaderProperties;
 
 @end
 

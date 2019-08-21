@@ -49,6 +49,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property (readonly) MTKMesh *metalKitMesh;
 @property (readonly, nonnull) NSArray<MGPSubmesh *> *submeshes;
+@property (readonly, nonatomic) id<MGPBoundingVolume> volume;
 
 @end
 

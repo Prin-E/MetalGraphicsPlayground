@@ -57,6 +57,12 @@ typedef struct __attribute__((__aligned__(256))) {
     float bias;
 } ssao_props_t;
 
+typedef struct __attribute__((__aligned__(256))) {
+    vector_float4 color;
+    vector_float3 position;
+    float radius;
+} gizmo_props_t;
+
 typedef enum {
     attachment_gbuffer_light_albedo,
     attachment_gbuffer_light_normal,

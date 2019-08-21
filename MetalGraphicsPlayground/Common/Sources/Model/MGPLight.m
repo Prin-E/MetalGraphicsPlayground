@@ -58,7 +58,7 @@ static NSUInteger _MGPLightCounter = 0;
     return clone;
 }
 
-- (light_t)shaderLightProperties {
+- (light_t)shaderProperties {
     light_t light;
     
     vector_float3 forward = _direction;

@@ -14,7 +14,6 @@
 @implementation MGPSubmesh {
     MTKSubmesh *_metalKitSubmesh;
     NSMutableArray *_textures;
-    id<MGPBoundingVolume> _boundingVolume;
 }
 
 @synthesize metalKitSubmesh = _metalKitSubmesh;
@@ -96,7 +95,7 @@
     MGPBoundingSphere *sphere = [MGPBoundingSphere new];
     sphere.radius = radius;
     sphere.position = center;
-    _boundingVolume = sphere;
+    _volume = sphere;
 }
 
 + (nonnull id<MTLTexture>) createMetalTextureFromMaterial:(nonnull MDLMaterial *)material

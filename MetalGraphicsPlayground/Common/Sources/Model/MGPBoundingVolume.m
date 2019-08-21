@@ -30,7 +30,7 @@
     NSArray<MGPPlane*> *planes = frustum.planes;
     for(MGPPlane *plane in planes) {
         float distance = [plane distanceToPosition: _position];
-        if(distance < _radius) {
+        if(distance < -_radius) {
             isCulled = YES;
             break;
         }

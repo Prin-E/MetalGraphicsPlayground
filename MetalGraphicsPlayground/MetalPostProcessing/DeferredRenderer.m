@@ -20,6 +20,8 @@
 #import "../Common/Sources/Model/MGPShadowManager.h"
 #import "../Common/Sources/Model/MGPLight.h"
 #import "../Common/Sources/Model/MGPCamera.h"
+#import "../Common/Sources/Model/MGPBoundingVolume.h"
+#import "../Common/Sources/Rendering/MGPGizmos.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #import "../Common/STB/stb_image.h"
@@ -50,6 +52,7 @@ const float kLightIntensityVariation = 1.0f;
     float _animationTime;
     
     BOOL _moveFlags[6];     // Front, Back, Left, Right, Up, Down
+    BOOL _moveFast;
     float _moveSpeeds[6];   // same as flags
     NSPoint _mouseDelta, _prevMousePos;
     
@@ -99,6 +102,9 @@ const float kLightIntensityVariation = 1.0f;
     
     // Shadow
     MGPShadowManager *_shadowManager;
+    
+    // Gizmos
+    MGPGizmos *_gizmos;
 }
 
 - (void)setView:(MGPView *)view {
@@ -136,10 +142,13 @@ const float kLightIntensityVariation = 1.0f;
         _moveFlags[5] = true;
     }
     if(theEvent.keyCode == 48) {
+        // tab
         MGPProjectionState proj = _camera.projectionState;
         _isOrthographic = !_isOrthographic;
         _camera.projectionState = proj;
     }
+    // shift
+    _moveFast = (theEvent.modifierFlags & NSEventModifierFlagShift);
 }
 
 - (void)view:(MGPView *)view keyUp:(NSEvent *)theEvent {
@@ -167,6 +176,8 @@ const float kLightIntensityVariation = 1.0f;
         // a
         _moveFlags[5] = false;
     }
+    // shift
+    _moveFast = (theEvent.modifierFlags & NSEventModifierFlagShift);
 }
 
 - (void)view:(MGPView *)view mouseDown:(NSEvent *)theEvent {
@@ -354,6 +365,11 @@ const float kLightIntensityVariation = 1.0f;
     ssao.numSamples = 48;
     [_postProcess addLayer: ssao];
     [_postProcess resize: _gBuffer.size];
+    
+    _gizmos = [[MGPGizmos alloc] initWithDevice:self.device
+                                        library:self.defaultLibrary
+                                  gizmoCapacity:8
+                              maxBuffersInFight:kMaxBuffersInFlight];
 }
 
 - (void)_initSkyboxDepthTexture {
@@ -393,14 +409,19 @@ const float kLightIntensityVariation = 1.0f;
     // move
     static int columnIndices[] = { 2, 2, 0, 0, 1, 1 };
     simd_float4x4 rotationMatrix = _camera.cameraToWorldRotationMatrix;
+    simd_float3 positionAdd = {};
+    BOOL positionIsChanged = NO;
     for(int i = 0; i < 6; i++) {
         float sign = (i % 2) ? -1.0f : 1.0f;
-        _moveSpeeds[i] = LERP(_moveSpeeds[i], _moveFlags[i] ? 100.0f : 0.0f, deltaTime * 14);
+        _moveSpeeds[i] = LERP(_moveSpeeds[i], _moveFlags[i] ? 100.0f * (_moveFast ? 5.0f : 1.0f) : 0.0f, deltaTime * 14);
         if(_moveSpeeds[i] > 0.0001f) {
             simd_float3 direction = rotationMatrix.columns[columnIndices[i]].xyz;
-            _camera.position += direction * deltaTime * _moveSpeeds[i] * sign;
+            positionAdd += direction * deltaTime * _moveSpeeds[i] * sign;
+            positionIsChanged = YES;
         }
     }
+    if(positionIsChanged)
+        _camera.position += positionAdd;
     
     // update animated orthographic rate
     MGPProjectionState proj = _camera.projectionState;
@@ -483,7 +504,7 @@ const float kLightIntensityVariation = 1.0f;
         
         // light properties -> buffer
         light_t *light_props_ptr = &light_props[_currentBufferIndex * kNumLight + i];
-        *light_props_ptr = light.shaderLightProperties;
+        *light_props_ptr = light.shaderProperties;
     }
     light_globals[_currentBufferIndex].num_light = _numLights;
     light_globals[_currentBufferIndex].ambient_color = vector3(0.1f, 0.1f, 0.1f);
@@ -550,6 +571,12 @@ const float kLightIntensityVariation = 1.0f;
     id<MTLCommandBuffer> commandBuffer = [self.queue commandBuffer];
     commandBuffer.label = @"Render";
     
+    // prepare gizmo encoding
+    [_gizmos prepareEncodingWithColorTexture:_gBuffer.output
+                                depthTexture:_gBuffer.depth
+                                cameraBuffer:_cameraPropsBuffer
+                                 bufferIndex:_currentBufferIndex];
+    
     // skybox pass
     _renderPassSkybox.colorAttachments[0].texture = self.view.currentDrawable.texture;
     _renderPassSkybox.depthAttachment.texture = _skyboxDepthTexture;
@@ -586,6 +613,9 @@ const float kLightIntensityVariation = 1.0f;
     // Post-process before prepass
     [_postProcess render: commandBuffer
        forRenderingOrder: MGPPostProcessingRenderingOrderAfterShadePass];
+    
+    // Encode gizmos
+    [_gizmos encodeToCommandBuffer: commandBuffer];
     
     // present to framebuffer
     _renderPassPresent.colorAttachments[0].texture = self.view.currentDrawable.texture;
@@ -625,8 +655,22 @@ const float kLightIntensityVariation = 1.0f;
 
 - (void)renderObjects:(id<MTLRenderCommandEncoder>)encoder
          bindTextures:(BOOL)bindTextures {
+    MGPFrustum *frustum = _camera.frustum;
+    
     for(MGPMesh *mesh in _meshes) {
         for(MGPSubmesh *submesh in mesh.submeshes) {
+            id<MGPBoundingVolume> volume = submesh.volume;
+            if([volume class] == [MGPBoundingSphere class]) {
+                MGPBoundingSphere *sphere = volume;
+                [_gizmos drawWireframeSphereWithCenter:sphere.position
+                                                radius:sphere.radius];
+            }
+            
+            /*
+            id<MGPBoundingVolume> volume = submesh.volume;
+            if([volume isCulledInFrustum:frustum])
+                continue;
+            */
             [encoder setVertexBuffer: mesh.metalKitMesh.vertexBuffers[0].buffer
                               offset: 0
                              atIndex: 0];
