@@ -62,36 +62,49 @@
 - (void)makeBoundingVolumeWithModelIOMesh: (MDLMesh *)mdlMesh
                            modelIOSubmesh: (MDLSubmesh *)mdlSubmesh {
     MDLVertexAttributeData *attributeData = [mdlMesh vertexAttributeDataForAttributeNamed: MDLVertexAttributePosition];
+    
+    // index buffer
+    size_t indexSize = mdlSubmesh.indexType / 8;
+    MDLMeshBufferMap *indexBufferMap = mdlSubmesh.indexBuffer.map;
+    void *indexBufferBytes = indexBufferMap.bytes;
+    
+    // attribute buffer
     void *posBytes = attributeData.dataStart;
     size_t posStride = attributeData.stride;
-    size_t posSize = 0;
+    size_t posSize = attributeData.format & 0xF;
     if(attributeData.format & MDLVertexFormatFloatBits)
-        posSize = sizeof(float) * (attributeData.format & ~(MDLVertexFormatFloatBits));
-    size_t indexSize = mdlSubmesh.indexType / 8;
-    void *indexBytes = mdlSubmesh.indexBuffer.map.bytes;
-    
-    void *posPtr = posBytes;
-    simd_float3 min = simd_make_float3(FLT_MAX, FLT_MAX, FLT_MAX);
-    simd_float3 max = simd_make_float3(FLT_MIN, FLT_MIN, FLT_MIN);
-    for(int i = 0; i < mdlSubmesh.indexCount; i++) {
-        size_t index = 0;
-        if(indexSize == 1)
-            index = ((uint8_t *)indexBytes)[i];
-        else if(indexSize == 2)
-            index = ((uint16_t *)indexBytes)[i];
-        else if(indexSize == 4)
-            index = ((uint32_t *)indexBytes)[i];
-        
-        float pos[3] = {};
-        memcpy(pos, posPtr, MIN(posSize, sizeof(pos)));
-        min = simd_make_float3(MIN(pos[0], min.x), MIN(pos[1], min.y), MIN(pos[2], min.z));
-        max = simd_make_float3(MAX(pos[0], max.x), MAX(pos[1], max.y), MAX(pos[2], max.z));
-        posPtr += posStride;
+        posSize = posSize * sizeof(float);
+    else {
+        NSLog(@"Couldn't parse position attribute because it's not float type.");
+        return;
     }
     
-    simd_float3 center = (max-min)*0.5;
-    float radius = simd_length(simd_abs(max-center));
+    // min/max
+    simd_float3 min = simd_make_float3(1e10f, 1e10f, 1e10f);
+    simd_float3 max = simd_make_float3(-1e10f, -1e10f, -1e10f);
     
+    // iterate over indices
+    for(NSUInteger i = 0, cnt = mdlSubmesh.indexCount; i < cnt; i++) {
+        size_t index = 0;
+        if(indexSize == 1)
+            index = *((uint8_t *)indexBufferBytes + i);
+        else if(indexSize == 2)
+            index = *((uint16_t *)indexBufferBytes + i);
+        else if(indexSize == 4)
+            index = *((uint32_t *)indexBufferBytes + i);
+        
+        float pos[4] = {};
+        memcpy(pos, posBytes + (posStride * index), posSize);
+        min = simd_make_float3(MIN(pos[0], min.x), MIN(pos[1], min.y), MIN(pos[2], min.z));
+        max = simd_make_float3(MAX(pos[0], max.x), MAX(pos[1], max.y), MAX(pos[2], max.z));
+    }
+    
+    // calculate center point and radius
+    simd_float3 center = (min+max)*0.5;
+    float radius = simd_length(max-center);
+    
+    // make bounding sphere
+    // TODO: applying bounding box...
     MGPBoundingSphere *sphere = [MGPBoundingSphere new];
     sphere.radius = radius;
     sphere.position = center;
@@ -260,7 +273,7 @@
     MTKMeshBufferAllocator *allocator = [[MTKMeshBufferAllocator alloc] initWithDevice: device];
     
     MDLAsset *asset = [[MDLAsset alloc] initWithURL: url
-                                   vertexDescriptor: nil
+                                   vertexDescriptor: descriptor
                                     bufferAllocator: allocator];
     
     NSMutableArray<MGPMesh *> *list = [NSMutableArray new];

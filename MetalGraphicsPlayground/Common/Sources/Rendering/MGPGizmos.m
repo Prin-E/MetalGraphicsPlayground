@@ -50,7 +50,7 @@
 
 - (void)_makePrimitives {
     MTKMeshBufferAllocator *allocator = [[MTKMeshBufferAllocator alloc] initWithDevice:_device];
-    MDLMesh *mdlSphere = [MDLMesh newEllipsoidWithRadii:simd_make_float3(0.5f, 0.5f, 0.5f)
+    MDLMesh *mdlSphere = [MDLMesh newEllipsoidWithRadii:simd_make_float3(1.0f, 1.0f, 1.0f)
                                          radialSegments:12
                                        verticalSegments:12
                                            geometryType:MDLGeometryTypeTriangles
@@ -71,6 +71,9 @@
     desc.fragmentFunction = [_library newFunctionWithName:@"gizmo_wireframe_frag"];
     desc.vertexDescriptor = MTKMetalVertexDescriptorFromModelIO(_sphereMesh.vertexDescriptor);
     desc.sampleCount = 1;
+    desc.vertexBuffers[0].mutability = MTLMutabilityImmutable;
+    desc.vertexBuffers[1].mutability = MTLMutabilityImmutable;
+    desc.vertexBuffers[2].mutability = MTLMutabilityImmutable;
     _wireframePipelineDesc = desc;
 }
 
@@ -110,7 +113,7 @@
     }
     gizmo_props_t gizmo = {
         .position = position,
-        .color = simd_make_float4(0, 0, 1, 1),
+        .color = simd_make_float4(0, 0.5, 1, 1),
         .radius = radius
     };
     memcpy(buffer.contents + sizeof(gizmo_props_t) * _currentGizmoIndex,
@@ -147,6 +150,7 @@
     }
     
     if(_currentGizmoIndex > 0) {
+        // marks the current buffer needs to be committed.
         [_propsBuffers[_currentBufferIndex] didModifyRange:NSMakeRange(0, _currentGizmoIndex*sizeof(gizmo_props_t))];
         
         id<MTLRenderCommandEncoder> encoder = [buffer renderCommandEncoderWithDescriptor:_wireframePass];
@@ -160,16 +164,21 @@
         [encoder setVertexBuffer:_cameraPropsBuffer
                           offset:sizeof(camera_props_t)*_currentBufferIndex
                          atIndex:1];
-        [encoder setVertexBuffer:_propsBuffers[_currentBufferIndex]
-                          offset:0
-                         atIndex:2];
-        for(MTKSubmesh *submesh in _sphereMesh.submeshes) {
-            [encoder drawIndexedPrimitives:submesh.primitiveType
-                                indexCount:submesh.indexCount
-                                 indexType:submesh.indexType
-                               indexBuffer:submesh.indexBuffer.buffer
-                         indexBufferOffset:submesh.indexBuffer.offset
-                             instanceCount:_currentGizmoIndex];
+        
+        const NSUInteger instancePerDrawCall = 256;
+        for(NSUInteger instanceCountOffset = 0; instanceCountOffset < _currentGizmoIndex; instanceCountOffset += instancePerDrawCall) {
+            // draw 512 instnaces per draw call because we send a props buffer as the constant buffer.
+            [encoder setVertexBuffer:_propsBuffers[_currentBufferIndex]
+                              offset:instanceCountOffset*sizeof(gizmo_props_t)
+                             atIndex:2];
+            for(MTKSubmesh *submesh in _sphereMesh.submeshes) {
+                [encoder drawIndexedPrimitives:submesh.primitiveType
+                                    indexCount:submesh.indexCount
+                                     indexType:submesh.indexType
+                                   indexBuffer:submesh.indexBuffer.buffer
+                             indexBufferOffset:submesh.indexBuffer.offset
+                                 instanceCount:MIN(instancePerDrawCall, _currentGizmoIndex-instanceCountOffset)];
+            }
         }
         [encoder endEncoding];
     }

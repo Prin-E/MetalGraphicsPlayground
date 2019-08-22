@@ -59,6 +59,8 @@ const float kLightIntensityVariation = 1.0f;
     BOOL _mouseDown;
     MGPCamera *_camera;
     BOOL _isOrthographic;
+    BOOL _drawGizmos;
+    BOOL _cull;
     
     // props
     id<MTLBuffer> _cameraPropsBuffer;
@@ -147,8 +149,14 @@ const float kLightIntensityVariation = 1.0f;
         _isOrthographic = !_isOrthographic;
         _camera.projectionState = proj;
     }
-    // shift
-    _moveFast = (theEvent.modifierFlags & NSEventModifierFlagShift);
+    if(theEvent.keyCode == 18) {
+        // 1
+        _drawGizmos = !_drawGizmos;
+    }
+    if(theEvent.keyCode == 19) {
+        // 2
+        _cull = !_cull;
+    }
 }
 
 - (void)view:(MGPView *)view keyUp:(NSEvent *)theEvent {
@@ -176,8 +184,11 @@ const float kLightIntensityVariation = 1.0f;
         // a
         _moveFlags[5] = false;
     }
+}
+
+- (void)view:(MGPView *)view flagsChanged:(NSEvent *)theEvent {
     // shift
-    _moveFast = (theEvent.modifierFlags & NSEventModifierFlagShift);
+    _moveFast = (theEvent.modifierFlags & NSEventModifierFlagShift) != 0;
 }
 
 - (void)view:(MGPView *)view mouseDown:(NSEvent *)theEvent {
@@ -660,17 +671,18 @@ const float kLightIntensityVariation = 1.0f;
     for(MGPMesh *mesh in _meshes) {
         for(MGPSubmesh *submesh in mesh.submeshes) {
             id<MGPBoundingVolume> volume = submesh.volume;
-            if([volume class] == [MGPBoundingSphere class]) {
-                MGPBoundingSphere *sphere = volume;
-                [_gizmos drawWireframeSphereWithCenter:sphere.position
-                                                radius:sphere.radius];
+            if(_cull) {
+                if([volume isCulledInFrustum:frustum])
+                    continue;
+            }
+            if(bindTextures && _drawGizmos) {
+                if([volume class] == [MGPBoundingSphere class]) {
+                    MGPBoundingSphere *sphere = volume;
+                    [_gizmos drawWireframeSphereWithCenter:sphere.position
+                                                    radius:sphere.radius];
+                }
             }
             
-            /*
-            id<MGPBoundingVolume> volume = submesh.volume;
-            if([volume isCulledInFrustum:frustum])
-                continue;
-            */
             [encoder setVertexBuffer: mesh.metalKitMesh.vertexBuffers[0].buffer
                               offset: 0
                              atIndex: 0];
