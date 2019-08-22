@@ -69,7 +69,10 @@ Requires Xcode 9 or later.
 * Under construction!
 * Shadow-mapping
 * SSAO
+* Frustum-Culling (Bounding Sphere)
+* Gizmos
 * TODO
   * Color grading (Tone mapping)
   * Depth of Field
   * Screen-space Reflection
+  * Axis-Aligned Bounding Box
