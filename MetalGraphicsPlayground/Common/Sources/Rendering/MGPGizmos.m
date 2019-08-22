@@ -64,6 +64,7 @@
 
 - (void)_makeRenderPipeline {
     MTLRenderPipelineDescriptor *desc = [MTLRenderPipelineDescriptor new];
+    desc.label = @"Gizmo Wireframe Pipeline";
     desc.colorAttachments[0].blendingEnabled = YES;
     desc.colorAttachments[0].sourceRGBBlendFactor = MTLBlendFactorSourceAlpha;
     desc.colorAttachments[0].destinationRGBBlendFactor = MTLBlendFactorOneMinusSourceAlpha;
@@ -90,6 +91,7 @@
     for(NSUInteger i = 0; i < _maxBuffersInFlight; i++) {
         id<MTLBuffer> buffer = [_device newBufferWithLength:sizeof(gizmo_props_t)*_numberOfGizmos
                                                     options:MTLResourceStorageModeManaged];
+        buffer.label = [NSString stringWithFormat:@"Gizmo Buffer #%d", (int)i];
         [_propsBuffers addObject:buffer];
     }
 }
@@ -154,6 +156,7 @@
         [_propsBuffers[_currentBufferIndex] didModifyRange:NSMakeRange(0, _currentGizmoIndex*sizeof(gizmo_props_t))];
         
         id<MTLRenderCommandEncoder> encoder = [buffer renderCommandEncoderWithDescriptor:_wireframePass];
+        [encoder setLabel:@"Gizmos"];
         [encoder setRenderPipelineState:_wireframePipeline];
         [encoder setTriangleFillMode:MTLTriangleFillModeLines];
         [encoder setDepthStencilState:_depthStencil];
@@ -167,7 +170,7 @@
         
         const NSUInteger instancePerDrawCall = 256;
         for(NSUInteger instanceCountOffset = 0; instanceCountOffset < _currentGizmoIndex; instanceCountOffset += instancePerDrawCall) {
-            // draw 512 instnaces per draw call because we send a props buffer as the constant buffer.
+            // draw 256 instnaces per draw call because we send a props buffer as the constant buffer. (max: 64k)
             [encoder setVertexBuffer:_propsBuffers[_currentBufferIndex]
                               offset:instanceCountOffset*sizeof(gizmo_props_t)
                              atIndex:2];

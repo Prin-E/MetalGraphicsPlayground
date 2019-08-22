@@ -8,17 +8,10 @@
 
 #import <Foundation/Foundation.h>
 #import <simd/simd.h>
+#import "MGPProjectionState.h"
 #import "../../Shaders/SharedStructures.h"
 
 NS_ASSUME_NONNULL_BEGIN
-
-typedef struct _MGPProjectionState {
-    float aspectRatio;
-    float orthographicRate;         // 0.0 : perspective, 1.0 : orthographic
-    float orthographicSize;
-    float fieldOfView;              // radian
-    float nearPlane, farPlane;
-} MGPProjectionState;
 
 @class MGPFrustum;
 @interface MGPCamera : NSObject

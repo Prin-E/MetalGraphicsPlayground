@@ -12,6 +12,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @class MGPPlane;
 @class MGPCamera;
+@class MGPLight;
 @interface MGPFrustum : NSObject
 
 // world-space 6 planes (near, far, left, right, bottom, top), normal inside
@@ -19,6 +20,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (instancetype)initWithCamera: (MGPCamera *)camera;
 - (void)setPlanesForCamera: (MGPCamera *)camera;
+- (void)setPlanesForLight: (MGPLight *)light;
 
 @end
 

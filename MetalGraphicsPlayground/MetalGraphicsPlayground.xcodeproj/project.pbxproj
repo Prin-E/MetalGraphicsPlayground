@@ -300,6 +300,7 @@
 		954F28C91C1454DC00D4D915 /* Shaders.metal */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.metal; path = Shaders.metal; sourceTree = "<group>"; };
 		954F28CB1C14573400D4D915 /* SharedStructures.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SharedStructures.h; sourceTree = "<group>"; };
 		954F28CC1C145A8000D4D915 /* lego.mtl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = lego.mtl; sourceTree = "<group>"; };
+		954F6F5D230F0B2800B22015 /* MGPProjectionState.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MGPProjectionState.h; sourceTree = "<group>"; };
 		9553ABB51E097641004E8465 /* MetalEnvironmentMapping.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MetalEnvironmentMapping.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		9553ABB71E097642004E8465 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		9553ABB81E097642004E8465 /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
@@ -1052,6 +1053,7 @@
 				958852D82302C3DC005218C8 /* MGPFrustum.m */,
 				958852DB23032798005218C8 /* MGPBoundingVolume.h */,
 				958852DC23032798005218C8 /* MGPBoundingVolume.m */,
+				954F6F5D230F0B2800B22015 /* MGPProjectionState.h */,
 			);
 			path = Model;
 			sourceTree = "<group>";

@@ -7,7 +7,10 @@
 //
 
 #import "MGPLight.h"
+#import "MGPFrustum.h"
 #import "../Utility/MetalMath.h"
+
+#define DEG_TO_RAD(x) ((x)*0.0174532925)
 
 static NSUInteger _MGPLightCounter = 0;
 
@@ -26,6 +29,10 @@ static NSUInteger _MGPLightCounter = 0;
         _color = vector3(1.0f, 1.0f, 1.0f);
         _intensity = 1.0f;
         _castShadows = NO;
+        _shadowNear = 1.0f;
+        _shadowFar = 5000.0f;
+        _radius = 10.0f;
+        _frustum = [[MGPFrustum alloc] init];
     }
     return self;
 }
@@ -74,6 +81,29 @@ static NSUInteger _MGPLightCounter = 0;
     light.cast_shadow = _castShadows;
     light.shadow_bias = _shadowBias;
     return light;
+}
+
+- (MGPFrustum *)frustum {
+    [_frustum setPlanesForLight:self];
+    return _frustum;
+}
+
+- (MGPProjectionState)projectionState {
+    MGPProjectionState proj = {
+        .aspectRatio = 1.0f
+    };
+    if(_type == MGPLightTypeDirectional) {
+        proj.fieldOfView = DEG_TO_RAD(60.0f);
+        proj.nearPlane = _shadowNear;
+        proj.farPlane = _shadowFar;
+    }
+    else {
+        proj.orthographicRate = 1.0f;
+        proj.orthographicSize = _radius;
+        proj.nearPlane = -_radius;
+        proj.farPlane = _radius;
+    }
+    return proj;
 }
 
 @end

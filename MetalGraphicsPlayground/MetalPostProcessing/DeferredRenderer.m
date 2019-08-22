@@ -148,14 +148,17 @@ const float kLightIntensityVariation = 1.0f;
         MGPProjectionState proj = _camera.projectionState;
         _isOrthographic = !_isOrthographic;
         _camera.projectionState = proj;
+        NSLog(@"Orthographic : %d", _isOrthographic);
     }
     if(theEvent.keyCode == 18) {
         // 1
         _drawGizmos = !_drawGizmos;
+        NSLog(@"Gizmo : %d", _drawGizmos);
     }
     if(theEvent.keyCode == 19) {
         // 2
         _cull = !_cull;
+        NSLog(@"Cull : %d", _cull);
     }
 }
 
@@ -665,16 +668,31 @@ const float kLightIntensityVariation = 1.0f;
 }
 
 - (void)renderObjects:(id<MTLRenderCommandEncoder>)encoder
-         bindTextures:(BOOL)bindTextures {
-    MGPFrustum *frustum = _camera.frustum;
+         bindTextures:(BOOL)bindTextures
+              frustum:(MGPFrustum *)frustum {
+    id<MTLTexture> textures[tex_total] = {};
+    BOOL textureChangedFlags[tex_total] = {};
+    for(int i = 0; i < tex_total; i++) {
+        textureChangedFlags[i] = YES;
+    }
     
     for(MGPMesh *mesh in _meshes) {
+        // Set vertex buffer
+        [encoder setVertexBuffer: mesh.metalKitMesh.vertexBuffers[0].buffer
+                          offset: 0
+                         atIndex: 0];
+        
+        // draw submeshes
         for(MGPSubmesh *submesh in mesh.submeshes) {
             id<MGPBoundingVolume> volume = submesh.volume;
+            
+            // Culling
             if(_cull) {
                 if([volume isCulledInFrustum:frustum])
                     continue;
             }
+            
+            // Gizmo
             if(bindTextures && _drawGizmos) {
                 if([volume class] == [MGPBoundingSphere class]) {
                     MGPBoundingSphere *sphere = volume;
@@ -683,21 +701,29 @@ const float kLightIntensityVariation = 1.0f;
                 }
             }
             
-            [encoder setVertexBuffer: mesh.metalKitMesh.vertexBuffers[0].buffer
-                              offset: 0
-                             atIndex: 0];
-            
+            // Texture binding
             if(bindTextures) {
+                // Check previous draw call's textures and current textures are duplicated.
                 for(int i = 0; i < tex_total; i++) {
-                    if(submesh.textures[i] != NSNull.null) {
-                        [encoder setFragmentTexture: submesh.textures[i] atIndex: i];
+                    id<MTLTexture> texture = submesh.textures[i];
+                    if(texture == (id<MTLTexture>)NSNull.null)
+                        texture = nil;
+                    if(textures[i] != texture) {
+                        textureChangedFlags[i] = YES;
+                        textures[i] = texture;
                     }
-                    else {
-                        [encoder setFragmentTexture: nil atIndex: i];
+                }
+                
+                // Set textures
+                for(int i = 0; i < tex_total; i++) {
+                    if(textureChangedFlags[i]) {
+                        [encoder setFragmentTexture: textures[i] atIndex: i];
+                        textureChangedFlags[i] = NO;
                     }
                 }
             }
             
+            // Draw call
             [encoder drawIndexedPrimitives: submesh.metalKitSubmesh.primitiveType
                                 indexCount: submesh.metalKitSubmesh.indexCount
                                  indexType: submesh.metalKitSubmesh.indexType
@@ -731,7 +757,8 @@ const float kLightIntensityVariation = 1.0f;
                        atIndex: 2];
     
     [self renderObjects: encoder
-           bindTextures: YES];
+           bindTextures: YES
+                frustum:_camera.frustum];
     [encoder endEncoding];
 }
 
@@ -759,7 +786,8 @@ const float kLightIntensityVariation = 1.0f;
                              atIndex: 3];
             
             [self renderObjects: encoder
-                   bindTextures: NO];
+                   bindTextures: NO
+                        frustum: _lights[i].frustum];
             [encoder endEncoding];
         }
     }

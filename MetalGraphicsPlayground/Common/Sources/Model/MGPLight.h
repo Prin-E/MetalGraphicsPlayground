@@ -8,6 +8,7 @@
 
 #import <Foundation/Foundation.h>
 #import <simd/simd.h>
+#import "MGPProjectionState.h"
 #import "../../Shaders/SharedStructures.h"
 
 NS_ASSUME_NONNULL_BEGIN
@@ -31,9 +32,16 @@ typedef NS_ENUM(NSUInteger, MGPLightType) {
 @property (nonatomic) BOOL castShadows;
 @property (nonatomic) float shadowBias;
 
+// point-light properties
+@property (nonatomic) float radius;
+
+// directional and spot-light properties
+@property (nonatomic) float shadowNear, shadowFar;
+
 @property (nonatomic) MGPFrustum *frustum;
 
 - (light_t)shaderProperties;
+- (MGPProjectionState)projectionState;
 
 @end
 
