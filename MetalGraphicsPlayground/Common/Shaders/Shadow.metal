@@ -56,6 +56,7 @@ fragment half4 shadow_frag(ShadowFragment in [[stage_in]],
 // https://developer.nvidia.com/gpugems/GPUGems/gpugems_ch11.html
 float shadow_sample_antialiased_4x4(texture2d<float> shadow_map,
                                     float2 shadow_size,
+                                    float2 light_view_pos,
                                     float2 light_screen_uv,
                                     float light_depth_test) {
     float lit = 0.0;
@@ -78,12 +79,12 @@ float shadow_sample_antialiased_4x4(texture2d<float> shadow_map,
 // https://developer.nvidia.com/gpugems/GPUGems/gpugems_ch11.html
 float shadow_sample_dithered(texture2d<float> shadow_map,
                              float2 shadow_size,
+                             float2 light_view_pos,
                              float2 light_screen_uv,
                              float light_depth_test) {
     float lit = 0.0;
     float2 shadow_size_div1 = 1.0 / shadow_size;
-    float2 light_screen_xy = light_screen_uv * shadow_size;
-    float2 offset = (float2)(fract(light_screen_xy * 0.5) > 0.25);
+    float2 offset = (float2)(fract(light_view_pos * 0.5) > 0.25);
     offset.y += offset.x;  // y ^= x in floating point
     if (offset.y > 1.1)
         offset.y = 0;
@@ -125,6 +126,7 @@ float get_shadow_lit(texture2d<float> shadow_map,
         
         lit = SHADOW_SAMPLE_FUNC(shadow_map,
                                  shadow_size,
+                                 light_view_pos.xy,
                                  light_screen_uv,
                                  light_clip_pos.z - light.shadow_bias);
     }
