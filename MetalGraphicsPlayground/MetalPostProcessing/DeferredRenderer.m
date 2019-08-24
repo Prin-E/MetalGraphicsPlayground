@@ -37,6 +37,7 @@ const size_t kNumInstance = 1;
 const uint32_t kNumLight = 128;
 const float kLightIntensityBase = 1.0f;
 const float kLightIntensityVariation = 1.0f;
+const size_t kShadowResolution = 2048;
 
 #define DEG_TO_RAD(x) ((x)*0.0174532925)
 
@@ -763,9 +764,11 @@ const float kLightIntensityVariation = 1.0f;
 }
 
 - (void)renderShadows:(id<MTLCommandBuffer>)buffer {
+    if(_numLights == 0) return;
+    
     for(int i = 0; i < _numLights; i++) {
         MGPShadowBuffer *shadowBuffer = [_shadowManager newShadowBufferForLight: _lights[i]
-                                                                     resolution: 1024
+                                                                     resolution: kShadowResolution
                                                                   cascadeLevels: 1];
         
         if(shadowBuffer != nil) {
@@ -817,7 +820,7 @@ const float kLightIntensityVariation = 1.0f;
     for(int i = 0; i < _numLights; i++) {
         if(_lights[i].castShadows) {
             MGPShadowBuffer *shadowBuffer = [_shadowManager newShadowBufferForLight: _lights[i]
-                                                                         resolution: 512
+                                                                         resolution: kShadowResolution
                                                                       cascadeLevels: 1];
             [encoder setFragmentTexture: shadowBuffer.texture
                                 atIndex: i+11];

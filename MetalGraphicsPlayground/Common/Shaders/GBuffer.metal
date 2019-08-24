@@ -11,6 +11,7 @@
 #include "BRDF.h"
 #include "CommonVariables.h"
 #include "CommonStages.h"
+#include "Shadow.h"
 
 using namespace metal;
 
@@ -180,18 +181,9 @@ fragment half4 gbuffer_light_frag(ScreenFragment in [[stage_in]],
     
     // calculate lights
     for(uint i = 0; i < light_global.num_light; i++) {
-        bool lit = true;
-        if(lights[i].cast_shadow) {
-            float4 light_view_pos = lights[i].light_view * world_pos;
-            float4 light_clip_pos = light_global.light_projection * light_view_pos;
-            light_clip_pos /= max(0.001, light_clip_pos.w);
-            float2 light_screen_uv = light_clip_pos.xy * 0.5 + 0.5;
-            light_screen_uv.y = 1.0 - light_screen_uv.y;
-            
-            float depth_value = shadow_maps[i].sample(nearest_clamp_to_edge, light_screen_uv).r;
-            lit = depth_value > light_clip_pos.z - lights[i].shadow_bias;
-        }
-        if(lit) {
+        float lit = get_shadow_lit(shadow_maps[i], lights[i], light_global, world_pos);
+        
+        if(lit > 0.0) {
             // query light direction from view matrix
             float3 light_dir_invert = -float3(lights[i].light_view[0].z,
                                               lights[i].light_view[1].z,
@@ -225,7 +217,7 @@ fragment half4 gbuffer_light_frag(ScreenFragment in [[stage_in]],
             shading_params.t_v = t_v;
             shading_params.b_v = b_v;
             
-            out_color.xyz += calculate_brdf(shading_params) * shading_values.z;
+            out_color.xyz += lit * calculate_brdf(shading_params) * shading_values.z;
         }
     }
     

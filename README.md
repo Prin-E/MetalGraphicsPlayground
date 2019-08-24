@@ -1,7 +1,7 @@
 # MetalGraphicsPlayground
 
 This workspace contains subprojects for testing Metal features.
-Requires Xcode 9 or later.
+Requires Xcode 10 or later.
 
 ## MetalTextureLOD
 
@@ -67,7 +67,7 @@ Requires Xcode 9 or later.
 <img src="./Screenshots/MetalPostProcessing.png" alt="MetalPostProcessing.png" width="592" height="494">
 
 * Under construction!
-* Shadow-mapping
+* Shadow-mapping (PCF))
 * SSAO
 * Frustum-Culling (Bounding Sphere)
 * Gizmos
