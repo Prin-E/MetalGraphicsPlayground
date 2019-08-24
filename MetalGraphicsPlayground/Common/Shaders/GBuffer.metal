@@ -35,7 +35,6 @@ typedef struct {
     float2 uv      [[attribute(attrib_uv)]];
     float3 normal  [[attribute(attrib_normal)]];
     float3 tangent [[attribute(attrib_tangent)]];
-    float3 bitangent [[attribute(attrib_bitangent)]];
 } GBufferVertex;
 
 // g-buffer fragment input data
@@ -70,7 +69,7 @@ vertex GBufferFragment gbuffer_prepass_vert(GBufferVertex in [[stage_in]],
     out.clipPos = cameraProps.viewProjection * out.worldPos;
     out.normal = (model * float4(in.normal, 0.0)).xyz;
     out.tangent = (model * float4(in.tangent, 0.0)).xyz;
-    out.bitangent = (model * float4(in.bitangent, 0.0)).xyz;
+    out.bitangent = cross(out.tangent, out.normal);
     out.uv = in.uv;
     out.iid = iid;
     return out;
@@ -95,6 +94,11 @@ fragment GBufferOutput gbuffer_prepass_frag(GBufferFragment in [[stage_in]],
     
     if(has_albedo_map) {
         out.albedo = albedoMap.sample(linear, in.uv);
+        // NOTE: g-buffer doesn't support alpha blending...
+        //       so that I added simple alpha testing.
+        // TODO: alpha-blending support
+        if(out.albedo.a < 0.05)
+            discard_fragment();
     }
     else {
         out.albedo = half4(half3(material.albedo), 1.0);

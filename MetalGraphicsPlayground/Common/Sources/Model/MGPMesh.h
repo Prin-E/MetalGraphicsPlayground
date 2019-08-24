@@ -28,12 +28,14 @@ NS_ASSUME_NONNULL_BEGIN
 + (NSArray<MGPMesh*>*)loadMeshesFromURL: (NSURL *)url
                 modelIOVertexDescriptor: (MDLVertexDescriptor *)descriptor
                                  device: (id<MTLDevice>)device
+                       calculateNormals: (BOOL)calculateNormals
                                   error: (NSError * __nullable * __nullable)error;
 
 
 + (NSArray<MGPMesh*>*)loadMeshesFromModelIOObject: (MDLObject *)object
                           modelIOVertexDescriptor: (nonnull MDLVertexDescriptor *)descriptor
                                            device: (id<MTLDevice>)device
+                                 calculateNormals: (BOOL)calculateNormals
                                             error: (NSError **)error;
 
 

@@ -125,10 +125,7 @@
     _baseVertexDescriptor.attributes[attrib_tangent].format = MTLVertexFormatFloat3;
     _baseVertexDescriptor.attributes[attrib_tangent].offset = 32;
     _baseVertexDescriptor.attributes[attrib_tangent].bufferIndex = 0;
-    _baseVertexDescriptor.attributes[attrib_bitangent].format = MTLVertexFormatFloat3;
-    _baseVertexDescriptor.attributes[attrib_bitangent].offset = 44;
-    _baseVertexDescriptor.attributes[attrib_bitangent].bufferIndex = 0;
-    _baseVertexDescriptor.layouts[0].stride = 56;
+    _baseVertexDescriptor.layouts[0].stride = 44;
     _baseVertexDescriptor.layouts[0].stepRate = 1;
     _baseVertexDescriptor.layouts[0].stepFunction = MTLStepFunctionPerVertex;
 }

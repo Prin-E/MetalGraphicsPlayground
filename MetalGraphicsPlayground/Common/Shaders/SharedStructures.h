@@ -114,8 +114,7 @@ typedef enum {
     attrib_pos,
     attrib_uv,
     attrib_normal,
-    attrib_tangent,
-    attrib_bitangent
+    attrib_tangent
 } attribute_index;
 
 // texture index

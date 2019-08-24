@@ -262,13 +262,13 @@ const float kLightIntensityVariation = 3.0;
     mdlVertexDescriptor.attributes[attrib_uv].name = MDLVertexAttributeTextureCoordinate;
     mdlVertexDescriptor.attributes[attrib_normal].name = MDLVertexAttributeNormal;
     mdlVertexDescriptor.attributes[attrib_tangent].name = MDLVertexAttributeTangent;
-    mdlVertexDescriptor.attributes[attrib_bitangent].name = MDLVertexAttributeBitangent;
     
     // meshes
     _meshes = [MGPMesh loadMeshesFromURL: [[NSBundle mainBundle] URLForResource: @"firetruck"
                                                                   withExtension: @"obj"]
                  modelIOVertexDescriptor: mdlVertexDescriptor
                                   device: self.device
+                        calculateNormals: YES
                                    error: nil];
     
     MGPTextureLoader *textureLoader = [[MGPTextureLoader alloc] initWithDevice: self.device];

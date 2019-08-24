@@ -25,7 +25,6 @@ typedef struct {
     float2 uv      [[attribute(attrib_uv)]];
     float3 normal  [[attribute(attrib_normal)]];
     float3 tangent [[attribute(attrib_tangent)]];
-    float3 bitangent [[attribute(attrib_bitangent)]];
 } ShadowVertex;
 
 typedef struct {

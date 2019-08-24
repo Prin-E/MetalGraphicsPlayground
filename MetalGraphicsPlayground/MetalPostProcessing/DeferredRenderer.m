@@ -277,13 +277,13 @@ const size_t kShadowResolution = 2048;
     mdlVertexDescriptor.attributes[attrib_uv].name = MDLVertexAttributeTextureCoordinate;
     mdlVertexDescriptor.attributes[attrib_normal].name = MDLVertexAttributeNormal;
     mdlVertexDescriptor.attributes[attrib_tangent].name = MDLVertexAttributeTangent;
-    mdlVertexDescriptor.attributes[attrib_bitangent].name = MDLVertexAttributeBitangent;
     
     // meshes
     _meshes = [MGPMesh loadMeshesFromURL: [[NSBundle mainBundle] URLForResource: @"sponza"
                                                                   withExtension: @"obj"]
                  modelIOVertexDescriptor: mdlVertexDescriptor
                                   device: self.device
+                        calculateNormals: NO
                                    error: nil];
     
     // build render pipeline
@@ -506,7 +506,7 @@ const size_t kShadowResolution = 2048;
     
     for(NSInteger i = 0; i < _numLights; i++) {
         simd_float3 rot_dir = vector3(0.0f, 1.0f, 0.0f);
-        simd_float4 dir = matrix_multiply(matrix_from_rotation(_animationTime * 3.0f, rot_dir.x, rot_dir.y, rot_dir.z), light_dirs[i]);
+        simd_float4 dir = matrix_multiply(matrix_from_rotation(_animationTime, rot_dir.x, rot_dir.y, rot_dir.z), light_dirs[i]);
         
         // set light properties
         MGPLight *light = _lights[i];

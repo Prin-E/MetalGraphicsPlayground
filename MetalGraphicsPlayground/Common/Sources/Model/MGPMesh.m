@@ -28,7 +28,6 @@
     self = [super init];
     if(self) {
         _metalKitSubmesh = mtkSubmesh;
-        
         _textures = [[NSMutableArray alloc] initWithCapacity: tex_total];
         
         MDLMaterialSemantic meterialSemantics[] = {
@@ -226,7 +225,7 @@
                               error: (NSError **)error {
     self = [super init];
     if(self) {
-        if(calculateNormals) {
+        if(calculateNormals || ![mdlMesh vertexAttributeDataForAttributeNamed: MDLVertexAttributeNormal]) {
             [mdlMesh addNormalsWithAttributeNamed:MDLVertexAttributeNormal
                                   creaseThreshold:0.2];
         }
@@ -235,9 +234,6 @@
             [mdlMesh addTangentBasisForTextureCoordinateAttributeNamed: MDLVertexAttributeTextureCoordinate
                                                   normalAttributeNamed: MDLVertexAttributeNormal
                                                  tangentAttributeNamed: MDLVertexAttributeTangent];
-            [mdlMesh addTangentBasisForTextureCoordinateAttributeNamed: MDLVertexAttributeTextureCoordinate
-                                                 tangentAttributeNamed: MDLVertexAttributeTangent
-                                               bitangentAttributeNamed: MDLVertexAttributeBitangent];
         }
         mdlMesh.vertexDescriptor = descriptor;
         
@@ -269,6 +265,7 @@
 + (NSArray<MGPMesh*>*)loadMeshesFromURL: (NSURL *)url
                 modelIOVertexDescriptor: (nonnull MDLVertexDescriptor *)descriptor
                                  device: (id<MTLDevice>)device
+                       calculateNormals: (BOOL)calculateNormals
                                   error: (NSError **)error {
     MTKMeshBufferAllocator *allocator = [[MTKMeshBufferAllocator alloc] initWithDevice: device];
     
@@ -284,6 +281,7 @@
             NSArray<MGPMesh *> *meshes = [MGPMesh loadMeshesFromModelIOObject: object
                                                       modelIOVertexDescriptor: descriptor
                                                                        device: device
+                                                             calculateNormals: calculateNormals
                                                                         error: error];
             [list addObjectsFromArray: meshes];
         }
@@ -295,6 +293,7 @@
 + (NSArray<MGPMesh*>*)loadMeshesFromModelIOObject: (MDLObject *)object
                           modelIOVertexDescriptor: (nonnull MDLVertexDescriptor *)descriptor
                                            device: (id<MTLDevice>)device
+                                 calculateNormals: (BOOL)calculateNormals
                                             error: (NSError **)error {
     NSMutableArray<MGPMesh*> *list = [NSMutableArray new];
     
@@ -306,7 +305,7 @@
                                      modelIOVertexDescriptor: descriptor
                                                textureLoader: textureLoader
                                                       device: device
-                                            calculateNormals: YES
+                                            calculateNormals: calculateNormals
                                                        error: error];
         
         [list addObject: mesh];
@@ -316,6 +315,7 @@
         NSArray *childMeshes = [MGPMesh loadMeshesFromModelIOObject: child
                                             modelIOVertexDescriptor: descriptor
                                                              device: device
+                                                   calculateNormals: calculateNormals
                                                               error: error];
         [list addObjectsFromArray: childMeshes];
     }
