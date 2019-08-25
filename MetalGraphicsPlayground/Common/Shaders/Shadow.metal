@@ -11,11 +11,15 @@
 #include "CommonVariables.h"
 #include "Shadow.h"
 
-#define SHADOW_DITHERED 0
-#if SHADOW_DITHERED
-    #define SHADOW_SAMPLE_FUNC shadow_sample_dithered
+#define SHADOW_ANTIALIASING 1
+#if SHADOW_ANTIALIASING == 1
+    #define SHADOW_SAMPLE_FUNC shadow_sample_linear
+#elif SHADOW_ANTIALIASING == 2
+#define SHADOW_SAMPLE_FUNC shadow_sample_dithered
+#elif SHADOW_ANTIALIASING == 3
+#define SHADOW_SAMPLE_FUNC shadow_sample_antialiased_4x4
 #else
-    #define SHADOW_SAMPLE_FUNC shadow_sample_antialiased_4x4
+#define SHADOW_SAMPLE_FUNC shadow_sample
 #endif
 
 using namespace metal;
@@ -32,6 +36,7 @@ typedef struct {
     float2 uv;
 } ShadowFragment;
 
+#pragma mark - Stages
 vertex ShadowFragment shadow_vert(ShadowVertex in [[stage_in]],
                                   constant light_t &light [[buffer(1)]],
                                   constant light_global_t &light_global [[buffer(2)]],
@@ -50,6 +55,44 @@ fragment half4 shadow_frag(ShadowFragment in [[stage_in]],
     return albedo.sample(linear, in.uv);
 }
 
+#pragma mark - Sampling
+// Basic hard-shadow sampling
+float shadow_sample(texture2d<float> shadow_map,
+                    float2 shadow_size,
+                    float2 light_view_pos,
+                    float2 light_screen_uv,
+                    float light_depth_test) {
+    float depth_value = shadow_map.sample(nearest_clamp_to_edge, light_screen_uv).r;
+    float lit = step(light_depth_test, depth_value);
+    return lit;
+}
+
+// Software bilinear sampling
+float shadow_sample_linear(texture2d<float> shadow_map,
+                           float2 shadow_size,
+                           float2 light_view_pos,
+                           float2 light_screen_uv,
+                           float light_depth_test) {
+    float2 shadow_size_div1 = 1.0 / shadow_size;
+    float2 light_screen_xy = light_screen_uv * shadow_size + 0.5;
+    float2 light_screen_xy_fract = fract(light_screen_xy);
+    light_screen_uv = (light_screen_xy - light_screen_xy_fract) / shadow_size;
+    
+    float depth_value_1 = shadow_sample(shadow_map, shadow_size, light_view_pos,
+                                        light_screen_uv, light_depth_test);
+    float depth_value_2 = shadow_sample(shadow_map, shadow_size, light_view_pos,
+                                        light_screen_uv + float2(shadow_size_div1.x, 0), light_depth_test);
+    float depth_value_3 = shadow_sample(shadow_map, shadow_size, light_view_pos,
+                                        light_screen_uv + float2(0, shadow_size_div1.y), light_depth_test);
+    float depth_value_4 = shadow_sample(shadow_map, shadow_size, light_view_pos,
+                                        light_screen_uv + shadow_size_div1, light_depth_test);
+    
+    float depth_value_mix1 = mix(depth_value_1, depth_value_2, light_screen_xy_fract.x);
+    float depth_value_mix2 = mix(depth_value_3, depth_value_4, light_screen_xy_fract.x);
+    float lit = mix(depth_value_mix1, depth_value_mix2, light_screen_xy_fract.y);
+    return lit;
+}
+
 // Using 16-samples of percentage-closer sampling
 // The result looks like smooth antialiased shadows
 // https://developer.nvidia.com/gpugems/GPUGems/gpugems_ch11.html
@@ -65,9 +108,16 @@ float shadow_sample_antialiased_4x4(texture2d<float> shadow_map,
     
     for(y = -1.5; y <= 1.51; y += 1.0) {
         for(x = -1.5; x <= 1.51; x += 1.0) {
-            float2 offset = float2(x,y)*shadow_size_div1;
+            float2 offset = float2(x,y) * shadow_size_div1;
+            
             depth_value = shadow_map.sample(nearest_clamp_to_edge, light_screen_uv + offset).r;
-            lit += depth_value > light_depth_test;
+            lit += step(light_depth_test, depth_value);
+            
+            // linear sampling (very slow!)
+            /*
+            lit += shadow_sample_linear(shadow_map, shadow_size, light_view_pos,
+                                        light_screen_uv + offset, light_depth_test);
+             */
         }
     }
     return lit * 0.0625;
@@ -97,18 +147,31 @@ float shadow_sample_dithered(texture2d<float> shadow_map,
     
     float depth_value = 0;
     depth_value = shadow_map.sample(nearest_clamp_to_edge, light_screen_uv + offsets[0]).r;
-    lit += depth_value > light_depth_test;
+    lit += step(light_depth_test, depth_value);
     depth_value = shadow_map.sample(nearest_clamp_to_edge, light_screen_uv + offsets[1]).r;
-    lit += depth_value > light_depth_test;
+    lit += step(light_depth_test, depth_value);
     depth_value = shadow_map.sample(nearest_clamp_to_edge, light_screen_uv + offsets[2]).r;
-    lit += depth_value > light_depth_test;
-    depth_value = shadow_map.sample(nearest_clamp_to_edge, light_screen_uv).r;
-    lit += depth_value > light_depth_test;
+    lit += step(light_depth_test, depth_value);
+    depth_value = shadow_map.sample(nearest_clamp_to_edge, light_screen_uv + offsets[3]).r;
+    lit += step(light_depth_test, depth_value);
+    
+    // linear sampling
+    /*
+    lit += shadow_sample_linear(shadow_map, shadow_size, light_view_pos,
+                                light_screen_uv + offsets[0], light_depth_test);
+    lit += shadow_sample_linear(shadow_map, shadow_size, light_view_pos,
+                                light_screen_uv + offsets[1], light_depth_test);
+    lit += shadow_sample_linear(shadow_map, shadow_size, light_view_pos,
+                                light_screen_uv + offsets[2], light_depth_test);
+    lit += shadow_sample_linear(shadow_map, shadow_size, light_view_pos,
+                                light_screen_uv + offsets[3], light_depth_test);
+     */
     lit /= (float)num_samples;
     
     return lit;
 }
 
+#pragma mark - Shadow
 float get_shadow_lit(texture2d<float> shadow_map,
                      constant light_t &light,
                      constant light_global_t &light_global,
