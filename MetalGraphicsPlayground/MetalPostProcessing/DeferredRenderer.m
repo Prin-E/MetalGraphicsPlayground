@@ -20,6 +20,7 @@
 #import "../Common/Sources/Model/MGPShadowManager.h"
 #import "../Common/Sources/Model/MGPLight.h"
 #import "../Common/Sources/Model/MGPCamera.h"
+#import "../Common/Sources/Model/MGPFrustum.h"
 #import "../Common/Sources/Model/MGPBoundingVolume.h"
 #import "../Common/Sources/Rendering/MGPGizmos.h"
 
@@ -37,7 +38,8 @@ const size_t kNumInstance = 1;
 const uint32_t kNumLight = 128;
 const float kLightIntensityBase = 1.0f;
 const float kLightIntensityVariation = 1.0f;
-const size_t kShadowResolution = 2048;
+const size_t kShadowResolution = 512;
+const float kCameraSpeed = 1;
 
 #define DEG_TO_RAD(x) ((x)*0.0174532925)
 
@@ -207,7 +209,7 @@ const size_t kShadowResolution = 2048;
     self = [super init];
     if(self) {
         _animate = NO;
-        _numLights = 2;
+        _numLights = 1;
         _roughness = 1.0f;
         _metalic = 0.0f;
         [self initUniformBuffers];
@@ -351,15 +353,15 @@ const size_t kShadowResolution = 2048;
     
     // camera
     _camera = [[MGPCamera alloc] init];
-    _camera.position = simd_make_float3(0, 50, -60);
+    _camera.position = simd_make_float3(0, 0.5, -0.6);
     
     // projection
     MGPProjectionState projection = _camera.projectionState;
     projection.aspectRatio = _gBuffer.size.width / _gBuffer.size.height;
     projection.fieldOfView = DEG_TO_RAD(60.0);
-    projection.nearPlane = 1.0f;
-    projection.farPlane = 5000.0f;
-    projection.orthographicSize = 500;
+    projection.nearPlane = 0.2f;
+    projection.farPlane = 30.0f;
+    projection.orthographicSize = 5;
     _camera.projectionState = projection;
     
     // shadow
@@ -374,11 +376,11 @@ const size_t kShadowResolution = 2048;
     _postProcess.cameraBuffer = _cameraPropsBuffer;
     MGPPostProcessingLayerSSAO *ssao = [[MGPPostProcessingLayerSSAO alloc] initWithDevice: self.device
                                                                                  library: self.defaultLibrary];
-    ssao.intensity = 0.8f;
-    ssao.radius = 50.0f;
-    ssao.bias = 2.0f;
-    ssao.numSamples = 48;
-    [_postProcess addLayer: ssao];
+    ssao.intensity = 0.9f;
+    ssao.radius = 0.5f;
+    ssao.bias = 0.02f;
+    ssao.numSamples = 32;
+    //[_postProcess addLayer: ssao];
     [_postProcess resize: _gBuffer.size];
     
     _gizmos = [[MGPGizmos alloc] initWithDevice:self.device
@@ -428,7 +430,7 @@ const size_t kShadowResolution = 2048;
     BOOL positionIsChanged = NO;
     for(int i = 0; i < 6; i++) {
         float sign = (i % 2) ? -1.0f : 1.0f;
-        _moveSpeeds[i] = LERP(_moveSpeeds[i], _moveFlags[i] ? 100.0f * (_moveFast ? 5.0f : 1.0f) : 0.0f, deltaTime * 14);
+        _moveSpeeds[i] = LERP(_moveSpeeds[i], _moveFlags[i] ? kCameraSpeed * (_moveFast ? 5.0f : 1.0f) : 0.0f, deltaTime * 14);
         if(_moveSpeeds[i] > 0.0001f) {
             simd_float3 direction = rotationMatrix.columns[columnIndices[i]].xyz;
             positionAdd += direction * deltaTime * _moveSpeeds[i] * sign;
@@ -482,6 +484,7 @@ const size_t kShadowResolution = 2048;
     for(NSInteger i = 0; i < kNumInstance; i++) {
         instance_props_t *p = &instance_props[_currentBufferIndex * kNumInstance + i];
         p->model = matrix_from_translation(instance_pos[i].x, instance_pos[i].y, instance_pos[i].z);
+        p->model.columns[0].x = p->model.columns[1].y = p->model.columns[2].z = 0.01f;
         p->material.albedo = instance_albedo[i];
         p->material.roughness = self.roughness;
         p->material.metalic = self.metalic;
@@ -513,9 +516,9 @@ const size_t kShadowResolution = 2048;
         light.color = light_colors[i];
         light.intensity = light_intensities[i];
         light.direction = simd_make_float3(dir);
-        light.position = -light.direction * 3000.0f;
+        light.position = -light.direction * 20.0f;
         light.castShadows = YES;
-        light.shadowBias = 0.00001f;
+        light.shadowBias = 0.001f;
         
         // light properties -> buffer
         light_t *light_props_ptr = &light_props[_currentBufferIndex * kNumLight + i];
@@ -523,7 +526,7 @@ const size_t kShadowResolution = 2048;
     }
     light_globals[_currentBufferIndex].num_light = _numLights;
     light_globals[_currentBufferIndex].ambient_color = vector3(0.1f, 0.1f, 0.1f);
-    light_globals[_currentBufferIndex].light_projection = matrix_from_perspective_fov_aspectLH(DEG_TO_RAD(60.0f), _gBuffer.size.width / _gBuffer.size.height, 1.0f, 5000.0f);
+    light_globals[_currentBufferIndex].light_projection = matrix_from_perspective_fov_aspectLH(DEG_TO_RAD(60.0f), _gBuffer.size.width / _gBuffer.size.height, 1.0f, 30.0f);
     
     // Synchronize buffers
     memcpy(_cameraPropsBuffer.contents + _currentBufferIndex * sizeof(camera_props_t),
@@ -671,6 +674,8 @@ const size_t kShadowResolution = 2048;
 - (void)renderObjects:(id<MTLRenderCommandEncoder>)encoder
          bindTextures:(BOOL)bindTextures
               frustum:(MGPFrustum *)frustum {
+    MGPFrustum *localSpaceFrustum = [frustum frustumByMultipliedWithMatrix:simd_inverse(instance_props[_currentBufferIndex * kNumInstance].model)];
+    
     id<MTLTexture> textures[tex_total] = {};
     BOOL textureChangedFlags[tex_total] = {};
     for(int i = 0; i < tex_total; i++) {
@@ -689,7 +694,7 @@ const size_t kShadowResolution = 2048;
             
             // Culling
             if(_cull) {
-                if([volume isCulledInFrustum:frustum])
+                if([volume isCulledInFrustum:localSpaceFrustum])
                     continue;
             }
             
@@ -759,7 +764,7 @@ const size_t kShadowResolution = 2048;
     
     [self renderObjects: encoder
            bindTextures: YES
-                frustum:_camera.frustum];
+                frustum: _camera.frustum];
     [encoder endEncoding];
 }
 
@@ -864,8 +869,10 @@ const size_t kShadowResolution = 2048;
         [encoder setFragmentTexture: _IBLs[_renderingIBLIndex].BRDFLookupTexture
                             atIndex: attachment_brdf_lookup];
     }
-    [encoder setFragmentTexture: ((MGPPostProcessingLayerSSAO *)_postProcess[0]).ssaoTexture
-                        atIndex: attachment_ssao];
+    if(_postProcess.layers.count > 0) {
+        [encoder setFragmentTexture: ((MGPPostProcessingLayerSSAO *)_postProcess[0]).ssaoTexture
+                            atIndex: attachment_ssao];
+    }
     [encoder drawPrimitives: MTLPrimitiveTypeTriangle
                 vertexStart: 0
                 vertexCount: 6];

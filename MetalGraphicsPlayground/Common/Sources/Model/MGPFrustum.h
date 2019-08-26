@@ -7,6 +7,7 @@
 //
 
 #import <Foundation/Foundation.h>
+#import <simd/simd.h>
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -21,6 +22,9 @@ NS_ASSUME_NONNULL_BEGIN
 - (instancetype)initWithCamera: (MGPCamera *)camera;
 - (void)setPlanesForCamera: (MGPCamera *)camera;
 - (void)setPlanesForLight: (MGPLight *)light;
+
+- (void)multiplyMatrix: (simd_float4x4)matrix;
+- (MGPFrustum *)frustumByMultipliedWithMatrix: (simd_float4x4)matrix;
 
 @end
 

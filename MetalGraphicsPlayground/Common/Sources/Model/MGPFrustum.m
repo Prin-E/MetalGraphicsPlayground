@@ -78,4 +78,21 @@
                                matrix:shaderProps.light_view];
 }
 
+- (void)multiplyMatrix:(simd_float4x4)matrix {
+    for(MGPPlane *plane in _planes) {
+        [plane multiplyMatrix:matrix];
+    }
+}
+
+- (MGPFrustum *)frustumByMultipliedWithMatrix:(simd_float4x4)matrix {
+    MGPFrustum *newFrustum = [[MGPFrustum alloc] init];
+    [newFrustum _makePlanes];
+    for(NSUInteger i = 0; i < _planes.count; i++) {
+        newFrustum->_planes[i].normal = _planes[i].normal;
+        newFrustum->_planes[i].center = _planes[i].center;
+    }
+    [newFrustum multiplyMatrix:matrix];
+    return newFrustum;
+}
+
 @end

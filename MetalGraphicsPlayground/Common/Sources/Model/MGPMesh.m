@@ -229,12 +229,9 @@
             [mdlMesh addNormalsWithAttributeNamed:MDLVertexAttributeNormal
                                   creaseThreshold:0.2];
         }
-        
-        if([mdlMesh vertexAttributeDataForAttributeNamed: MDLVertexAttributeTextureCoordinate]) {
-            [mdlMesh addTangentBasisForTextureCoordinateAttributeNamed: MDLVertexAttributeTextureCoordinate
-                                                  normalAttributeNamed: MDLVertexAttributeNormal
-                                                 tangentAttributeNamed: MDLVertexAttributeTangent];
-        }
+        [mdlMesh addTangentBasisForTextureCoordinateAttributeNamed: MDLVertexAttributeTextureCoordinate
+                                              normalAttributeNamed: MDLVertexAttributeNormal
+                                             tangentAttributeNamed: MDLVertexAttributeTangent];
         mdlMesh.vertexDescriptor = descriptor;
         
         MTKMesh *mtkMesh = [[MTKMesh alloc] initWithMesh: mdlMesh
