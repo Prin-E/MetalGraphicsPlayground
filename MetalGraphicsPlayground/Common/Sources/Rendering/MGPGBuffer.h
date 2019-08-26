@@ -18,6 +18,7 @@ typedef struct MGPGBufferPrepassFunctionConstants {
     bool hasOcclusionMap;
     bool hasAnisotropicMap;
     bool flipVertically;
+    bool sRGBTexture;
 } MGPGBufferPrepassFunctionConstants;
 
 typedef struct MGPGBufferShadingFunctionConstants {
@@ -53,7 +54,8 @@ typedef struct MGPGBufferShadingFunctionConstants {
 
 // render pass
 @property (readonly) MTLRenderPassDescriptor *renderPassDescriptor;
-@property (readonly) MTLRenderPassDescriptor *lightingPassDescriptor;
+@property (readonly) MTLRenderPassDescriptor *lightingPassBaseDescriptor;
+@property (readonly) MTLRenderPassDescriptor *lightingPassAddDescriptor;
 @property (readonly) MTLRenderPassDescriptor *shadingPassDescriptor;
 
 // resolution

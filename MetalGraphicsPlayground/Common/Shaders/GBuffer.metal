@@ -11,6 +11,7 @@
 #include "BRDF.h"
 #include "CommonVariables.h"
 #include "CommonStages.h"
+#include "ColorSpace.h"
 #include "Shadow.h"
 
 using namespace metal;
@@ -23,6 +24,7 @@ constant bool has_metalic_map [[function_constant(fcv_metalic)]];
 constant bool has_occlusion_map [[function_constant(fcv_occlusion)]];
 constant bool has_anisotropic_map [[function_constant(fcv_anisotropic)]];
 constant bool flip_vertically [[function_constant(fcv_flip_vertically)]];
+constant bool srgb_texture [[function_constant(fcv_srgb_texture)]];
 
 // g-buffer shade pass
 constant bool uses_ibl_irradiance_map [[function_constant(fcv_uses_ibl_irradiance_map)]];
@@ -94,6 +96,11 @@ fragment GBufferOutput gbuffer_prepass_frag(GBufferFragment in [[stage_in]],
     
     if(has_albedo_map) {
         out.albedo = albedoMap.sample(linear, in.uv);
+        if(srgb_texture) {
+            half4 val = half4(0);
+            val = half4(val < 0.0);
+            out.albedo = srgb_to_linear(out.albedo);
+        }
         // NOTE: g-buffer doesn't support alpha blending...
         //       so that I added simple alpha testing.
         // TODO: alpha-blending support
@@ -162,7 +169,7 @@ fragment half4 gbuffer_light_frag(ScreenFragment in [[stage_in]],
                                   texture2d<half> shading [[texture(attachment_shading)]],
                                   texture2d<half> tangent [[texture(attachment_tangent)]],
                                   array<texture2d<float>,32> shadow_maps [[texture(11)]]) {
-    float4 out_color = float4(0.0, 0.0, 0.0, 1.0);
+    float4 out_color = float4(0.0, 0.0, 0.0, 0.0);
     
     // shared values
     float4 n_c = float4(normal.sample(linear, in.uv));
@@ -184,7 +191,7 @@ fragment half4 gbuffer_light_frag(ScreenFragment in [[stage_in]],
     float4 world_pos = pos.sample(linear_clamp_to_edge, in.uv);
     
     // calculate lights
-    for(uint i = 0; i < light_global.num_light; i++) {
+    for(uint i = 0; i < 4; i++) {        
         float lit = get_shadow_lit(shadow_maps[i], lights[i], light_global, world_pos);
         
         if(lit > 0.0) {
@@ -224,7 +231,6 @@ fragment half4 gbuffer_light_frag(ScreenFragment in [[stage_in]],
             out_color.xyz += lit * calculate_brdf(shading_params) * shading_values.z;
         }
     }
-    
     return half4(out_color);
 }
 

@@ -32,6 +32,7 @@ const size_t kNumInstance = 8;
 const uint32_t kNumLight = 128;
 const float kLightIntensityBase = 0.25;
 const float kLightIntensityVariation = 3.0;
+const size_t kShadowResolution = 512;
 
 #define DEG_TO_RAD(x) ((x)*0.0174532925)
 
@@ -591,8 +592,20 @@ const float kLightIntensityVariation = 3.0;
     [self renderGBuffer:prepassEncoder];
     
     // G-buffer light-accumulation pass
-    id<MTLRenderCommandEncoder> lightingPassEncoder = [commandBuffer renderCommandEncoderWithDescriptor: _gBuffer.lightingPassDescriptor];
-    [self renderLighting:lightingPassEncoder];
+    // render 4 lights per each draw call
+    const NSUInteger lightCountPerDrawCall = 4;
+    id<MTLRenderCommandEncoder> lightingPassEncoder = [commandBuffer renderCommandEncoderWithDescriptor: _gBuffer.lightingPassBaseDescriptor];
+    [self renderLighting:lightingPassEncoder
+               fromIndex:0
+                 toIndex:lightCountPerDrawCall-1
+        countPerDrawCall:lightCountPerDrawCall];
+    if(_numLights > lightCountPerDrawCall) {
+        lightingPassEncoder = [commandBuffer renderCommandEncoderWithDescriptor: _gBuffer.lightingPassAddDescriptor];
+        [self renderLighting:lightingPassEncoder
+                   fromIndex:lightCountPerDrawCall
+                     toIndex:_numLights-1
+            countPerDrawCall:lightCountPerDrawCall];
+    }
     
     // G-buffer shade pass
     id<MTLRenderCommandEncoder> shadingPassEncoder = [commandBuffer renderCommandEncoderWithDescriptor: _gBuffer.shadingPassDescriptor];
@@ -694,16 +707,16 @@ const float kLightIntensityVariation = 3.0;
     [encoder endEncoding];
 }
 
-- (void)renderLighting:(id<MTLRenderCommandEncoder>)encoder {
-    encoder.label = @"Lighting";
+- (void)renderLighting:(id<MTLRenderCommandEncoder>)encoder
+             fromIndex:(NSUInteger)lightFromIndex
+               toIndex:(NSUInteger)lightToIndex
+      countPerDrawCall:(NSUInteger)lightCountPerDrawCall {
+    encoder.label = [NSString stringWithFormat: @"Lighting %@", lightFromIndex == 0 ? @"Base" : @"Add"];
     [encoder setRenderPipelineState: _renderPipelineLighting];
     [encoder setCullMode: MTLCullModeBack];
     [encoder setVertexBuffer: _commonVertexBuffer
                       offset: 0
                      atIndex: 0];
-    [encoder setFragmentBuffer: _lightPropsBuffer
-                        offset: _currentBufferIndex * sizeof(light_t) * kNumLight
-                       atIndex: 1];
     [encoder setFragmentBuffer: _lightGlobalBuffer
                         offset: _currentBufferIndex * sizeof(light_global_t)
                        atIndex: 2];
@@ -715,18 +728,29 @@ const float kLightIntensityVariation = 3.0;
                         atIndex: attachment_shading];
     [encoder setFragmentTexture: _gBuffer.tangent
                         atIndex: attachment_tangent];
-    for(int i = 0; i < _numLights; i++) {
-        if(_lights[i].castShadows) {
-            MGPShadowBuffer *shadowBuffer = [_shadowManager newShadowBufferForLight: _lights[i]
-                                                                         resolution: 512
-                                                                      cascadeLevels: 1];
-            [encoder setFragmentTexture: shadowBuffer.texture
-                                atIndex: i+11];
+    
+    for(NSUInteger i = lightFromIndex; i <= lightToIndex; i += lightCountPerDrawCall) {
+        [encoder setFragmentBuffer: _lightPropsBuffer
+                            offset: (_currentBufferIndex * kNumLight + i) * sizeof(light_t)
+                           atIndex: 1];
+        
+        for(NSUInteger j = 0; j < lightCountPerDrawCall; j++) {
+            if(_lights[i + j].castShadows) {
+                MGPShadowBuffer *shadowBuffer = [_shadowManager newShadowBufferForLight: _lights[i + j]
+                                                                             resolution: kShadowResolution
+                                                                          cascadeLevels: 1];
+                [encoder setFragmentTexture: shadowBuffer.texture
+                                    atIndex: j+11];
+            }
+            else {
+                [encoder setFragmentTexture: nil
+                                    atIndex: j+11];
+            }
         }
+        [encoder drawPrimitives: MTLPrimitiveTypeTriangle
+                    vertexStart: 0
+                    vertexCount: 6];
     }
-    [encoder drawPrimitives: MTLPrimitiveTypeTriangle
-                vertexStart: 0
-                vertexCount: 6];
     
     [encoder endEncoding];
 }

@@ -11,14 +11,18 @@
 
 template<typename T>
 inline T linear_to_srgb(T linear) {
-    T srgb = (linear <= 0.0031308) ? (linear * 12.92) : ((pow(linear, 1.0/2.4) * 1.055) - 0.055);
-    return srgb;
+    T srgb_low = (linear * 12.92);
+    T srgb_high = (pow(linear, 1.0/2.4) * 1.055) - 0.055;
+    T a = step(0.0031308, linear);
+    return mix(srgb_low, srgb_high, a);
 }
 
 template<typename T>
 inline T srgb_to_linear(T srgb) {
-    T linear = (srgb <= 0.04045) ? (srgb / 12.92) : pow((srgb + 0.055) / 1.055, 2.4);
-    return linear;
+    T linear_low = srgb / 12.92;
+    T linear_high = pow((srgb + 0.055) / 1.055, 2.4);
+    T a = step(0.04045, srgb);
+    return mix(linear_low, linear_high, a);
 }
 
 template<typename T>

@@ -209,7 +209,7 @@ const float kCameraSpeed = 1;
     self = [super init];
     if(self) {
         _animate = NO;
-        _numLights = 1;
+        _numLights = 2;
         _roughness = 1.0f;
         _metalic = 0.0f;
         [self initUniformBuffers];
@@ -297,6 +297,7 @@ const float kCameraSpeed = 1;
     prepassConstants.hasOcclusionMap = _meshes[0].submeshes[0].textures[tex_occlusion] != NSNull.null;
     prepassConstants.hasAnisotropicMap = _meshes[0].submeshes[0].textures[tex_anisotropic] != NSNull.null;
     prepassConstants.flipVertically = YES;  // for sponza textures
+    prepassConstants.sRGBTexture = YES;     // for sponza textures
     MGPGBufferShadingFunctionConstants shadingConstants = {};
     shadingConstants.hasIBLIrradianceMap = _IBLs.count > 0;
     shadingConstants.hasIBLSpecularMap = _IBLs.count > 0;
@@ -380,7 +381,7 @@ const float kCameraSpeed = 1;
     ssao.radius = 0.5f;
     ssao.bias = 0.02f;
     ssao.numSamples = 32;
-    //[_postProcess addLayer: ssao];
+    [_postProcess addLayer: ssao];
     [_postProcess resize: _gBuffer.size];
     
     _gizmos = [[MGPGizmos alloc] initWithDevice:self.device
@@ -516,7 +517,7 @@ const float kCameraSpeed = 1;
         light.color = light_colors[i];
         light.intensity = light_intensities[i];
         light.direction = simd_make_float3(dir);
-        light.position = -light.direction * 20.0f;
+        light.position = -light.direction * 30.0f;
         light.castShadows = YES;
         light.shadowBias = 0.001f;
         
@@ -617,8 +618,20 @@ const float kCameraSpeed = 1;
        forRenderingOrder: MGPPostProcessingRenderingOrderBeforeLightPass];
     
     // G-buffer light-accumulation pass
-    id<MTLRenderCommandEncoder> lightingPassEncoder = [commandBuffer renderCommandEncoderWithDescriptor: _gBuffer.lightingPassDescriptor];
-    [self renderLighting:lightingPassEncoder];
+    // render 4 lights per each draw call
+    const NSUInteger lightCountPerDrawCall = 4;
+    id<MTLRenderCommandEncoder> lightingPassEncoder = [commandBuffer renderCommandEncoderWithDescriptor: _gBuffer.lightingPassBaseDescriptor];
+    [self renderLighting:lightingPassEncoder
+               fromIndex:0
+                 toIndex:lightCountPerDrawCall-1
+        countPerDrawCall:lightCountPerDrawCall];
+    if(_numLights > lightCountPerDrawCall) {
+        lightingPassEncoder = [commandBuffer renderCommandEncoderWithDescriptor: _gBuffer.lightingPassAddDescriptor];
+        [self renderLighting:lightingPassEncoder
+                   fromIndex:lightCountPerDrawCall
+                     toIndex:_numLights-1
+            countPerDrawCall:lightCountPerDrawCall];
+    }
     
     // Post-process before shade pass
     [_postProcess render: commandBuffer
@@ -801,16 +814,16 @@ const float kCameraSpeed = 1;
     }
 }
 
-- (void)renderLighting:(id<MTLRenderCommandEncoder>)encoder {
-    encoder.label = @"Lighting";
+- (void)renderLighting:(id<MTLRenderCommandEncoder>)encoder
+             fromIndex:(NSUInteger)lightFromIndex
+               toIndex:(NSUInteger)lightToIndex
+      countPerDrawCall:(NSUInteger)lightCountPerDrawCall {
+    encoder.label = [NSString stringWithFormat: @"Lighting %@", lightFromIndex == 0 ? @"Base" : @"Add"];
     [encoder setRenderPipelineState: _renderPipelineLighting];
     [encoder setCullMode: MTLCullModeBack];
     [encoder setVertexBuffer: _commonVertexBuffer
                       offset: 0
                      atIndex: 0];
-    [encoder setFragmentBuffer: _lightPropsBuffer
-                        offset: _currentBufferIndex * sizeof(light_t) * kNumLight
-                       atIndex: 1];
     [encoder setFragmentBuffer: _lightGlobalBuffer
                         offset: _currentBufferIndex * sizeof(light_global_t)
                        atIndex: 2];
@@ -822,18 +835,29 @@ const float kCameraSpeed = 1;
                         atIndex: attachment_shading];
     [encoder setFragmentTexture: _gBuffer.tangent
                         atIndex: attachment_tangent];
-    for(int i = 0; i < _numLights; i++) {
-        if(_lights[i].castShadows) {
-            MGPShadowBuffer *shadowBuffer = [_shadowManager newShadowBufferForLight: _lights[i]
-                                                                         resolution: kShadowResolution
-                                                                      cascadeLevels: 1];
-            [encoder setFragmentTexture: shadowBuffer.texture
-                                atIndex: i+11];
+    
+    for(NSUInteger i = lightFromIndex; i <= lightToIndex; i += lightCountPerDrawCall) {
+        [encoder setFragmentBuffer: _lightPropsBuffer
+                            offset: (_currentBufferIndex * kNumLight + i) * sizeof(light_t)
+                           atIndex: 1];
+        
+        for(NSUInteger j = 0; j < lightCountPerDrawCall; j++) {
+            if(_lights[i + j].castShadows) {
+                MGPShadowBuffer *shadowBuffer = [_shadowManager newShadowBufferForLight: _lights[i + j]
+                                                                             resolution: kShadowResolution
+                                                                          cascadeLevels: 1];
+                [encoder setFragmentTexture: shadowBuffer.texture
+                                    atIndex: j+11];
+            }
+            else {
+                [encoder setFragmentTexture: nil
+                                    atIndex: j+11];
+            }
         }
+        [encoder drawPrimitives: MTLPrimitiveTypeTriangle
+                    vertexStart: 0
+                    vertexCount: 6];
     }
-    [encoder drawPrimitives: MTLPrimitiveTypeTriangle
-                vertexStart: 0
-                vertexCount: 6];
     
     [encoder endEncoding];
 }

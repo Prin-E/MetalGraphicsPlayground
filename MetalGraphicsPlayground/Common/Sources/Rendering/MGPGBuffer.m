@@ -17,7 +17,8 @@
     CGSize _size;
     MTLVertexDescriptor *_baseVertexDescriptor;
     MTLRenderPassDescriptor *_renderPassDescriptor;
-    MTLRenderPassDescriptor *_lightingPassDescriptor;
+    MTLRenderPassDescriptor *_lightingPassBaseDescriptor;
+    MTLRenderPassDescriptor *_lightingPassAddDescriptor;
     MTLRenderPassDescriptor *_shadingPassDescriptor;
     MTLRenderPipelineDescriptor *_renderPipelineDescriptor;
     MTLRenderPipelineDescriptor *_lightingPipelineDescriptor;
@@ -156,9 +157,12 @@
     
     // color attachments
     desc.colorAttachments[0].pixelFormat = _lighting.pixelFormat;
+    desc.colorAttachments[0].blendingEnabled = YES;
+    desc.colorAttachments[0].rgbBlendOperation = MTLBlendOperationAdd;
+    desc.colorAttachments[0].sourceRGBBlendFactor = MTLBlendFactorOne;
+    desc.colorAttachments[0].destinationRGBBlendFactor = MTLBlendFactorOne;
     desc.vertexFunction = [_library newFunctionWithName:@"gbuffer_light_vert"];
     desc.fragmentFunction = [_library newFunctionWithName:@"gbuffer_light_frag"];
-    
     _lightingPipelineDescriptor = desc;
 }
 
@@ -205,16 +209,23 @@
 }
 
 - (void)_makeLightingPassDescriptor {
-    if(_lightingPassDescriptor == nil) {
-        _lightingPassDescriptor = [[MTLRenderPassDescriptor alloc] init];
+    if(_lightingPassBaseDescriptor == nil) {
+        _lightingPassBaseDescriptor = [[MTLRenderPassDescriptor alloc] init];
         
         // color attachments
-        _lightingPassDescriptor.colorAttachments[0].loadAction = MTLLoadActionLoad;
-        _lightingPassDescriptor.colorAttachments[0].storeAction = MTLStoreActionStore;
-        _lightingPassDescriptor.colorAttachments[0].clearColor = MTLClearColorMake(0, 0, 0, 0);
+        _lightingPassBaseDescriptor.colorAttachments[0].loadAction = MTLLoadActionClear;
+        _lightingPassBaseDescriptor.colorAttachments[0].storeAction = MTLStoreActionStore;
+    }
+    if(_lightingPassAddDescriptor == nil) {
+        _lightingPassAddDescriptor = [[MTLRenderPassDescriptor alloc] init];
+        
+        // color attachments
+        _lightingPassAddDescriptor.colorAttachments[0].loadAction = MTLLoadActionLoad;
+        _lightingPassAddDescriptor.colorAttachments[0].storeAction = MTLStoreActionStore;
     }
     
-    _lightingPassDescriptor.colorAttachments[0].texture = _lighting;
+    _lightingPassBaseDescriptor.colorAttachments[0].texture = _lighting;
+    _lightingPassAddDescriptor.colorAttachments[0].texture = _lighting;
 }
 
 - (void)_makeShadingPassDescriptor {
@@ -239,8 +250,12 @@
     return _renderPassDescriptor;
 }
 
-- (MTLRenderPassDescriptor *)lightingPassDescriptor {
-    return _lightingPassDescriptor;
+- (MTLRenderPassDescriptor *)lightingPassBaseDescriptor {
+    return _lightingPassBaseDescriptor;
+}
+
+- (MTLRenderPassDescriptor *)lightingPassAddDescriptor {
+    return _lightingPassAddDescriptor;
 }
 
 - (MTLRenderPassDescriptor *)shadingPassDescriptor {
@@ -279,6 +294,7 @@
     bitflag |= constants.hasOcclusionMap ? (1L << fcv_occlusion) : 0;
     bitflag |= constants.hasAnisotropicMap ? (1L << fcv_anisotropic) : 0;
     bitflag |= constants.flipVertically ? (1L << fcv_flip_vertically) : 0;
+    bitflag |= constants.sRGBTexture ? (1L << fcv_srgb_texture) : 0;
     
     NSNumber *key = @(bitflag);
     id<MTLRenderPipelineState> renderPipelineState = [_renderPipelineDict objectForKey: key];
@@ -306,6 +322,9 @@
         [constantValues setConstantValue: &constants.flipVertically
                                     type: MTLDataTypeBool
                                  atIndex: fcv_flip_vertically];
+        [constantValues setConstantValue: &constants.sRGBTexture
+                                    type: MTLDataTypeBool
+                                 atIndex: fcv_srgb_texture];
         
         _renderPipelineDescriptor.vertexFunction = [_library newFunctionWithName: @"gbuffer_prepass_vert"
                                                                   constantValues: constantValues

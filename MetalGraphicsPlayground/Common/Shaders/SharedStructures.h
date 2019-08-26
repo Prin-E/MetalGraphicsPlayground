@@ -104,6 +104,7 @@ typedef enum {
     fcv_occlusion,
     fcv_anisotropic,
     fcv_flip_vertically,
+    fcv_srgb_texture,
     fcv_uses_ibl_irradiance_map,
     fcv_uses_ibl_specular_map,
     fcv_uses_ssao_map
