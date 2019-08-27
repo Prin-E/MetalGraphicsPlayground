@@ -10,7 +10,7 @@ Ni 1.000000
 d 0.000000
 illum 2
 map_Kd lion.dds
-map_Disp lion_ddn.dds
+bump lion_ddn.dds
 map_Ka lion.dds
 
 newmtl Material__298
@@ -22,7 +22,7 @@ Ni 1.000000
 d 0.000000
 illum 2
 map_Kd background.dds
-map_Disp background_ddn.dds
+bump background_ddn.dds
 map_Ka background.dds
 
 newmtl Material__47
@@ -57,7 +57,7 @@ d 0.000000
 illum 2
 map_Kd sponza_arch_diff.dds
 map_Ka sponza_arch_diff.dds
-map_Disp sponza_arch_ddn.dds
+bump sponza_arch_ddn.dds
 
 newmtl bricks
 Ns 7.843137
@@ -68,7 +68,7 @@ Ni 1.000000
 d 0.000000
 illum 2
 map_Kd spnza_bricks_a_diff.dds
-map_Disp spnza_bricks_a_ddn.dds
+bump spnza_bricks_a_ddn.dds
 map_Ka spnza_bricks_a_diff.dds
 
 newmtl ceiling
@@ -81,7 +81,7 @@ d 0.000000
 illum 2
 map_Kd sponza_ceiling_a_diff.dds
 map_Ka sponza_ceiling_a_diff.dds
-map_Disp sponza_ceiling_a_ddn.dds
+bump sponza_ceiling_a_ddn.dds
 
 newmtl chain
 Ns 7.843137
@@ -93,7 +93,7 @@ d 1.000000
 illum 2
 map_Kd chain_texture.dds
 map_d chain_texture_mask.dds
-map_Disp chain_texture_ddn.dds
+bump chain_texture_ddn.dds
 map_Ka chain_texture.dds
 
 newmtl column_a
@@ -105,7 +105,7 @@ Ni 1.000000
 d 0.000000
 illum 2
 map_Kd sponza_column_a_diff.dds
-map_Disp sponza_column_a_ddn.dds
+bump sponza_column_a_ddn.dds
 map_Ka sponza_column_a_diff.dds
 
 newmtl column_b
@@ -117,7 +117,7 @@ Ni 1.000000
 d 0.000000
 illum 2
 map_Kd sponza_column_b_diff.dds
-map_Disp sponza_column_b_ddn.dds
+bump sponza_column_b_ddn.dds
 map_Ka sponza_column_b_diff.dds
 
 newmtl column_c
@@ -129,7 +129,7 @@ Ni 1.000000
 d 0.000000
 illum 2
 map_Kd sponza_column_c_diff.dds
-map_Disp sponza_column_c_ddn.dds
+bump sponza_column_c_ddn.dds
 map_Ka sponza_column_c_diff.dds
 
 newmtl details
@@ -142,7 +142,7 @@ d 0.000000
 illum 2
 map_Kd sponza_details_diff.dds
 map_Ka sponza_details_diff.dds
-map_Disp sponza_details_ddn.dds
+bump sponza_details_ddn.dds
 
 newmtl fabric_a
 Ns 7.843137
@@ -154,7 +154,7 @@ d 0.000000
 illum 2
 map_Kd sponza_fabric_diff.dds
 map_Ka sponza_fabric_diff.dds
-map_Disp sponza_fabric_ddn.dds
+bump sponza_fabric_ddn.dds
 
 newmtl fabric_c
 Ns 7.843137
@@ -166,7 +166,7 @@ d 0.000000
 illum 2
 map_Kd sponza_curtain_diff.dds
 map_Ka sponza_curtain_diff.dds
-map_Disp sponza_curtain_ddn.dds
+bump sponza_curtain_ddn.dds
 
 
 newmtl fabric_d
@@ -179,7 +179,7 @@ d 0.000000
 illum 2
 map_Kd sponza_fabric_blue_diff.dds
 map_Ka sponza_fabric_blue_diff.dds
-map_Disp sponza_fabric_ddn.dds
+bump sponza_fabric_ddn.dds
 
 
 newmtl fabric_e
@@ -192,7 +192,7 @@ d 0.000000
 illum 2
 map_Kd sponza_fabric_green_diff.dds
 map_Ka sponza_fabric_green_diff.dds
-map_Disp sponza_fabric_ddn.dds
+bump sponza_fabric_ddn.dds
 
 
 newmtl fabric_f
@@ -205,7 +205,7 @@ d 0.000000
 illum 2
 map_Kd sponza_curtain_green_diff.dds
 map_Ka sponza_curtain_green_diff.dds
-map_Disp sponza_curtain_ddn.dds
+bump sponza_curtain_ddn.dds
 
 newmtl fabric_g
 Ns 7.843137
@@ -217,7 +217,7 @@ d 0.000000
 illum 2
 map_Kd sponza_curtain_blue_diff.dds
 map_Ka sponza_curtain_blue_diff.dds
-map_Disp sponza_curtain_ddn.dds
+bump sponza_curtain_ddn.dds
 
 
 newmtl flagpole
@@ -230,7 +230,7 @@ d 0.000000
 illum 2
 map_Kd sponza_flagpole_diff.dds
 map_Ka sponza_flagpole_diff.dds
-map_Disp sponza_flagpole_ddn.dds
+bump sponza_flagpole_ddn.dds
 
 newmtl floor
 Ns 7.843137
@@ -242,7 +242,7 @@ d 0.000000
 illum 2
 map_Kd sponza_floor_a_diff.dds
 map_Ka sponza_floor_a_diff.dds
-map_Disp sponza_floor_a_ddn.dds
+bump sponza_floor_a_ddn.dds
 
 newmtl leaf
 Ns 7.843137
@@ -254,7 +254,7 @@ d 1.000000
 illum 2
 map_Kd sponza_thorn_diff.dds
 map_d sponza_thorn_mask.dds
-map_Disp sponza_thorn_ddn.dds
+bump sponza_thorn_ddn.dds
 map_Ka sponza_thorn_diff.dds
 
 newmtl roof
@@ -279,7 +279,7 @@ d 0.000000
 illum 2
 map_Kd vase_diff.dds
 map_Ka vase_diff.dds
-map_Disp vase_ddn.dds
+bump vase_ddn.dds
 
 newmtl vase_hanging
 Ns 7.843137
@@ -291,7 +291,7 @@ d 0.000000
 illum 2
 map_Kd vase_hanging_diff.dds
 map_Ka vase_hanging_diff.dds
-map_Disp vase_round_ddn.dds
+bump vase_round_ddn.dds
 
 newmtl vase_round
 Ns 7.843137
@@ -302,5 +302,5 @@ Ni 1.000000
 d 0.000000
 illum 2
 map_Kd vase_round.dds
-map_Disp vase_round_ddn.dds
+bump vase_round_ddn.dds
 map_Ka vase_round.dds

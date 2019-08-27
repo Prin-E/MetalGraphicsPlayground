@@ -82,10 +82,10 @@ fragment GBufferOutput gbuffer_prepass_frag(GBufferFragment in [[stage_in]],
                                   constant instance_props_t *instanceProps [[buffer(2)]],
                                   texture2d<half> albedoMap [[texture(tex_albedo), function_constant(has_albedo_map)]],
                                   texture2d<half> normalMap [[texture(tex_normal), function_constant(has_normal_map)]],
-                                    texture2d<float> roughnessMap [[texture(tex_roughness), function_constant(has_roughness_map)]],
-                                    texture2d<half> metalicMap [[texture(tex_metalic), function_constant(has_metalic_map)]],
-                                    texture2d<half> occlusionMap [[texture(tex_occlusion), function_constant(has_occlusion_map)]],
-                                    texture2d<half> anisotropicMap [[texture(tex_anisotropic), function_constant(has_anisotropic_map)]]
+                                  texture2d<float> roughnessMap [[texture(tex_roughness), function_constant(has_roughness_map)]],
+                                  texture2d<half> metalicMap [[texture(tex_metalic), function_constant(has_metalic_map)]],
+                                  texture2d<half> occlusionMap [[texture(tex_occlusion), function_constant(has_occlusion_map)]],
+                                  texture2d<half> anisotropicMap [[texture(tex_anisotropic), function_constant(has_anisotropic_map)]]
                                   ) {
     GBufferOutput out;
     material_t material = instanceProps[in.iid].material;
@@ -97,9 +97,7 @@ fragment GBufferOutput gbuffer_prepass_frag(GBufferFragment in [[stage_in]],
     if(has_albedo_map) {
         out.albedo = albedoMap.sample(linear, in.uv);
         if(srgb_texture) {
-            half4 val = half4(0);
-            val = half4(val < 0.0);
-            out.albedo = srgb_to_linear(out.albedo);
+            out.albedo = srgb_to_linear_fast(out.albedo);
         }
         // NOTE: g-buffer doesn't support alpha blending...
         //       so that I added simple alpha testing.

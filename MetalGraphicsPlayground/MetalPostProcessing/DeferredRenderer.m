@@ -31,7 +31,7 @@
 #define LERP(x,y,t) ((x)*(1.0-(t))+(y)*(t))
 #endif
 
-#define TEST 1
+#define USE_IBL 0
 
 const size_t kMaxBuffersInFlight = 3;
 const size_t kNumInstance = 1;
@@ -83,7 +83,6 @@ const float kCameraSpeed = 1;
     
     // render pass, pipeline states
     id<MTLRenderPipelineState> _renderPipelineSkybox;
-    id<MTLRenderPipelineState> _renderPipelinePrepass;
     id<MTLRenderPipelineState> _renderPipelineLighting;
     id<MTLRenderPipelineState> _renderPipelineShading;
     id<MTLRenderPipelineState> _renderPipelinePresent;
@@ -246,7 +245,7 @@ const float kCameraSpeed = 1;
     // IBL
     _IBLs = [NSMutableArray array];
     
-    /*
+#if USE_IBL
     NSArray<NSString*> *skyboxNames = @[@"Tropical_Beach_3k"];
     for(NSInteger i = 0; i < skyboxNames.count; i++) {
         NSString *skyboxImagePath = [[NSBundle mainBundle] pathForResource:skyboxNames[i]
@@ -271,7 +270,7 @@ const float kCameraSpeed = 1;
                                                                 equirectangularMap: skyboxTexture];
         [_IBLs addObject: IBL];
     }
-    */
+#endif
     
     // vertex descriptor
     MDLVertexDescriptor *mdlVertexDescriptor = MTKModelIOVertexDescriptorFromMetal(_gBuffer.baseVertexDescriptor);
@@ -289,21 +288,10 @@ const float kCameraSpeed = 1;
                                    error: nil];
     
     // build render pipeline
-    MGPGBufferPrepassFunctionConstants prepassConstants = {};
-    prepassConstants.hasAlbedoMap = _meshes[0].submeshes[0].textures[tex_albedo] != NSNull.null;
-    prepassConstants.hasNormalMap = _meshes[0].submeshes[0].textures[tex_normal] != NSNull.null;
-    prepassConstants.hasRoughnessMap = _meshes[0].submeshes[0].textures[tex_roughness] != NSNull.null;
-    prepassConstants.hasMetalicMap = _meshes[0].submeshes[0].textures[tex_metalic] != NSNull.null;
-    prepassConstants.hasOcclusionMap = _meshes[0].submeshes[0].textures[tex_occlusion] != NSNull.null;
-    prepassConstants.hasAnisotropicMap = _meshes[0].submeshes[0].textures[tex_anisotropic] != NSNull.null;
-    prepassConstants.flipVertically = YES;  // for sponza textures
-    prepassConstants.sRGBTexture = YES;     // for sponza textures
     MGPGBufferShadingFunctionConstants shadingConstants = {};
     shadingConstants.hasIBLIrradianceMap = _IBLs.count > 0;
     shadingConstants.hasIBLSpecularMap = _IBLs.count > 0;
     shadingConstants.hasSSAOMap = YES;
-    _renderPipelinePrepass = [_gBuffer renderPipelineStateWithConstants: prepassConstants
-                                                                  error: nil];
     _renderPipelineLighting = [_gBuffer lightingPipelineStateWithError: nil];
     _renderPipelineShading = [_gBuffer shadingPipelineStateWithConstants: shadingConstants
                                                                    error: nil];
@@ -360,7 +348,7 @@ const float kCameraSpeed = 1;
     MGPProjectionState projection = _camera.projectionState;
     projection.aspectRatio = _gBuffer.size.width / _gBuffer.size.height;
     projection.fieldOfView = DEG_TO_RAD(60.0);
-    projection.nearPlane = 0.2f;
+    projection.nearPlane = 0.1f;
     projection.farPlane = 30.0f;
     projection.orthographicSize = 5;
     _camera.projectionState = projection;
@@ -695,6 +683,7 @@ const float kCameraSpeed = 1;
         textureChangedFlags[i] = YES;
     }
     
+    id<MTLRenderPipelineState> prevPrepassPipeline = nil;
     for(MGPMesh *mesh in _meshes) {
         // Set vertex buffer
         [encoder setVertexBuffer: mesh.metalKitMesh.vertexBuffers[0].buffer
@@ -740,6 +729,25 @@ const float kCameraSpeed = 1;
                         textureChangedFlags[i] = NO;
                     }
                 }
+                
+                // Set render pipeline for G-buffer
+                MGPGBufferPrepassFunctionConstants prepassConstants = {};
+                prepassConstants.hasAlbedoMap = submesh.textures[tex_albedo] != NSNull.null;
+                prepassConstants.hasNormalMap = submesh.textures[tex_normal] != NSNull.null;
+                prepassConstants.hasRoughnessMap = submesh.textures[tex_roughness] != NSNull.null;
+                prepassConstants.hasMetalicMap = submesh.textures[tex_metalic] != NSNull.null;
+                prepassConstants.hasOcclusionMap = submesh.textures[tex_occlusion] != NSNull.null;
+                prepassConstants.hasAnisotropicMap = submesh.textures[tex_anisotropic] != NSNull.null;
+                prepassConstants.flipVertically = YES;  // for sponza textures
+                prepassConstants.sRGBTexture = YES;     // for sponza textures
+                
+                id<MTLRenderPipelineState> prepassPipeline = [_gBuffer renderPipelineStateWithConstants: prepassConstants
+                                                                                                  error: nil];
+                if(prepassPipeline != nil &&
+                   prevPrepassPipeline != prepassPipeline) {
+                    [encoder setRenderPipelineState: prepassPipeline];
+                    prevPrepassPipeline = prepassPipeline;
+                }
             }
             
             // Draw call
@@ -755,7 +763,6 @@ const float kCameraSpeed = 1;
 
 - (void)renderGBuffer:(id<MTLRenderCommandEncoder>)encoder {
     encoder.label = @"G-buffer";
-    [encoder setRenderPipelineState: _renderPipelinePrepass];
     [encoder setDepthStencilState: _depthStencil];
     [encoder setCullMode: MTLCullModeBack];
     

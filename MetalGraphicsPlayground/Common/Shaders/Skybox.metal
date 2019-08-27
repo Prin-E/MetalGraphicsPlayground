@@ -28,8 +28,11 @@ vertex SkyboxFragment skybox_vert(constant SkyboxVertex *in [[buffer(0)]],
                                   uint vid [[vertex_id]]) {
     SkyboxFragment out;
     float3 pos = in[vid].pos;
+    float c = cameraProps.projection[2][2];
+    float d = cameraProps.projection[3][2];
+    float far = d / (1 - c);
     out.pos = pos;
-    out.clipPos = cameraProps.projection * cameraProps.rotation * float4(pos * 50.0, 1.0);
+    out.clipPos = cameraProps.projection * cameraProps.rotation * float4(pos * far * 0.5, 1.0);
     return out;
 }
 
