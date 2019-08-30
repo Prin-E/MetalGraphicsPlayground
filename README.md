@@ -29,7 +29,8 @@ You can check framework sources codes in **Common** directory!
   * Sphere
 
 **Render Pass**
-<img src="./Screenshots/RenderPass.jpg" alt="Render Pass">
+
+<img src="./Screenshots/RenderPass.jpg" alt="Render Pass" width="390" height="562">
 
 **Showcase Videos** (Click to watch)
 
