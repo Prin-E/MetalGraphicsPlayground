@@ -29,7 +29,7 @@ You can check framework sources codes in **Common** directory!
   * Sphere
 
 **Render Pass**
-<img src="./Screenshots/RenderPass.png" alt="Render Pass">
+<img src="./Screenshots/RenderPass.jpg" alt="Render Pass">
 
 **Showcase Videos** (Click to watch)
 
