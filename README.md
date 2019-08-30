@@ -3,6 +3,40 @@
 This workspace contains subprojects for testing Metal features.
 Requires Xcode 10 or later.
 
+## Rendering Engine (work in progress)
+
+**MetalDeferred** and **MetalPostProcessing** use deferred rendering based PBR frameworks.
+You can check framework sources codes in **Common** directory!
+
+
+**Features**
+* Deferred Rendering
+  * Light pre-pass based
+  * G-buffer pass : Albedo, Normal, Tangent, Shading, Depth
+  * Light pass : Light + Shadow Accumulation
+  * Shade pass : Convolution
+* Image based Lighting
+  * HDRI Image (Equirectangular map -> Cubemap)
+  * Split-sum approximation model
+* Physically based Rendering
+  * Metalic, Roughness, Anisotropic
+* Light
+  * Directional Light
+  * Shadow (Bilinear, PCF)
+* Post-processing
+  * SSAO
+* Frustum Culling
+  * Sphere
+
+**Render Pass**
+<img src="./Screenshots/RenderPass.png" alt="Render Pass">
+
+**Showcase Videos** (Click to watch)
+
+[![Image based Lighting](https://img.youtube.com/vi/Z3z76WkNG6U/0.jpg)](https://www.youtube.com/watch?v=Z3z76WkNG6U)
+[![Physically based Rendering](https://img.youtube.com/vi/aeZVjN5krqk/0.jpg)](https://www.youtube.com/watch?v=aeZVjN5krqk)
+[![Light and Shadows](https://img.youtube.com/vi/aQeWSRoBLfU/0.jpg)](https://www.youtube.com/watch?v=aQeWSRoBLfU)
+
 ## MetalTextureLOD
 
 <img src="./Screenshots/MetalTextureLOD.png" alt="MetalTextureLOD" width="592" height="494">
@@ -67,7 +101,7 @@ Requires Xcode 10 or later.
 <img src="./Screenshots/MetalPostProcessing.png" alt="MetalPostProcessing.png" width="592" height="494">
 
 * Under construction!
-* Shadow-mapping (PCF))
+* Shadow-mapping (PCF)
 * SSAO
 * Frustum-Culling (Bounding Sphere)
 * Gizmos
