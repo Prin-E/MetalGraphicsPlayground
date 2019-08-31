@@ -344,7 +344,6 @@ const size_t kShadowResolution = 512;
     prepassTestConstants.hasMetalicMap = _testObjects[0].submeshes[0].textures[tex_metalic] != NSNull.null;
     prepassTestConstants.hasOcclusionMap = _testObjects[0].submeshes[0].textures[tex_occlusion] != NSNull.null;
     prepassTestConstants.hasAnisotropicMap = _testObjects[0].submeshes[0].textures[tex_anisotropic] != NSNull.null;
-    prepassTestConstants.flipVertically = NO;
     _renderPipelinePrepassTest = [_gBuffer renderPipelineStateWithConstants: prepassTestConstants
                                                                       error: nil];
     
@@ -682,7 +681,10 @@ const size_t kShadowResolution = 512;
 
 - (void)renderGBuffer:(id<MTLRenderCommandEncoder>)encoder {
     encoder.label = @"G-buffer";
-    [encoder setRenderPipelineState: _renderPipelinePrepass];
+    if(_showsTestObjects)
+        [encoder setRenderPipelineState: _renderPipelinePrepassTest];
+    else
+        [encoder setRenderPipelineState: _renderPipelinePrepass];
     [encoder setDepthStencilState: _depthStencil];
     [encoder setCullMode: MTLCullModeBack];
     

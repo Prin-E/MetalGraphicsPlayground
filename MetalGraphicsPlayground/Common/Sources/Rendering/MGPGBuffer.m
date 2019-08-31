@@ -78,7 +78,7 @@
     _albedo.label = @"Albedo G-buffer";
     
     // normal
-    desc.pixelFormat = MTLPixelFormatRGBA16Float;
+    desc.pixelFormat = MTLPixelFormatRGB10A2Unorm;
     _normal = [_device newTextureWithDescriptor: desc];
     _normal.label = @"Normal G-buffer";
     
@@ -98,7 +98,7 @@
     _shading.label = @"Shading G-buffer";
     
     // tangent
-    desc.pixelFormat = MTLPixelFormatRGBA16Float;
+    desc.pixelFormat = MTLPixelFormatRGB10A2Unorm;
     _tangent = [_device newTextureWithDescriptor: desc];
     _tangent.label = @"Tangent G-buffer";
     
@@ -196,7 +196,7 @@
         
         // depth attachments
         _renderPassDescriptor.depthAttachment.loadAction = MTLLoadActionClear;
-        _renderPassDescriptor.depthAttachment.storeAction = MTLStoreActionStore;
+        _renderPassDescriptor.depthAttachment.storeAction = MTLStoreActionDontCare;
     }
     
     // assign or replace textures
