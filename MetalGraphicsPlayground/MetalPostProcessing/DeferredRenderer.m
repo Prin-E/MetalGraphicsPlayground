@@ -834,6 +834,9 @@ const float kCameraSpeed = 1;
     [encoder setFragmentBuffer: _lightGlobalBuffer
                         offset: _currentBufferIndex * sizeof(light_global_t)
                        atIndex: 2];
+    [encoder setFragmentBuffer: _cameraPropsBuffer
+                        offset: _currentBufferIndex * sizeof(camera_props_t)
+                       atIndex: 3];
     [encoder setFragmentTexture: _gBuffer.normal
                         atIndex: attachment_normal];
     [encoder setFragmentTexture: _gBuffer.pos

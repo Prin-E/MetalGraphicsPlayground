@@ -15,8 +15,8 @@ using namespace metal;
 vertex ScreenFragment screen_vert(constant ScreenVertex *in [[buffer(0)]],
                                   uint vid [[vertex_id]]) {
     ScreenFragment out;
-    out.clipPos = float4(in[vid].pos, 1.0);
-    out.uv = (out.clipPos.xy + 1.0) * 0.5;
+    out.clip_pos = float4(in[vid].pos, 1.0);
+    out.uv = (out.clip_pos.xy + 1.0) * 0.5;
     out.uv.y = 1.0 - out.uv.y;
     return out;
 }

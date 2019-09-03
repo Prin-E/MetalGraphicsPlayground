@@ -152,8 +152,8 @@ fragment GBufferOutput gbuffer_prepass_frag(GBufferFragment in [[stage_in]],
 vertex ScreenFragment gbuffer_light_vert(constant ScreenVertex *in [[buffer(0)]],
                                     uint vid [[vertex_id]]) {
     ScreenFragment out;
-    out.clipPos = float4(in[vid].pos, 1.0);
-    out.uv = (out.clipPos.xy + 1.0) * 0.5;
+    out.clip_pos = float4(in[vid].pos, 1.0);
+    out.uv = (out.clip_pos.xy + 1.0) * 0.5;
     out.uv.y = 1.0 - out.uv.y;
     return out;
 }
@@ -162,6 +162,7 @@ vertex ScreenFragment gbuffer_light_vert(constant ScreenVertex *in [[buffer(0)]]
 fragment half4 gbuffer_light_frag(ScreenFragment in [[stage_in]],
                                   constant light_t *lights [[buffer(1)]],
                                   constant light_global_t &light_global [[buffer(2)]],
+                                  constant camera_props_t &camera_props [[buffer(3)]],
                                   texture2d<half> normal [[texture(attachment_normal)]],
                                   texture2d<float> pos [[texture(attachment_pos)]],
                                   texture2d<half> shading [[texture(attachment_shading)]],
@@ -198,10 +199,11 @@ fragment half4 gbuffer_light_frag(ScreenFragment in [[stage_in]],
                                               lights[i].light_view[1].z,
                                               lights[i].light_view[2].z);
             // world-space pos
-            float3 light_pos = -lights[i].light_view[3].xyz;
+            // we don't need it for directional light right now,
+            //float3 light_pos = lights[i].position;
             float3 light_color = lights[i].color;
             float light_intensity = lights[i].intensity;
-            float3 v = normalize(light_pos - world_pos.xyz);
+            float3 v = normalize(-(camera_props.view * world_pos).xyz);
             float3 h = normalize(light_dir_invert + v);
             float h_v = max(0.001, saturate(dot(h, v)));
             float n_h = dot(n, h);
@@ -236,8 +238,8 @@ fragment half4 gbuffer_light_frag(ScreenFragment in [[stage_in]],
 vertex ScreenFragment gbuffer_shade_vert(constant ScreenVertex *in [[buffer(0)]],
                                     uint vid [[vertex_id]]) {
     ScreenFragment out;
-    out.clipPos = float4(in[vid].pos, 1.0);
-    out.uv = (out.clipPos.xy + 1.0) * 0.5;
+    out.clip_pos = float4(in[vid].pos, 1.0);
+    out.uv = (out.clip_pos.xy + 1.0) * 0.5;
     out.uv.y = 1.0 - out.uv.y;
     return out;
 }

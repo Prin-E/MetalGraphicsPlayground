@@ -34,8 +34,9 @@ typedef struct __attribute__((__aligned__(256))) {
 
 typedef struct __attribute__((__aligned__(256))) {
     matrix_float4x4 light_view;
-    vector_float3 color;
+    vector_float3 position;
     float intensity;
+    vector_float3 color;
     float shadow_bias;
     bool cast_shadow;
 } light_t;

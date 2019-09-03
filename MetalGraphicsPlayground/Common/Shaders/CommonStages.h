@@ -17,14 +17,8 @@ typedef struct {
 } ScreenVertex;
 
 typedef struct {
-    float4 clipPos      [[position]];
+    float4 clip_pos      [[position]];
     float2 uv;
 } ScreenFragment;
-
-vertex ScreenFragment screen_vert(constant ScreenVertex *in [[buffer(0)]],
-                                  uint vid [[vertex_id]]);
-
-fragment half4 screen_frag(ScreenFragment in [[stage_in]],
-                           texture2d<half> tex [[texture(0)]]);
 
 #endif /* ShaderCommon_h */

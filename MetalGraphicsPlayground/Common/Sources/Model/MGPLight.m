@@ -74,6 +74,7 @@ static NSUInteger _MGPLightCounter = 0;
     up = simd_cross(forward, right);
     
     light.light_view = matrix_lookat(_position, _position + _direction, up);
+    light.position = _position;
     light.intensity = _intensity;
     light.color = _color;
     light.cast_shadow = _castShadows;
