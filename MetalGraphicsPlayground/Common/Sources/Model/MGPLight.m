@@ -10,8 +10,6 @@
 #import "MGPFrustum.h"
 #import "../Utility/MetalMath.h"
 
-#define DEG_TO_RAD(x) ((x)*0.0174532925)
-
 static NSUInteger _MGPLightCounter = 0;
 
 @implementation MGPLight {

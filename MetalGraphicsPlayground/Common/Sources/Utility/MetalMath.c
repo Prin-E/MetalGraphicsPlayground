@@ -77,6 +77,18 @@ matrix_float4x4 matrix_from_rotation(float radians, float x, float y, float z)
     return m;
 }
 
+matrix_float4x4 matrix_from_euler(vector_float3 rotation) {
+    simd_float4 rad = DEG_TO_RAD(simd_make_float4(rotation, 0.0));
+    simd_float4 s = _simd_sin_f4(rad);
+    simd_float4 c = _simd_cos_f4(rad);
+    matrix_float4x4 matrix = matrix_identity_float4x4;
+    matrix.columns[0] = simd_make_float4(c.y*c.z, c.y*s.z, -s.y, 0.0);
+    matrix.columns[1] = simd_make_float4(s.x*s.y*c.z-c.x*s.z, s.x*s.y*s.z+c.x*c.z, s.x*c.y, 0.0);
+    matrix.columns[2] = simd_make_float4(c.x*s.y*c.z+s.x*s.z, c.x*s.y*s.z-s.x*c.z, c.x*c.y, 0.0);
+    matrix.columns[3] = simd_make_float4(0, 0, 0, 1);
+    return matrix;
+}
+
 matrix_float4x4 matrix_lookat(vector_float3 eye,
                             vector_float3 center,
                             vector_float3 up)
@@ -112,3 +124,29 @@ matrix_float4x4 matrix_lookat(vector_float3 eye,
     
     return matrix_from_columns(P, Q, R, S);
 } // lookAt
+
+void matrix_decompose_trs(simd_float4x4 matrix, simd_float3 *pos, simd_float3 *rot, simd_float3 *scale) {
+    // pos
+    if(pos) {
+        *pos = matrix.columns[3].xyz;
+    }
+    
+    // scale
+    if(scale) {
+        *scale = simd_make_float3(simd_length(matrix.columns[0].xyz),
+                                  simd_length(matrix.columns[1].xyz),
+                                  simd_length(matrix.columns[2].xyz));
+    }
+    
+    // rotation
+    if(rot) {
+        float m00 = matrix.columns[0].x;
+        float m01 = matrix.columns[0].y;
+        float m02 = matrix.columns[0].z;
+        float m12 = matrix.columns[1].z;
+        float m22 = matrix.columns[2].z;
+        rot->x = atan2f(m12, m22);
+        rot->y = atan2f(-m02, sqrtf(m12*m12 + m22*m22));
+        rot->z = atan2f(m01, m00);
+    }
+}

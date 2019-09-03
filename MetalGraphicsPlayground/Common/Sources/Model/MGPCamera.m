@@ -92,10 +92,9 @@
 - (void)setRotation:(simd_float3)rotation {
     @synchronized (self) {
         _rotation = rotation;
-        _worldToCameraRotationMatrix = simd_mul(matrix_from_rotation(-_rotation.x, 1, 0, 0),
-                                                simd_mul(matrix_from_rotation(-_rotation.y, 0, 1, 0),
-                                                         matrix_from_rotation(-_rotation.z, 0, 0, 1)));
-        _cameraToWorldRotationMatrix = simd_transpose(_worldToCameraRotationMatrix);
+        _cameraToWorldRotationMatrix = matrix_from_euler(RAD_TO_DEG(_rotation));
+        _worldToCameraRotationMatrix = simd_transpose(_cameraToWorldRotationMatrix);
+        
         for(int i = 0; i < 3; i++) {
             _worldToCameraMatrix.columns[i].xyz = _worldToCameraRotationMatrix.columns[i].xyz;
             _cameraToWorldMatrix.columns[i].xyz = _cameraToWorldRotationMatrix.columns[i].xyz;

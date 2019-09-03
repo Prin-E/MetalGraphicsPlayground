@@ -13,18 +13,22 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface MGPSceneNode : NSObject
 
-// Local<->Parent Matrix
+// On/Off
+@property (nonatomic, getter=isEnabled) BOOL enabled;       // affects recursively
+
+// Matrix
 @property (nonatomic) matrix_float4x4 localToParentMatrix;
 @property (nonatomic) matrix_float4x4 parentToLocalMatrix;
 @property (nonatomic, readonly) matrix_float4x4 localToWorldMatrix;
 @property (nonatomic, readonly) matrix_float4x4 worldToLocalMatrix;
 
-// Transform
+// Transform (Local)
 @property (nonatomic) simd_float3 position;
 @property (nonatomic) simd_float3 rotation;
 @property (nonatomic) simd_float3 scale;
 
-@property (nonatomic) NSArray<MGPSceneNode*> *children;
+// Relations
+@property (nonatomic, readonly) NSArray<MGPSceneNode*> *children;
 @property (nonatomic) MGPSceneNode *parent;
 
 - (void)addChild: (MGPSceneNode *)node;
