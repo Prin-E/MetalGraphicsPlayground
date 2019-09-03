@@ -21,7 +21,7 @@ matrix_float4x4 matrix_from_perspective_fov_aspectLH(const float fovY, const flo
 matrix_float4x4 matrix_from_translation(float x, float y, float z);
 matrix_float4x4 matrix_ortho(float left, float right, float bottom, float top, float near, float far);
 matrix_float4x4 matrix_from_rotation(float radians, float x, float y, float z);
-matrix_float4x4 matrix_from_euler(vector_float3 rotation);
+matrix_float4x4 matrix_from_euler(vector_float3 euler);
 matrix_float4x4 matrix_lookat(vector_float3 eye,
                               vector_float3 center,
                               vector_float3 up);

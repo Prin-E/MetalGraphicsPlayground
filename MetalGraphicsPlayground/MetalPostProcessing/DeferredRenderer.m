@@ -515,7 +515,7 @@ const float kCameraSpeed = 1;
     }
     light_globals[_currentBufferIndex].num_light = _numLights;
     light_globals[_currentBufferIndex].ambient_color = vector3(0.1f, 0.1f, 0.1f);
-    light_globals[_currentBufferIndex].light_projection = matrix_from_perspective_fov_aspectLH(DEG_TO_RAD(60.0f), _gBuffer.size.width / _gBuffer.size.height, 1.0f, 30.0f);
+    light_globals[_currentBufferIndex].light_projection = matrix_from_perspective_fov_aspectLH(DEG_TO_RAD(60.0f), _gBuffer.size.width / _gBuffer.size.height, 1.0f, 80.0f);
     
     // Synchronize buffers
     memcpy(_cameraPropsBuffer.contents + _currentBufferIndex * sizeof(camera_props_t),
