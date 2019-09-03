@@ -53,12 +53,14 @@ NSString * const MGPPostProcessingLayerErrorDomain = @"MGPPostProcessingLayerErr
     id<MTLComputePipelineState> _ssaoPipeline;
     id<MTLBuffer> _ssaoRandomSamplesBuffer;
     id<MTLBuffer> _ssaoPropsBuffer;
+    CGSize _destinationResolution;
 }
 
 - (instancetype)initWithDevice:(id<MTLDevice>)device library:(id<MTLLibrary>)library {
     self = [super initWithDevice: device library: library];
     if(self) {
         _numSamples = 32;
+        _downsample = 1;
         _intensity = 0.5f;
         _radius = 0.1f;
         _bias = 0.05f;
@@ -75,6 +77,9 @@ NSString * const MGPPostProcessingLayerErrorDomain = @"MGPPostProcessingLayerErr
 }
 
 - (void)_makeTexturesWithSize: (CGSize)size {
+    size.width = MAX(16, size.width / powf(2, _downsample));
+    size.height = MAX(16, size.height / powf(2, _downsample));
+    
     MTLTextureDescriptor *desc = [MTLTextureDescriptor texture2DDescriptorWithPixelFormat: MTLPixelFormatR16Float
                                                                                     width: size.width height:size.height
                                                                                 mipmapped: NO];
@@ -109,9 +114,16 @@ NSString * const MGPPostProcessingLayerErrorDomain = @"MGPPostProcessingLayerErr
     return MGPPostProcessingRenderingOrderBeforeLightPass;
 }
 
+- (void)setDownsample:(uint32_t)downsample {
+    _downsample = downsample;
+    if(_ssaoTexture != nil)
+        [self _makeTexturesWithSize: _destinationResolution];
+}
+
 - (void)render: (id<MTLCommandBuffer>)buffer {
     ssao_props_t props = {
         .num_samples = _numSamples,
+        .downsample = _downsample,
         .intensity = _intensity,
         .radius = _radius,
         .bias = _bias
@@ -147,6 +159,7 @@ NSString * const MGPPostProcessingLayerErrorDomain = @"MGPPostProcessingLayerErr
 }
 
 - (void)resize: (CGSize)newSize {
+    _destinationResolution = newSize;
     [self _makeTexturesWithSize: newSize];
 }
 

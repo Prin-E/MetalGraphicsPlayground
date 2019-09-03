@@ -52,6 +52,7 @@ typedef struct __attribute__((__aligned__(256))) {
 
 typedef struct __attribute__((__aligned__(256))) {
     uint32_t num_samples;
+    uint32_t downsample;
     float intensity;
     float radius;
     float bias;

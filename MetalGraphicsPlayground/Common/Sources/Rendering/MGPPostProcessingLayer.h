@@ -42,6 +42,7 @@ typedef NS_ENUM(NSUInteger, MGPPostProcessingRenderingOrder) {
 @property (nonatomic, readonly) id<MTLTexture> ssaoTexture;
 
 @property (nonatomic) uint32_t numSamples;
+@property (nonatomic) uint32_t downsample;
 @property (nonatomic) float intensity;    // 0.0~1.0
 @property (nonatomic) float radius;       // world-space
 @property (nonatomic) float bias;
