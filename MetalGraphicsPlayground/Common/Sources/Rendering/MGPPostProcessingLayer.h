@@ -18,6 +18,7 @@ typedef NS_ENUM(NSUInteger, MGPPostProcessingRenderingOrder) {
     MGPPostProcessingRenderingOrderAfterShadePass = 3000
 };
 
+#pragma mark - Base protocol and class
 @class MGPGBuffer;
 @class MGPPostProcessing;
 @protocol MGPPostProcessingLayer <NSObject>
@@ -26,30 +27,39 @@ typedef NS_ENUM(NSUInteger, MGPPostProcessingRenderingOrder) {
 
 - (instancetype)initWithDevice: (id<MTLDevice>)device
                        library: (id<MTLLibrary>)library;
-- (NSUInteger)renderingOrder;
+- (NSUInteger)renderingOrder;                   // ascending
 - (void)render:(id<MTLCommandBuffer>)buffer;
 - (void)resize:(CGSize)newSize;
 
 @end
 
 @interface MGPPostProcessingLayer : NSObject <MGPPostProcessingLayer>
-
 @end
 
-// Ambient Occlusion
+#pragma mark - Ambient Occlusion
 @interface MGPPostProcessingLayerSSAO : MGPPostProcessingLayer
 
 @property (nonatomic, readonly) id<MTLTexture> ssaoTexture;
 
 @property (nonatomic) uint32_t numSamples;
-@property (nonatomic) uint32_t downsample;
-@property (nonatomic) float intensity;    // 0.0~1.0
-@property (nonatomic) float radius;       // world-space
-@property (nonatomic) float bias;
+@property (nonatomic) uint32_t downsample;  // 0 : full size, 1~n : 2^n downscale
+@property (nonatomic) float intensity;      // 0.0~1.0
+@property (nonatomic) float radius;         // world-space
+@property (nonatomic) float bias;           // world-space
 
 @end
 
-// Temporal AA
+#pragma mark - Screen Space Reflection
+@interface MGPPostProcessingLayerScreenSpaceReflection : MGPPostProcessingLayer
+
+@property (nonatomic) uint32_t iteration;
+@property (nonatomic) float step;
+@property (nonatomic) float opacity;
+
+@end
+
+#pragma mark - Temporal AA
+// TODO:
 @interface MGPPostProcessingLayerTemporalAA : MGPPostProcessingLayer
 
 @property (nonatomic, readonly) id<MTLTexture> historyTexture;

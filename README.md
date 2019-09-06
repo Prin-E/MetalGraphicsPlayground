@@ -24,7 +24,8 @@ You can check framework sources codes in **Common** directory!
   * Directional Light
   * Shadow (Bilinear, PCF)
 * Post-processing
-  * SSAO
+  * Screen-Space Ambient Occlusion
+  * Screen-Space Reflection
 * Frustum Culling
   * Sphere
 
@@ -103,11 +104,11 @@ You can check framework sources codes in **Common** directory!
 
 * Under construction!
 * Shadow-mapping (PCF)
-* SSAO
+* Screen-Space Ambient Occlusion
+* Screen-Space Reflection
 * Frustum-Culling (Bounding Sphere)
 * Gizmos
 * TODO
   * Color grading (Tone mapping)
   * Depth of Field
-  * Screen-space Reflection
   * Axis-Aligned Bounding Box

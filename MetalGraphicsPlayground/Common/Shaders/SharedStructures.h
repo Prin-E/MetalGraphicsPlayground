@@ -16,6 +16,9 @@ typedef struct __attribute__((__aligned__(256))) {
     matrix_float4x4 projection;
     matrix_float4x4 viewProjection;
     matrix_float4x4 rotation;
+    matrix_float4x4 viewInverse;
+    matrix_float4x4 projectionInverse;
+    matrix_float4x4 viewProjectionInverse;
     vector_float3 position;
 } camera_props_t;
 
@@ -58,6 +61,12 @@ typedef struct __attribute__((__aligned__(256))) {
     float radius;
     float bias;
 } ssao_props_t;
+
+typedef struct __attribute__((__aligned__(256))) {
+    uint32_t iteration;
+    float step;
+    float opacity;
+} screen_space_reflection_props_t;
 
 typedef struct __attribute__((__aligned__(256))) {
     vector_float4 color;

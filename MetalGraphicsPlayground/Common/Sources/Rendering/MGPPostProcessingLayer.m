@@ -165,6 +165,125 @@ NSString * const MGPPostProcessingLayerErrorDomain = @"MGPPostProcessingLayerErr
 
 @end
 
+@implementation MGPPostProcessingLayerScreenSpaceReflection {
+    id<MTLComputePipelineState> _ssrPipeline;
+    id<MTLBuffer> _ssrPropsBuffer;
+    id<MTLTexture> _ssrOutputTexture, _ssrPrevOutputTexture;
+    NSUInteger _ssrPrevOutputTextureLifetime;
+}
+
+- (instancetype)initWithDevice:(id<MTLDevice>)device library:(id<MTLLibrary>)library {
+    self = [super initWithDevice:device
+                         library:library];
+    if(self) {
+        _iteration = 32;
+        _step = 1.0;
+        _opacity = 0.5;
+        [self _makeAssets];
+    }
+    return self;
+}
+
+- (void)_makeAssets {
+    _ssrPipeline = [_device newComputePipelineStateWithFunction: [_library newFunctionWithName: @"ssr"]
+                                                          error: nil];
+    _ssrPropsBuffer = [_device newBufferWithLength: sizeof(screen_space_reflection_props_t) * 3
+                                           options: MTLResourceStorageModeManaged];
+}
+
+- (void)_makeTexturesWithSize:(CGSize)newSize {
+    NSUInteger width = newSize.width + 0.001;
+    NSUInteger height = newSize.height + 0.001;
+    
+    if(_ssrOutputTexture == nil ||
+       _ssrOutputTexture.width != width ||
+       _ssrOutputTexture.height != height) {
+        _ssrPrevOutputTexture = _ssrOutputTexture;
+        _ssrPrevOutputTextureLifetime = 3;  // becuase our implementation uses triple buffering
+        
+        MTLTextureDescriptor *textureDesc = [MTLTextureDescriptor texture2DDescriptorWithPixelFormat:self.postProcessing.gBuffer.output.pixelFormat
+                                                                                               width:newSize.width
+                                                                                              height:newSize.height
+                                                                                           mipmapped:NO];
+        textureDesc.storageMode = MTLStorageModePrivate;
+        textureDesc.usage = MTLTextureUsageShaderWrite;
+        _ssrOutputTexture = [_device newTextureWithDescriptor:textureDesc];
+        _ssrOutputTexture.label = @"SSR Color Temporary";
+    }
+}
+
+- (NSUInteger)renderingOrder {
+    return MGPPostProcessingRenderingOrderAfterShadePass;
+}
+
+- (void)render:(id<MTLCommandBuffer>)buffer {
+    screen_space_reflection_props_t props = {
+        .iteration = _iteration,
+        .step = _step,
+        .opacity = _opacity
+    };
+    
+    memcpy(_ssrPropsBuffer.contents + sizeof(screen_space_reflection_props_t) * _postProcessing.currentBufferIndex,
+           &props, sizeof(screen_space_reflection_props_t));
+    [_ssrPropsBuffer didModifyRange: NSMakeRange(sizeof(screen_space_reflection_props_t) * _postProcessing.currentBufferIndex, sizeof(ssao_props_t))];
+    
+    // manage previous ssr texture lifetime
+    if(_ssrPrevOutputTextureLifetime > 0) {
+        _ssrPrevOutputTextureLifetime -= 1;
+        if(_ssrPrevOutputTextureLifetime == 0) {
+            _ssrPrevOutputTexture = nil;
+        }
+    }
+    
+    MGPGBuffer *gBuffer = _postProcessing.gBuffer;
+    id<MTLBuffer> cameraBuffer = _postProcessing.cameraBuffer;
+    NSUInteger currentBufferIndex = _postProcessing.currentBufferIndex;
+    NSUInteger width = gBuffer.size.width, height = gBuffer.size.height;
+    
+    [buffer pushDebugGroup: @"Screen-Space Reflection"];
+    
+    // step 1 : screen space reflection
+    id<MTLComputeCommandEncoder> encoder = [buffer computeCommandEncoder];
+    [encoder setLabel: @"SSR #1 : Compute"];
+    [encoder setComputePipelineState: _ssrPipeline];
+    [encoder setTexture: gBuffer.normal atIndex: 0];
+    [encoder setTexture: gBuffer.depth atIndex: 1];
+    [encoder setTexture: gBuffer.shading atIndex: 2];
+    [encoder setTexture: gBuffer.output atIndex: 3];
+    [encoder setTexture: _ssrOutputTexture atIndex: 4];
+    [encoder setBuffer: _ssrPropsBuffer
+                offset: sizeof(screen_space_reflection_props_t) * _postProcessing.currentBufferIndex
+               atIndex: 0];
+    [encoder setBuffer: cameraBuffer
+                offset: currentBufferIndex * sizeof(camera_props_t)
+               atIndex: 1];
+    [encoder dispatchThreadgroups: MTLSizeMake((width+15)/16, (height+15)/16, 1)
+            threadsPerThreadgroup: MTLSizeMake(16, 16, 1)];
+    [encoder endEncoding];
+    
+    // step 2 : blit to output texture
+    id<MTLBlitCommandEncoder> blit = [buffer blitCommandEncoder];
+    [blit setLabel: @"SSR #2 : Blit to output texture"];
+    [blit copyFromTexture:_ssrOutputTexture
+              sourceSlice:0
+              sourceLevel:0
+             sourceOrigin:MTLOriginMake(0, 0, 0)
+               sourceSize:MTLSizeMake(_ssrOutputTexture.width, _ssrOutputTexture.height, 1)
+                toTexture:gBuffer.output
+         destinationSlice:0
+         destinationLevel:0
+        destinationOrigin:MTLOriginMake(0, 0, 0)];
+    [blit endEncoding];
+    
+    [buffer popDebugGroup];
+}
+
+- (void)resize: (CGSize)newSize {
+    [self _makeTexturesWithSize:newSize];
+}
+
+@end
+
 @implementation MGPPostProcessingLayerTemporalAA
 
 - (NSUInteger)renderingOrder {

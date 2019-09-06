@@ -243,6 +243,7 @@ illum 2
 map_Kd sponza_floor_a_diff.dds
 map_Ka sponza_floor_a_diff.dds
 bump sponza_floor_a_ddn.dds
+map_metallic sponza_floor_a_spec.dds
 
 newmtl leaf
 Ns 7.843137

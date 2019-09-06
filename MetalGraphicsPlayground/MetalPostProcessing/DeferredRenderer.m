@@ -370,6 +370,12 @@ const float kCameraSpeed = 1;
     ssao.bias = 0.02f;
     ssao.numSamples = 32;
     [_postProcess addLayer: ssao];
+    MGPPostProcessingLayerScreenSpaceReflection *ssr = [[MGPPostProcessingLayerScreenSpaceReflection alloc] initWithDevice:self.device
+                                                                                                                   library:self.defaultLibrary];
+    ssr.step = 1.0;
+    ssr.iteration = 32;
+    ssr.opacity = 1.0;
+    [_postProcess addLayer: ssr];
     [_postProcess resize: _gBuffer.size];
     
     _gizmos = [[MGPGizmos alloc] initWithDevice:self.device

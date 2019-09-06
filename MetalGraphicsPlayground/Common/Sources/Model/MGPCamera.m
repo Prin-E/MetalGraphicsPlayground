@@ -26,6 +26,7 @@
         _cameraToWorldMatrix = matrix_identity_float4x4;
         _cameraToWorldRotationMatrix = matrix_identity_float4x4;
         _projectionMatrix = matrix_identity_float4x4;
+        _projectionInverseMatrix = matrix_identity_float4x4;
         
         _fStop = 1.4f;
         _shutterSpeed = 1.0f / 60.0f;
@@ -63,6 +64,7 @@
             _projectionMatrix.columns[i] = perspectiveMatrix.columns[i] * (1.0f - lerp) +
                                            orthographicMatrix.columns[i] * lerp;
         }
+        _projectionInverseMatrix = simd_inverse(_projectionMatrix);
         [_frustum setPlanesForCamera: self];
     }
 }
@@ -131,6 +133,9 @@
         props.view = _worldToCameraMatrix;
         props.projection = _projectionMatrix;
         props.viewProjection = simd_mul(_projectionMatrix, _worldToCameraMatrix);
+        props.viewInverse = simd_inverse(props.view);// _cameraToWorldMatrix;
+        props.projectionInverse = _projectionInverseMatrix;
+        props.viewProjectionInverse = simd_mul(_cameraToWorldMatrix, _projectionInverseMatrix);
         return props;
     }
 }

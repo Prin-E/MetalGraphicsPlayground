@@ -26,6 +26,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 // projection
 @property (readonly) matrix_float4x4 projectionMatrix;
+@property (readonly) matrix_float4x4 projectionInverseMatrix;
 @property MGPProjectionState projectionState;
 
 // pos/rot
