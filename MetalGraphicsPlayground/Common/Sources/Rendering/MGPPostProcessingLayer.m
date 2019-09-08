@@ -220,7 +220,9 @@ NSString * const MGPPostProcessingLayerErrorDomain = @"MGPPostProcessingLayerErr
     screen_space_reflection_props_t props = {
         .iteration = _iteration,
         .step = _step,
-        .opacity = _opacity
+        .opacity = _opacity,
+        .attenuation = _attenuation,
+        .vignette = _vignette
     };
     
     memcpy(_ssrPropsBuffer.contents + sizeof(screen_space_reflection_props_t) * _postProcessing.currentBufferIndex,

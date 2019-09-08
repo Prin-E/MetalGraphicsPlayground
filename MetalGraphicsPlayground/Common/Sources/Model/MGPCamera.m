@@ -133,7 +133,7 @@
         props.view = _worldToCameraMatrix;
         props.projection = _projectionMatrix;
         props.viewProjection = simd_mul(_projectionMatrix, _worldToCameraMatrix);
-        props.viewInverse = simd_inverse(props.view);// _cameraToWorldMatrix;
+        props.viewInverse = _cameraToWorldMatrix;
         props.projectionInverse = _projectionInverseMatrix;
         props.viewProjectionInverse = simd_mul(_cameraToWorldMatrix, _projectionInverseMatrix);
         return props;

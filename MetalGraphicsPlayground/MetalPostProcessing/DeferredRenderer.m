@@ -103,6 +103,7 @@ const float kCameraSpeed = 1;
     
     // Post-processing
     MGPPostProcessing *_postProcess;
+    MGPPostProcessingLayerScreenSpaceReflection *_ssr;
     
     // Shadow
     MGPShadowManager *_shadowManager;
@@ -377,6 +378,7 @@ const float kCameraSpeed = 1;
     ssr.opacity = 1.0;
     [_postProcess addLayer: ssr];
     [_postProcess resize: _gBuffer.size];
+    _ssr = ssr;
     
     _gizmos = [[MGPGizmos alloc] initWithDevice:self.device
                                         library:self.defaultLibrary
@@ -406,6 +408,8 @@ const float kCameraSpeed = 1;
     [self _updateCamera: deltaTime];
     [self _updateUniformBuffers: deltaTime];
     _postProcess.currentBufferIndex = _currentBufferIndex;
+    _ssr.vignette = _vignette;
+    _ssr.attenuation = _attenuation;
 }
 
 - (void)_updateCamera: (float)deltaTime {

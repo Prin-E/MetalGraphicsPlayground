@@ -29,5 +29,14 @@
     // Insert code here to tear down your application
 }
 
+- (void)setAttenuation:(float)attenuation {
+    _attenuation = attenuation;
+    renderer.attenuation = attenuation;
+}
+
+- (void)setVignette:(float)vignette {
+    _vignette = vignette;
+    renderer.vignette = vignette;
+}
 
 @end

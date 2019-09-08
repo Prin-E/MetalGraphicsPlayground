@@ -9,6 +9,9 @@
 #ifndef ColorSpace_h
 #define ColorSpace_h
 
+#include <metal_stdlib>
+using namespace metal;
+
 template<typename T>
 inline T linear_to_srgb(T linear) {
     T srgb_low = (linear * 12.92);

@@ -12,6 +12,7 @@
 @interface AppDelegate : NSObject <NSApplicationDelegate>
 
 @property (weak) IBOutlet MGPView *view;
+@property (nonatomic) float vignette, attenuation;
 
 @end
 

@@ -66,6 +66,8 @@ typedef struct __attribute__((__aligned__(256))) {
     uint32_t iteration;
     float step;
     float opacity;
+    float attenuation;
+    float vignette;
 } screen_space_reflection_props_t;
 
 typedef struct __attribute__((__aligned__(256))) {

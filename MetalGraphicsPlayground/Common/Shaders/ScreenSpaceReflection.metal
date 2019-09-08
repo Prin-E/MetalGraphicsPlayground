@@ -9,9 +9,23 @@
 #include <metal_stdlib>
 #include "SharedStructures.h"
 #include "CommonMath.h"
+#include "ColorSpace.h"
 #include "BRDF.h"
 
 using namespace metal;
+
+float attenuate(float2 uv, uint2 size, float attenuation) {
+    float offset = min(1.0 - max(uv.x, uv.y), min(uv.x, uv.y));
+    float result = offset / attenuation;
+    result = saturate(result);
+    return pow(result, 0.5);
+}
+
+float vignette(float2 uv, uint2 size, float vignette) {
+    float2 k = abs(uv - 0.5) * vignette;
+    k.x *= 1.0f / float(size.x);
+    return pow(saturate(1.0 - dot(k, k)), 5.0);
+}
 
 kernel void ssr(texture2d<float> normal [[texture(0)]],
                 texture2d<float> depth [[texture(1)]],
@@ -83,11 +97,17 @@ kernel void ssr(texture2d<float> normal [[texture(0)]],
             }
             
             if(current_ray_ndc.x < -1.0 || current_ray_ndc.x > 1.0 ||
-               current_ray_ndc.y < -1.0 || current_ray_ndc.y > 1.0)
-                break;
+               current_ray_ndc.y < -1.0 || current_ray_ndc.y > 1.0) {
+                output.write(float4(0,0,1,1), thread_pos);
+            }
             
             float4 surface_color = color.read(current_ray_coords);
             float3 reflection_color = surface_color.xyz * ssr_props.opacity * metalic * f_s;
+            
+            // vignette, attenuation
+            float2 coords_uv = current_ray_ndc.xy * 0.5 + 0.5;
+            reflection_color *= attenuate(coords_uv, size, ssr_props.attenuation) * vignette(coords_uv, size, ssr_props.vignette);
+            
             color_value.xyz += reflection_color;
             break;
         }

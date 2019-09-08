@@ -35,10 +35,10 @@ typedef struct MGPGBufferShadingFunctionConstants {
 
 // g-buffer
 @property (readonly) id<MTLTexture> albedo;     // RGB+A
-@property (readonly) id<MTLTexture> normal;     // view-space (XYZ+A(0.0:empty-space))
-@property (readonly) id<MTLTexture> pos;        // view-space (XYZ)
+@property (readonly) id<MTLTexture> normal;     // world-space (XYZ+A(0.0:empty-space))
+@property (readonly) id<MTLTexture> pos;        // world-space (XYZ)
 @property (readonly) id<MTLTexture> shading;    // R:roughness,G:metalic,BA:TODO
-@property (readonly) id<MTLTexture> tangent;    // view-space (XYZ+A(0.0:empty-space))
+@property (readonly) id<MTLTexture> tangent;    // world-space (XYZ+A(0.0:empty-space))
 
 // light-accumulation-output
 @property (readonly) id<MTLTexture> lighting;

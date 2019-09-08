@@ -11,7 +11,7 @@
             </connections>
         </customObject>
         <customObject id="-1" userLabel="First Responder" customClass="FirstResponder"/>
-        <customObject id="-3" userLabel="Application"/>
+        <customObject id="-3" userLabel="Application" customClass="NSObject"/>
         <customObject id="Voe-Tx-rLC" customClass="AppDelegate">
             <connections>
                 <outlet property="view" destination="IfQ-fh-BNP" id="8SQ-FW-rj4"/>
@@ -683,18 +683,63 @@
         <window title="MetalPostProcessing" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" releasedWhenClosed="NO" animationBehavior="default" id="QvC-M9-y7g">
             <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES" resizable="YES"/>
             <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
-            <rect key="contentRect" x="335" y="390" width="480" height="360"/>
+            <rect key="contentRect" x="335" y="390" width="480" height="480"/>
             <rect key="screenRect" x="0.0" y="0.0" width="1440" height="877"/>
             <view key="contentView" id="EiT-Mj-1SZ">
-                <rect key="frame" x="0.0" y="0.0" width="480" height="360"/>
+                <rect key="frame" x="0.0" y="0.0" width="480" height="480"/>
                 <autoresizingMask key="autoresizingMask"/>
                 <subviews>
                     <customView fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="IfQ-fh-BNP" customClass="MGPView">
-                        <rect key="frame" x="0.0" y="0.0" width="480" height="360"/>
+                        <rect key="frame" x="0.0" y="120" width="480" height="360"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                     </customView>
+                    <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="AOE-qW-krG">
+                        <rect key="frame" x="18" y="95" width="70" height="17"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxY="YES"/>
+                        <textFieldCell key="cell" lineBreakMode="clipping" title="Reflection" id="haB-Bg-v1b">
+                            <font key="font" metaFont="systemBold"/>
+                            <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                            <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                        </textFieldCell>
+                    </textField>
+                    <slider verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="CoB-pe-wi2">
+                        <rect key="frame" x="108" y="68" width="204" height="19"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                        <sliderCell key="cell" continuous="YES" state="on" alignment="left" maxValue="1" doubleValue="0.5" tickMarkPosition="above" sliderType="linear" id="sNK-13-JEr"/>
+                        <connections>
+                            <binding destination="Voe-Tx-rLC" name="value" keyPath="self.attenuation" id="K7S-2e-zQ1"/>
+                        </connections>
+                    </slider>
+                    <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="g06-mq-IsV">
+                        <rect key="frame" x="30" y="70" width="74" height="17"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxY="YES"/>
+                        <textFieldCell key="cell" lineBreakMode="clipping" title="Attenuation" id="6mV-Je-rGi">
+                            <font key="font" metaFont="system"/>
+                            <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                            <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                        </textFieldCell>
+                    </textField>
+                    <slider verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="OTX-Fw-zjD">
+                        <rect key="frame" x="108" y="43" width="204" height="19"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                        <sliderCell key="cell" continuous="YES" state="on" alignment="left" maxValue="1" doubleValue="0.5" tickMarkPosition="above" sliderType="linear" id="NwE-99-jUp"/>
+                        <connections>
+                            <binding destination="Voe-Tx-rLC" name="value" keyPath="self.vignette" id="ljC-IN-gCX"/>
+                        </connections>
+                    </slider>
+                    <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Dbe-J3-dxy">
+                        <rect key="frame" x="30" y="45" width="56" height="17"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxY="YES"/>
+                        <textFieldCell key="cell" lineBreakMode="clipping" title="Vignette" id="X5U-cA-ntX">
+                            <font key="font" metaFont="system"/>
+                            <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                            <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                        </textFieldCell>
+                    </textField>
                 </subviews>
             </view>
+            <point key="canvasLocation" x="131" y="-54"/>
         </window>
+        <userDefaultsController representsSharedInstance="YES" id="1KU-XK-awp"/>
     </objects>
 </document>

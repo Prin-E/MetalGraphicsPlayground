@@ -55,6 +55,8 @@ typedef NS_ENUM(NSUInteger, MGPPostProcessingRenderingOrder) {
 @property (nonatomic) uint32_t iteration;
 @property (nonatomic) float step;
 @property (nonatomic) float opacity;
+@property (nonatomic) float attenuation;
+@property (nonatomic) float vignette;
 
 @end
 
