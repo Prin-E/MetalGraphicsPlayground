@@ -68,10 +68,28 @@ NSString * const MGPPostProcessingErrorDomain = @"MGPPostProcessingErrorDomain";
     return _layers[index];
 }
 
+- (id<MGPPostProcessingLayer>)layerByClass:(Class)layerClass {
+    for(id<MGPPostProcessingLayer> layer in _layers) {
+        if(layer.class == layerClass)
+            return layer;
+    }
+    return nil;
+}
+
 - (void)removeLayerAtIndex:(NSUInteger)index {
     id<MGPPostProcessingLayer> layer = [_layers objectAtIndex: index];
     layer.postProcessing = nil;
     [_layers removeObjectAtIndex:index];
+}
+
+- (void)removeLayerByClass:(Class)layerClass {
+    for(NSUInteger i = 0; i < _layers.count; i++) {
+        id<MGPPostProcessingLayer> layer = _layers[i];
+        if(layer.class == layerClass) {
+            [_layers removeObjectAtIndex:i];
+            break;
+        }
+    }
 }
 
 - (id<MGPPostProcessingLayer>)objectAtIndexedSubscript: (NSUInteger)index {

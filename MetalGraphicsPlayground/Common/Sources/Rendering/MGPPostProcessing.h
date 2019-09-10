@@ -32,7 +32,9 @@ NS_ASSUME_NONNULL_BEGIN
 // add/remove
 - (void)addLayer:(id<MGPPostProcessingLayer>)layer;
 - (id<MGPPostProcessingLayer>)layerAtIndex:(NSUInteger)index;
+- (id<MGPPostProcessingLayer>)layerByClass:(Class)layerClass;
 - (void)removeLayerAtIndex:(NSUInteger)index;
+- (void)removeLayerByClass:(Class)layerClass;
 
 // indexed subscript
 - (id<MGPPostProcessingLayer>)objectAtIndexedSubscript: (NSUInteger)index;

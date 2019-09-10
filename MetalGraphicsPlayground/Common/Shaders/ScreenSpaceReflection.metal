@@ -98,7 +98,7 @@ kernel void ssr(texture2d<float> normal [[texture(0)]],
             
             if(current_ray_ndc.x < -1.0 || current_ray_ndc.x > 1.0 ||
                current_ray_ndc.y < -1.0 || current_ray_ndc.y > 1.0) {
-                output.write(float4(0,0,1,1), thread_pos);
+                break;
             }
             
             float4 surface_color = color.read(current_ray_coords);
