@@ -98,9 +98,9 @@ typedef enum {
 typedef enum {
     attachment_albedo,
     attachment_normal,
-    attachment_pos,
     attachment_shading,
     attachment_tangent,
+    attachment_depth,
     attachment_light,
     attachment_irradiance,
     attachment_prefiltered_specular,

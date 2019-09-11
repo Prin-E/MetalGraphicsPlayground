@@ -25,5 +25,6 @@ inline float cube(float f0) {
 float2 hammersley(uint i, uint N);
 float2 sample_spherical(float3 dir);
 float3 view_pos_from_depth(constant matrix_float4x4 &invProjection, uint2 coords, uint2 size, float depth);
+float3 view_pos_from_depth(constant matrix_float4x4 &invProjection, float2 uv, float depth);
 
 #endif /* CommonMath_h */

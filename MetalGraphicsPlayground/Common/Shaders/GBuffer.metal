@@ -11,6 +11,7 @@
 #include "BRDF.h"
 #include "CommonVariables.h"
 #include "CommonStages.h"
+#include "CommonMath.h"
 #include "ColorSpace.h"
 #include "Shadow.h"
 
@@ -42,7 +43,6 @@ typedef struct {
 // g-buffer fragment input data
 typedef struct {
     float4 clipPos      [[position]];
-    float4 worldPos;
     float2 uv;
     float3 normal;
     float3 tangent;
@@ -54,7 +54,6 @@ typedef struct {
 typedef struct {
     half4 albedo    [[color(attachment_albedo)]];
     half4 normal    [[color(attachment_normal)]];
-    float4 pos      [[color(attachment_pos)]];
     half4 shading   [[color(attachment_shading)]];
     half4 tangent   [[color(attachment_tangent)]];
 } GBufferOutput;
@@ -67,8 +66,7 @@ vertex GBufferFragment gbuffer_prepass_vert(GBufferVertex in [[stage_in]],
     GBufferFragment out;
     float4 v = float4(in.pos, 1.0);
     float4x4 model = instanceProps[iid].model;
-    out.worldPos = model * v;
-    out.clipPos = cameraProps.viewProjection * out.worldPos;
+    out.clipPos = cameraProps.viewProjection * model * v;
     out.normal = (model * float4(in.normal, 0.0)).xyz;
     out.tangent = (model * float4(in.tangent, 0.0)).xyz;
     out.bitangent = cross(out.tangent, out.normal);
@@ -134,7 +132,6 @@ fragment GBufferOutput gbuffer_prepass_frag(GBufferFragment in [[stage_in]],
             out.tangent = half4(half3((normalize(in.tangent) + 1.0) * 0.5), 1.0);
         }
     }
-    out.pos = in.worldPos;
     out.shading = half4(material.roughness, material.metalic, 1, material.anisotropy * 0.5 + 0.5);
     if(has_roughness_map) {
         out.shading.x = roughnessMap.sample(linear, in.uv).r;
@@ -164,9 +161,9 @@ fragment half4 gbuffer_light_frag(ScreenFragment in [[stage_in]],
                                   constant light_global_t &light_global [[buffer(2)]],
                                   constant camera_props_t &camera_props [[buffer(3)]],
                                   texture2d<half> normal [[texture(attachment_normal)]],
-                                  texture2d<float> pos [[texture(attachment_pos)]],
                                   texture2d<half> shading [[texture(attachment_shading)]],
                                   texture2d<half> tangent [[texture(attachment_tangent)]],
+                                  texture2d<float> depth [[texture(attachment_depth)]],
                                   array<texture2d<float>,32> shadow_maps [[texture(11)]]) {
     float4 out_color = float4(0.0, 0.0, 0.0, 0.0);
     
@@ -187,7 +184,9 @@ fragment half4 gbuffer_light_frag(ScreenFragment in [[stage_in]],
     shading_params.anisotropy = shading_values.w * 2.0 - 1.0;
     
     // world-space pos
-    float4 world_pos = pos.sample(linear_clamp_to_edge, in.uv);
+    float depth_value = depth.sample(nearest_clamp_to_edge, in.uv).r;
+    float4 view_pos = float4(view_pos_from_depth(camera_props.projectionInverse, in.uv, depth_value), 1.0);
+    float4 world_pos = camera_props.viewInverse * view_pos;
     
     // calculate lights
     for(uint i = 0; i < 4; i++) {        
@@ -203,7 +202,7 @@ fragment half4 gbuffer_light_frag(ScreenFragment in [[stage_in]],
             //float3 light_pos = lights[i].position;
             float3 light_color = lights[i].color;
             float light_intensity = lights[i].intensity;
-            float3 v = normalize(-(camera_props.view * world_pos).xyz);
+            float3 v = normalize(-view_pos.xyz);
             float3 h = normalize(light_dir_invert + v);
             float h_v = max(0.001, saturate(dot(h, v)));
             float n_h = dot(n, h);
@@ -249,8 +248,8 @@ fragment half4 gbuffer_shade_frag(ScreenFragment in [[stage_in]],
                                   constant light_global_t &light_global [[buffer(2)]],
                                   texture2d<half> albedo [[texture(attachment_albedo)]],
                                   texture2d<half> normal [[texture(attachment_normal)]],
-                                  texture2d<float> pos [[texture(attachment_pos)]],
                                   texture2d<half> shading [[texture(attachment_shading)]],
+                                  texture2d<float> depth [[texture(attachment_depth)]],
                                   texture2d<half> light [[texture(attachment_light)]],
                                   texturecube<half> irradiance [[texture(attachment_irradiance), function_constant(uses_ibl_irradiance_map)]],
                                   texturecube<half> prefilteredSpecular [[texture(attachment_prefiltered_specular), function_constant(uses_ibl_specular_map)]],
@@ -262,7 +261,9 @@ fragment half4 gbuffer_shade_frag(ScreenFragment in [[stage_in]],
     if(n_c.w == 0.0)
         return half4(0, 0, 0, 0);
     float3 n = normalize((n_c.xyz - 0.5) * 2.0);
-    float3 v = normalize(cameraProps.position - pos.sample(linear, in.uv).xyz);
+    float3 view_pos = view_pos_from_depth(cameraProps.projectionInverse, in.uv, depth.sample(nearest_clamp_to_edge, in.uv).r);
+    float4 world_pos = cameraProps.viewProjectionInverse * float4(view_pos, 1.0);
+    float3 v = normalize(cameraProps.position - world_pos.xyz);
     float n_v = max(0.001, saturate(dot(n, v)));
     float3 albedo_color = float3(albedo.sample(linear, in.uv).xyz);
     half4 shading_props_color = shading.sample(linear, in.uv);
@@ -302,111 +303,3 @@ fragment half4 gbuffer_shade_frag(ScreenFragment in [[stage_in]],
     
     return half4(out_color);
 }
-
-/*
-// shading
-vertex ScreenFragment lighting_vert(constant ScreenVertex *in [[buffer(0)]],
-                                      uint vid [[vertex_id]]) {
-    LightingFragment out;
-    out.clipPos = float4(in[vid].pos, 1.0);
-    out.uv = (out.clipPos.xy + 1.0) * 0.5;
-    out.uv.y = 1.0 - out.uv.y;
-    return out;
-}
-
-fragment half4 lighting_frag(ScreenFragment in [[stage_in]],
-                             constant camera_props_t &cameraProps [[buffer(1)]],
-                             constant light_t *lightProps [[buffer(2)]],
-                             constant light_global_t &lightGlobal [[buffer(3)]],
-                             texture2d<half> albedo [[texture(attachment_albedo)]],
-                             texture2d<half> normal [[texture(attachment_normal)]],
-                             texture2d<float> pos [[texture(attachment_pos)]],
-                             texture2d<half> shading [[texture(attachment_shading)]],
-                             texture2d<half> tangent [[texture(attachment_tangent)]],
-                             texturecube<half> irradiance [[texture(attachment_irradiance), function_constant(uses_ibl_irradiance_map)]],
-                             texturecube<half> prefilteredSpecular [[texture(attachment_prefiltered_specular), function_constant(uses_ibl_specular_map)]],
-                             texture2d<half> brdfLookup [[texture(attachment_brdf_lookup), function_constant(uses_ibl_specular_map)]],
-                             texture2d<half> ssao [[texture(attachment_ssao), function_constant(uses_ssao_map)]]) {
-    float3 out_color = float3(0);
-    
-    // shared values
-    float4 n_c = float4(normal.sample(linear, in.uv));
-    if(n_c.w == 0.0)
-        return half4(0, 0, 0, 0);
-    float3 n = normalize((n_c.xyz - 0.5) * 2.0);
-    float4 t_c = float4(tangent.sample(linear, in.uv));
-    float3 t = normalize((t_c.xyz - 0.5) * 2.0);
-    float3 b = cross(t, n);
-    float3 v = normalize(cameraProps.position - pos.sample(linear, in.uv).xyz);
-    float3 albedo_c = float4(albedo.sample(linear, in.uv)).xyz;
-    half4 shading_values = shading.sample(linear, in.uv);
-    float n_v = max(0.001, saturate(dot(n, v)));
-    float t_v = max(0.001, saturate(dot(t, v)));
-    float b_v = max(0.001, saturate(dot(b, v)));
-    half ao = 1.0;
-    
-    if(uses_ssao_map) {
-        ao = 1.0 - ssao.sample(linear, in.uv).r;
-    }
-    
-    // make shading parameters
-    shading_t shading_params;
-    shading_params.albedo = albedo_c;
-    shading_params.roughness = shading_values.x;
-    shading_params.metalic = shading_values.y;
-    shading_params.anisotropy = shading_values.w * 2.0 - 1.0;
-    shading_params.n_v = n_v;
-    shading_params.t_v = t_v;
-    shading_params.b_v = b_v;
-    
-    // global ambient color
-    out_color += lightGlobal.ambient_color;
-    
-    // irradiance
-    if(uses_ibl_irradiance_map) {
-        float3 irradiance_color = float3(irradiance.sample(linear, n).xyz);
-        float3 k_s = fresnel(mix(0.04, shading_params.albedo, shading_params.metalic), n_v);
-        float3 k_d = (float3(1.0) - k_s) * (1.0 - shading_params.metalic);
-        out_color += ao * k_d * irradiance_color * albedo_c * shading_values.z;
-    }
-    
-    // prefiltered specular
-    if(uses_ibl_specular_map) {
-        float mip_index = shading_params.roughness * prefilteredSpecular.get_num_mip_levels();
-        float3 prefiltered_color = float3(prefilteredSpecular.sample(linear, n, level(mip_index)).xyz);
-        float3 environment_brdf = float3(brdfLookup.sample(linear_clamp_to_edge, float2(shading_params.roughness, n_v)).xyz);
-        out_color += ao * k_s * prefiltered_color * (albedo_c * environment_brdf.x + environment_brdf.y);
-    }
-    
-    // direct lights
-    const uint num_light = lightGlobal.num_light;
-    for(uint light_index = 0; light_index < num_light; light_index++) {
-        light_t light = lightProps[light_index];
-        float3 light_dir = normalize(light.direction);
-        float3 light_color = light.color;
-        float light_intensity = light.intensity;
-        
-        float3 h = normalize(light_dir + v);
-        float h_v = max(0.001, saturate(dot(h, v)));
-        float n_h = dot(n, h);
-        float t_h = dot(t, h);
-        float b_h = dot(b, h);
-        float n_l = max(0.001, saturate(dot(n, light_dir)));
-        float t_l = max(0.001, saturate(dot(t, light_dir)));
-        float b_l = max(0.001, saturate(dot(b, light_dir)));
-        
-        shading_params.light = light_color * light_intensity;
-        shading_params.n_l = n_l;
-        shading_params.n_h = n_h;
-        shading_params.h_v = h_v;
-        shading_params.t_h = t_h;
-        shading_params.b_h = b_h;
-        shading_params.t_l = t_l;
-        shading_params.b_l = b_l;
-        
-        out_color += calculate_brdf(shading_params) * shading_values.z;
-    }
-    
-    return half4(half3(out_color), 1.0);
-}
-*/

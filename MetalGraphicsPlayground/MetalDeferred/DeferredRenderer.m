@@ -727,12 +727,12 @@ const size_t kShadowResolution = 512;
                        atIndex: 3];
     [encoder setFragmentTexture: _gBuffer.normal
                         atIndex: attachment_normal];
-    [encoder setFragmentTexture: _gBuffer.pos
-                        atIndex: attachment_pos];
     [encoder setFragmentTexture: _gBuffer.shading
                         atIndex: attachment_shading];
     [encoder setFragmentTexture: _gBuffer.tangent
                         atIndex: attachment_tangent];
+    [encoder setFragmentTexture: _gBuffer.depth
+                        atIndex: attachment_depth];
     
     for(NSUInteger i = lightFromIndex; i <= lightToIndex; i += lightCountPerDrawCall) {
         [encoder setFragmentBuffer: _lightPropsBuffer
@@ -777,12 +777,13 @@ const size_t kShadowResolution = 512;
                         atIndex: attachment_albedo];
     [encoder setFragmentTexture: _gBuffer.normal
                         atIndex: attachment_normal];
-    [encoder setFragmentTexture: _gBuffer.pos
-                        atIndex: attachment_pos];
     [encoder setFragmentTexture: _gBuffer.shading
                         atIndex: attachment_shading];
+    [encoder setFragmentTexture: _gBuffer.depth
+                        atIndex: attachment_depth];
     [encoder setFragmentTexture: _gBuffer.lighting
                         atIndex: attachment_light];
+    
     if(_IBLs.count > 0) {
         [encoder setFragmentTexture: _IBLs[_renderingIBLIndex].irradianceMap
                             atIndex: attachment_irradiance];

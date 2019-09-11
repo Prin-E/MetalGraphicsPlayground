@@ -82,11 +82,6 @@
     _normal = [_device newTextureWithDescriptor: desc];
     _normal.label = @"Normal G-buffer";
     
-    // pos
-    desc.pixelFormat = MTLPixelFormatRGBA32Float;
-    _pos = [_device newTextureWithDescriptor: desc];
-    _pos.label = @"Position G-buffer";
-    
     // depth
     desc.pixelFormat = MTLPixelFormatDepth32Float_Stencil8;
     _depth = [_device newTextureWithDescriptor: desc];
@@ -138,7 +133,6 @@
     // color attachments
     desc.colorAttachments[attachment_albedo].pixelFormat = _albedo.pixelFormat;
     desc.colorAttachments[attachment_normal].pixelFormat = _normal.pixelFormat;
-    desc.colorAttachments[attachment_pos].pixelFormat = _pos.pixelFormat;
     desc.colorAttachments[attachment_shading].pixelFormat = _shading.pixelFormat;
     desc.colorAttachments[attachment_tangent].pixelFormat = _tangent.pixelFormat;
     
@@ -182,15 +176,12 @@
         _renderPassDescriptor.colorAttachments[attachment_albedo].storeAction = MTLStoreActionStore;
         _renderPassDescriptor.colorAttachments[attachment_normal].loadAction = MTLLoadActionClear;
         _renderPassDescriptor.colorAttachments[attachment_normal].storeAction = MTLStoreActionStore;
-        _renderPassDescriptor.colorAttachments[attachment_pos].loadAction = MTLLoadActionClear;
-        _renderPassDescriptor.colorAttachments[attachment_pos].storeAction = MTLStoreActionStore;
         _renderPassDescriptor.colorAttachments[attachment_shading].loadAction = MTLLoadActionClear;
         _renderPassDescriptor.colorAttachments[attachment_shading].storeAction = MTLStoreActionStore;
         _renderPassDescriptor.colorAttachments[attachment_tangent].loadAction = MTLLoadActionClear;
         _renderPassDescriptor.colorAttachments[attachment_tangent].storeAction = MTLStoreActionStore;
         _renderPassDescriptor.colorAttachments[attachment_albedo].clearColor = MTLClearColorMake(0, 0, 0, 0);
         _renderPassDescriptor.colorAttachments[attachment_normal].clearColor = MTLClearColorMake(0, 0, 0, 0);
-        _renderPassDescriptor.colorAttachments[attachment_pos].clearColor = MTLClearColorMake(0, 0, 0, 0);
         _renderPassDescriptor.colorAttachments[attachment_shading].clearColor = MTLClearColorMake(0, 0, 0, 0);
         _renderPassDescriptor.colorAttachments[attachment_tangent].clearColor = MTLClearColorMake(0, 0, 0, 0);
         
@@ -202,7 +193,6 @@
     // assign or replace textures
     _renderPassDescriptor.colorAttachments[attachment_albedo].texture = _albedo;
     _renderPassDescriptor.colorAttachments[attachment_normal].texture = _normal;
-    _renderPassDescriptor.colorAttachments[attachment_pos].texture = _pos;
     _renderPassDescriptor.colorAttachments[attachment_shading].texture = _shading;
     _renderPassDescriptor.colorAttachments[attachment_tangent].texture = _tangent;
     _renderPassDescriptor.depthAttachment.texture = _depth;

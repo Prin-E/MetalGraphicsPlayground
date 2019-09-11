@@ -142,7 +142,7 @@ NSString * const MGPPostProcessingLayerErrorDomain = @"MGPPostProcessingLayerErr
     [encoder setComputePipelineState: _ssaoPipeline];
     [encoder setTexture: gBuffer.normal atIndex: 0];
     [encoder setTexture: gBuffer.tangent atIndex: 1];
-    [encoder setTexture: gBuffer.pos atIndex: 2];
+    [encoder setTexture: gBuffer.depth atIndex: 2];
     [encoder setTexture: _ssaoTexture atIndex: 3];
     [encoder setBuffer: _ssaoRandomSamplesBuffer
                 offset: 0

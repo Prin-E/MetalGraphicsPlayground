@@ -374,7 +374,7 @@ const float kCameraSpeed = 1;
     MGPPostProcessingLayerScreenSpaceReflection *ssr = [[MGPPostProcessingLayerScreenSpaceReflection alloc] initWithDevice:self.device
                                                                                                                    library:self.defaultLibrary];
     ssr.step = 1.0;
-    ssr.iteration = 32;
+    ssr.iteration = 16;
     ssr.opacity = 1.0;
     [_postProcess addLayer: ssr];
     [_postProcess resize: _gBuffer.size];
@@ -657,6 +657,22 @@ const float kCameraSpeed = 1;
         if(handler != nil)
             handler();
     }];
+    
+    // calculate GPU time
+    if(@available(macOS 10.15, *)) {
+        static CFTimeInterval startTime, endTime;
+        static CGFloat elapsed = 0.0f;
+        [commandBuffer addCompletedHandler:^(id<MTLCommandBuffer> buffer) {
+            startTime = buffer.GPUStartTime;
+            endTime = buffer.GPUEndTime;
+            elapsed += endTime - startTime;
+            if(elapsed >= 2.0f) {
+                NSLog(@"GPU Time : %.2fms", (endTime - startTime) * 1000.0f);
+                elapsed -= 2.0f;
+            }
+        }];
+    }
+    
     [commandBuffer commit];
 }
 
@@ -849,12 +865,12 @@ const float kCameraSpeed = 1;
                        atIndex: 3];
     [encoder setFragmentTexture: _gBuffer.normal
                         atIndex: attachment_normal];
-    [encoder setFragmentTexture: _gBuffer.pos
-                        atIndex: attachment_pos];
     [encoder setFragmentTexture: _gBuffer.shading
                         atIndex: attachment_shading];
     [encoder setFragmentTexture: _gBuffer.tangent
                         atIndex: attachment_tangent];
+    [encoder setFragmentTexture: _gBuffer.depth
+                        atIndex: attachment_depth];
     
     for(NSUInteger i = lightFromIndex; i <= lightToIndex; i += lightCountPerDrawCall) {
         [encoder setFragmentBuffer: _lightPropsBuffer
@@ -899,10 +915,10 @@ const float kCameraSpeed = 1;
                         atIndex: attachment_albedo];
     [encoder setFragmentTexture: _gBuffer.normal
                         atIndex: attachment_normal];
-    [encoder setFragmentTexture: _gBuffer.pos
-                        atIndex: attachment_pos];
     [encoder setFragmentTexture: _gBuffer.shading
                         atIndex: attachment_shading];
+    [encoder setFragmentTexture: _gBuffer.depth
+                        atIndex: attachment_depth];
     [encoder setFragmentTexture: _gBuffer.lighting
                         atIndex: attachment_light];
     if(_IBLs.count > 0) {
