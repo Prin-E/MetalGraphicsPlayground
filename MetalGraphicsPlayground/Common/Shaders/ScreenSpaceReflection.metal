@@ -44,7 +44,7 @@ kernel void ssr(texture2d<float> normal [[texture(0)]],
         output.write(color_value, thread_pos);
         return;
     }
-    float3 view_normal = (camera_props.view * float4(normalize(normal.read(thread_pos).xyz * 2.0 - 1.0), 0.0)).xyz;
+    float3 view_normal = normalize(normal.read(thread_pos).xyz * 2.0 - 1.0);
     float depth_value = depth.read(thread_pos).r;
     half4 shading_value = shading.read(thread_pos);
     

@@ -65,10 +65,10 @@ vertex GBufferFragment gbuffer_prepass_vert(GBufferVertex in [[stage_in]],
                                     uint iid [[instance_id]]) {
     GBufferFragment out;
     float4 v = float4(in.pos, 1.0);
-    float4x4 model = instanceProps[iid].model;
-    out.clipPos = cameraProps.viewProjection * model * v;
-    out.normal = (model * float4(in.normal, 0.0)).xyz;
-    out.tangent = (model * float4(in.tangent, 0.0)).xyz;
+    float4x4 modelview = cameraProps.view * instanceProps[iid].model;
+    out.clipPos = cameraProps.projection * modelview * v;
+    out.normal = (modelview * float4(in.normal, 0.0)).xyz;
+    out.tangent = (modelview * float4(in.tangent, 0.0)).xyz;
     out.bitangent = cross(out.tangent, out.normal);
     out.uv = in.uv;
     out.iid = iid;
@@ -106,32 +106,35 @@ fragment GBufferOutput gbuffer_prepass_frag(GBufferFragment in [[stage_in]],
     else {
         out.albedo = half4(half3(material.albedo), 1.0);
     }
+    
+    float3 n = in.normal;
+    float3 t = in.tangent;
+    float3 b = in.bitangent;
     if(has_normal_map) {
         half4 nc = normalMap.sample(linear, in.uv);
         nc = nc * 2.0 - 1.0;
-        float3 n = normalize(in.normal * nc.z + in.tangent * nc.x + in.bitangent * nc.y);
-        out.normal = half4(half3((n + 1.0) * 0.5), 1.0);
+        n = normalize(in.normal * nc.z + in.tangent * nc.x + in.bitangent * nc.y);
     }
     else {
-        out.normal = half4(half3((normalize(in.normal) + 1.0) * 0.5), 1.0);
+        n = normalize(n);
     }
+    out.normal = half4(half3((n + 1.0) * 0.5), 1.0);
+    
     if(has_anisotropic_map) {
         half4 tc = anisotropicMap.sample(linear, in.uv);
         tc = tc * 2.0 - 1.0;
-        float3 t = normalize(float3(tc.xyz));
-        out.tangent = half4(half3((t + 1.0) * 0.5), 1.0);
+        t = normalize(float3(tc.xyz));
     }
     else {
         if(has_normal_map) {
-            float3 n = normalize(float3(in.normal * 2.0 - 1.0));
-            float3 b = cross(normalize(in.tangent), n);
-            float3 t = cross(n, b);
-            out.tangent = half4(half3((t + 1.0) * 0.5), 1.0);
+            t = cross(n, normalize(b));
         }
         else {
-            out.tangent = half4(half3((normalize(in.tangent) + 1.0) * 0.5), 1.0);
+            t = normalize(t);
         }
     }
+    out.tangent = half4(half3((t + 1.0) * 0.5), 1.0);
+    
     out.shading = half4(material.roughness, material.metalic, 1, material.anisotropy * 0.5 + 0.5);
     if(has_roughness_map) {
         out.shading.x = roughnessMap.sample(linear, in.uv).r;
@@ -197,6 +200,8 @@ fragment half4 gbuffer_light_frag(ScreenFragment in [[stage_in]],
             float3 light_dir_invert = -float3(lights[i].light_view[0].z,
                                               lights[i].light_view[1].z,
                                               lights[i].light_view[2].z);
+            light_dir_invert = (camera_props.view * float4(light_dir_invert, 0.0)).xyz;
+            
             // world-space pos
             // we don't need it for directional light right now,
             //float3 light_pos = lights[i].position;
@@ -262,8 +267,7 @@ fragment half4 gbuffer_shade_frag(ScreenFragment in [[stage_in]],
         return half4(0, 0, 0, 0);
     float3 n = normalize((n_c.xyz - 0.5) * 2.0);
     float3 view_pos = view_pos_from_depth(cameraProps.projectionInverse, in.uv, depth.sample(nearest_clamp_to_edge, in.uv).r);
-    float4 world_pos = cameraProps.viewProjectionInverse * float4(view_pos, 1.0);
-    float3 v = normalize(cameraProps.position - world_pos.xyz);
+    float3 v = normalize(-view_pos);
     float n_v = max(0.001, saturate(dot(n, v)));
     float3 albedo_color = float3(albedo.sample(linear, in.uv).xyz);
     half4 shading_props_color = shading.sample(linear, in.uv);

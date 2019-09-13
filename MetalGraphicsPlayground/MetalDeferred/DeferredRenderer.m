@@ -17,6 +17,7 @@
 #import "../Common/Sources/Model/MGPShadowBuffer.h"
 #import "../Common/Sources/Model/MGPShadowManager.h"
 #import "../Common/Sources/Model/MGPLight.h"
+#import "../Common/Sources/Model/MGPCamera.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #import "../Common/STB/stb_image.h"
@@ -33,6 +34,7 @@ const uint32_t kNumLight = 128;
 const float kLightIntensityBase = 0.25;
 const float kLightIntensityVariation = 3.0;
 const size_t kShadowResolution = 512;
+const float kCameraSpeed = 100;
 
 #define DEG_TO_RAD(x) ((x)*0.0174532925)
 
@@ -48,14 +50,12 @@ const size_t kShadowResolution = 512;
     float _animationTime;
     
     BOOL _moveFlags[6];     // Front, Back, Left, Right, Up, Down
+    BOOL _moveFast;
     float _moveSpeeds[6];   // same as flags
     NSPoint _mouseDelta, _prevMousePos;
     
     BOOL _mouseDown;
-    vector_float3 _cameraPos;
-    vector_float3 _cameraRot;
-    matrix_float4x4 _cameraRotationMatrix, _cameraRotationInverseMatrix;
-    matrix_float4x4 _cameraMatrix, _cameraInverseMatrix;
+    MGPCamera *_camera;
     
     // props
     id<MTLBuffer> _cameraPropsBuffer;
@@ -184,6 +184,12 @@ const size_t kShadowResolution = 512;
     }
 }
 
+- (void)view:(MGPView *)view flagsChanged:(NSEvent *)theEvent {
+    // shift
+    _moveFast = (theEvent.modifierFlags & NSEventModifierFlagShift) != 0;
+}
+
+
 - (void)view:(MGPView *)view mouseDown:(NSEvent *)theEvent {
     _mouseDown = YES;
 }
@@ -197,7 +203,6 @@ const size_t kShadowResolution = 512;
     if(self) {
         _numLights = 1;
         _animate = YES;
-        _cameraPos = vector3(0.0f, 0.0f, -60.0f);
         [self initUniformBuffers];
         [self initAssets];
     }
@@ -338,12 +343,14 @@ const size_t kShadowResolution = 512;
                                                                    error: nil];
     
     MGPGBufferPrepassFunctionConstants prepassTestConstants = {};
+    /*
     prepassTestConstants.hasAlbedoMap = _testObjects[0].submeshes[0].textures[tex_albedo] != NSNull.null;
     prepassTestConstants.hasNormalMap = _testObjects[0].submeshes[0].textures[tex_normal] != NSNull.null;
     prepassTestConstants.hasRoughnessMap = _testObjects[0].submeshes[0].textures[tex_roughness] != NSNull.null;
     prepassTestConstants.hasMetalicMap = _testObjects[0].submeshes[0].textures[tex_metalic] != NSNull.null;
     prepassTestConstants.hasOcclusionMap = _testObjects[0].submeshes[0].textures[tex_occlusion] != NSNull.null;
     prepassTestConstants.hasAnisotropicMap = _testObjects[0].submeshes[0].textures[tex_anisotropic] != NSNull.null;
+     */
     _renderPipelinePrepassTest = [_gBuffer renderPipelineStateWithConstants: prepassTestConstants
                                                                       error: nil];
     
@@ -391,6 +398,19 @@ const size_t kShadowResolution = 512;
         [_lights addObject: [[MGPLight alloc] init]];
     }
     
+    // camera
+    _camera = [[MGPCamera alloc] init];
+    _camera.position = simd_make_float3(0, 0.0, -60.0f);
+    
+    // projection
+    MGPProjectionState projection = _camera.projectionState;
+    projection.aspectRatio = _gBuffer.size.width / _gBuffer.size.height;
+    projection.fieldOfView = DEG_TO_RAD(60.0f);
+    projection.nearPlane = 0.5f;
+    projection.farPlane = 300.0f;
+    projection.orthographicSize = 5;
+    _camera.projectionState = projection;
+    
     // shadow
     _shadowManager = [[MGPShadowManager alloc] initWithDevice: self.device
                                                       library: self.defaultLibrary
@@ -424,34 +444,33 @@ const size_t kShadowResolution = 512;
     // camera rotation
     if(_mouseDown) {
         NSPoint pixelMouseDelta = [self.view convertPointToBacking: _mouseDelta];
-        _cameraRot.y = _cameraRot.y + pixelMouseDelta.x / (0.5f * _gBuffer.size.height) * M_PI_2;
-        _cameraRot.x = MIN(MAX(_cameraRot.x + pixelMouseDelta.y / (0.5f * _gBuffer.size.height) * M_PI_2, -M_PI*0.4), M_PI*0.4);
+        simd_float3 rot = _camera.rotation;
+        rot.y = rot.y + pixelMouseDelta.x / (0.5f * _gBuffer.size.height) * M_PI_2;
+        rot.x = MIN(MAX(rot.x - pixelMouseDelta.y / (0.5f * _gBuffer.size.height) * M_PI_2, -M_PI*0.4), M_PI*0.4);
+        _camera.rotation = rot;
     }
-    _cameraRotationMatrix = matrix_multiply(matrix_from_rotation(_cameraRot.y, 0, 1, 0),
-                                            matrix_from_rotation(-_cameraRot.x, 1, 0, 0));
-    _cameraRotationInverseMatrix = matrix_invert(_cameraRotationMatrix);
     
     // move
-    static int columnIndices[] = {
-        2,2,0,0,1,1
-    };
+    static int columnIndices[] = { 2, 2, 0, 0, 1, 1 };
+    simd_float4x4 rotationMatrix = _camera.cameraToWorldRotationMatrix;
+    simd_float3 positionAdd = {};
+    BOOL positionIsChanged = NO;
     for(int i = 0; i < 6; i++) {
         float sign = (i % 2) ? -1.0f : 1.0f;
-        _moveSpeeds[i] = LERP(_moveSpeeds[i], _moveFlags[i] ? 100.0f : 0.0f, deltaTime * 14);
-        _cameraPos = _cameraPos + _cameraRotationMatrix.columns[columnIndices[i]].xyz * deltaTime * _moveSpeeds[i] * sign;
+        _moveSpeeds[i] = LERP(_moveSpeeds[i], _moveFlags[i] ? kCameraSpeed * (_moveFast ? 5.0f : 1.0f) : 0.0f, deltaTime * 14);
+        if(_moveSpeeds[i] > 0.0001f) {
+            simd_float3 direction = rotationMatrix.columns[columnIndices[i]].xyz;
+            positionAdd += direction * deltaTime * _moveSpeeds[i] * sign;
+            positionIsChanged = YES;
+        }
     }
-    matrix_float4x4 cameraTranslationMatrix = matrix_from_translation(_cameraPos.x, _cameraPos.y, _cameraPos.z);
-    _cameraMatrix = matrix_multiply(cameraTranslationMatrix, _cameraRotationMatrix);
-    _cameraInverseMatrix = matrix_invert(_cameraMatrix);
+    if(positionIsChanged)
+        _camera.position += positionAdd;
 }
 
 - (void)_updateUniformBuffers: (float)deltaTime {
     // Update camera properties
-    camera_props[_currentBufferIndex].view = _cameraInverseMatrix;
-    camera_props[_currentBufferIndex].projection = matrix_from_perspective_fov_aspectLH(DEG_TO_RAD(60.0f), _gBuffer.size.width / _gBuffer.size.height, 0.5f, 300.0f);
-    camera_props[_currentBufferIndex].viewProjection = matrix_multiply(camera_props[_currentBufferIndex].projection, camera_props[_currentBufferIndex].view);
-    camera_props[_currentBufferIndex].rotation = _cameraRotationInverseMatrix;
-    camera_props[_currentBufferIndex].position = _cameraPos;
+    camera_props[_currentBufferIndex] = _camera.shaderProperties;
     
     // Update per-instance properties
     static const simd_float3 instance_pos[] = {
@@ -499,18 +518,23 @@ const size_t kShadowResolution = 512;
         }
     }
     
-    for(NSInteger i = 0; i < _numLights; i++) {
-        simd_float3 rot_dir = simd_cross(vector3(light_dirs[i].x, light_dirs[i].y, light_dirs[i].z), vector3(0.0f, 1.0f, 0.0f));
-        simd_float4 dir = matrix_multiply(matrix_from_rotation(_animationTime * 3.0f, rot_dir.x, rot_dir.y, rot_dir.z), light_dirs[i]);
-        simd_float3 eye = -simd_make_float3(dir);
-        
-        // set light properties
+    for(NSInteger i = 0; i < kNumLight; i++) {
         MGPLight *light = _lights[i];
-        light.color = light_colors[i];
-        light.intensity = light_intensities[i];
-        light.direction = simd_make_float3(dir);
-        light.position = eye;
-        light.castShadows = NO;
+        if(i < _numLights) {
+            simd_float3 rot_dir = simd_cross(vector3(light_dirs[i].x, light_dirs[i].y, light_dirs[i].z), vector3(0.0f, 1.0f, 0.0f));
+            simd_float4 dir = matrix_multiply(matrix_from_rotation(_animationTime * 3.0f, rot_dir.x, rot_dir.y, rot_dir.z), light_dirs[i]);
+            simd_float3 eye = -simd_make_float3(dir);
+            
+            // set light properties
+            light.color = light_colors[i];
+            light.intensity = light_intensities[i];
+            light.direction = simd_make_float3(dir);
+            light.position = eye;
+            light.castShadows = NO;
+        }
+        else {
+            light.intensity = 0;
+        }
         
         // light properties -> buffer
         light_t *light_props_ptr = &light_props[_currentBufferIndex * kNumLight + i];
@@ -817,6 +841,9 @@ const size_t kShadowResolution = 512;
 
 - (void)resize:(CGSize)newSize {
     [_gBuffer resize:newSize];
+    MGPProjectionState proj = _camera.projectionState;
+    proj.aspectRatio = newSize.width / newSize.height;
+    _camera.projectionState = proj;
     [self _initSkyboxDepthTexture];
 }
 

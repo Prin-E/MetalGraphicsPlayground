@@ -33,7 +33,6 @@ kernel void ssao(texture2d<float> normal [[texture(0)]],
     float depth_value = depth.read(coords).r;
     
     float3 view_pos = view_pos_from_depth(camera_props.projectionInverse, coords, size, depth_value);
-    float3 world_pos = (camera_props.viewInverse * float4(view_pos, 1.0)).xyz;
     
     const uint num_samples = ssao_props.num_samples;
     const float sample_bias = ssao_props.bias;
@@ -43,9 +42,8 @@ kernel void ssao(texture2d<float> normal [[texture(0)]],
     float occlusion = 0;
     for(uint i = 0; i < num_samples; i++) {
         float3 sample = random_samples[i];
-        float3 offset_pos = world_pos + radius * float3(t * sample.x + b * sample.y + n * sample.z);
-        float4 view_offset_pos = camera_props.view * float4(offset_pos, 1.0);
-        float4 proj_offset_pos = camera_props.projection * view_offset_pos;
+        float3 view_offset_pos = view_pos + radius * float3(t * sample.x + b * sample.y + n * sample.z);
+        float4 proj_offset_pos = camera_props.projection * float4(view_offset_pos, 1.0);
         proj_offset_pos = proj_offset_pos / proj_offset_pos.w;
         proj_offset_pos.xyz = proj_offset_pos.xyz * 0.5 + 0.5;
         proj_offset_pos.xy = saturate(proj_offset_pos.xy);
