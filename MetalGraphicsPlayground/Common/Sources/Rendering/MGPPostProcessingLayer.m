@@ -50,7 +50,9 @@ NSString * const MGPPostProcessingLayerErrorDomain = @"MGPPostProcessingLayerErr
 @end
 
 @implementation MGPPostProcessingLayerSSAO {
+    id<MTLTexture> _temporarySSAOTexture;
     id<MTLComputePipelineState> _ssaoPipeline;
+    id<MTLComputePipelineState> _blurHPipeline, _blurVPipeline;
     id<MTLBuffer> _ssaoRandomSamplesBuffer;
     id<MTLBuffer> _ssaoPropsBuffer;
     CGSize _destinationResolution;
@@ -74,6 +76,10 @@ NSString * const MGPPostProcessingLayerErrorDomain = @"MGPPostProcessingLayerErr
 - (void)_makeComputePipeline {
     _ssaoPipeline = [_device newComputePipelineStateWithFunction: [_library newFunctionWithName: @"ssao"]
                                                            error: nil];
+    _blurHPipeline = [_device newComputePipelineStateWithFunction: [_library newFunctionWithName: @"ssao_blur_horizontal"]
+                                                          error: nil];
+    _blurVPipeline = [_device newComputePipelineStateWithFunction: [_library newFunctionWithName: @"ssao_blur_vertical"]
+                                                                                                                 error: nil];
 }
 
 - (void)_makeTexturesWithSize: (CGSize)size {
@@ -85,6 +91,8 @@ NSString * const MGPPostProcessingLayerErrorDomain = @"MGPPostProcessingLayerErr
                                                                                 mipmapped: NO];
     desc.usage = MTLTextureUsageShaderRead | MTLTextureUsageShaderWrite;
     desc.storageMode = MTLStorageModePrivate;
+    _temporarySSAOTexture = [_device newTextureWithDescriptor: desc];
+    _temporarySSAOTexture.label = @"SSAO Temporary Texture";
     _ssaoTexture = [_device newTextureWithDescriptor: desc];
     _ssaoTexture.label = @"SSAO Texture";
 }
@@ -139,6 +147,8 @@ NSString * const MGPPostProcessingLayerErrorDomain = @"MGPPostProcessingLayerErr
     
     id<MTLComputeCommandEncoder> encoder = [buffer computeCommandEncoder];
     [encoder setLabel: @"SSAO"];
+    
+    // step 1 : ssao
     [encoder setComputePipelineState: _ssaoPipeline];
     [encoder setTexture: gBuffer.normal atIndex: 0];
     [encoder setTexture: gBuffer.tangent atIndex: 1];
@@ -155,6 +165,21 @@ NSString * const MGPPostProcessingLayerErrorDomain = @"MGPPostProcessingLayerErr
                atIndex: 2];
     [encoder dispatchThreadgroups: MTLSizeMake((width+15)/16, (height+15)/16, 1)
             threadsPerThreadgroup: MTLSizeMake(16, 16, 1)];
+    
+    // step 2 : blur horizontal
+    [encoder setComputePipelineState: _blurHPipeline];
+    [encoder setTexture: _ssaoTexture atIndex: 0];
+    [encoder setTexture: _temporarySSAOTexture atIndex: 1];
+    [encoder dispatchThreadgroups: MTLSizeMake((width+15)/16, (height+15)/16, 1)
+            threadsPerThreadgroup: MTLSizeMake(16, 16, 1)];
+    
+    // step 3 : blur vertical
+    [encoder setComputePipelineState: _blurVPipeline];
+    [encoder setTexture: _temporarySSAOTexture atIndex: 0];
+    [encoder setTexture: _ssaoTexture atIndex: 1];
+    [encoder dispatchThreadgroups: MTLSizeMake((width+15)/16, (height+15)/16, 1)
+            threadsPerThreadgroup: MTLSizeMake(16, 16, 1)];
+    
     [encoder endEncoding];
 }
 

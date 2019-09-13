@@ -33,8 +33,6 @@
 		953040A11BEF96B2001DECA7 /* MetalKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 95273DD71B9BEB180015BB27 /* MetalKit.framework */; };
 		953040A21BEF96B6001DECA7 /* Metal.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 95273DD51B9BEB100015BB27 /* Metal.framework */; };
 		953040A41BEF993D001DECA7 /* Shaders.metal in Sources */ = {isa = PBXBuildFile; fileRef = 953040A31BEF993D001DECA7 /* Shaders.metal */; };
-		9532B1FB23259CC0006B9ECA /* Blur.metal in Sources */ = {isa = PBXBuildFile; fileRef = 9532B1FA23259CC0006B9ECA /* Blur.metal */; };
-		9532B1FC23259CC0006B9ECA /* Blur.metal in Sources */ = {isa = PBXBuildFile; fileRef = 9532B1FA23259CC0006B9ECA /* Blur.metal */; };
 		953EAB801B9B5AFC0024994F /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 953EAB7F1B9B5AFC0024994F /* AppDelegate.m */; };
 		953EAB831B9B5AFC0024994F /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 953EAB821B9B5AFC0024994F /* main.m */; };
 		953EAB851B9B5AFC0024994F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 953EAB841B9B5AFC0024994F /* Assets.xcassets */; };
@@ -285,7 +283,6 @@
 		9530409B1BEF9673001DECA7 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/MainMenu.xib; sourceTree = "<group>"; };
 		9530409D1BEF9673001DECA7 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		953040A31BEF993D001DECA7 /* Shaders.metal */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.metal; path = Shaders.metal; sourceTree = "<group>"; };
-		9532B1FA23259CC0006B9ECA /* Blur.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = Blur.metal; sourceTree = "<group>"; };
 		953EAB7B1B9B5AFC0024994F /* MetalGraphicsPlayground.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MetalGraphicsPlayground.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		953EAB7E1B9B5AFC0024994F /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		953EAB7F1B9B5AFC0024994F /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
@@ -356,6 +353,7 @@
 		956AB4DF2289C6A1009B5362 /* albedo.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = albedo.png; sourceTree = "<group>"; };
 		956AB4E52289C92B009B5362 /* metallic.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = metallic.png; sourceTree = "<group>"; };
 		956AB4E72289C98D009B5362 /* ao.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = ao.png; sourceTree = "<group>"; };
+		956F9B0E232C098B00F29A77 /* Blur.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Blur.h; sourceTree = "<group>"; };
 		957C604B1E48EFA700132359 /* bun_zipper_res3.obj */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = bun_zipper_res3.obj; sourceTree = "<group>"; };
 		957E3C021E4B658300C10FB2 /* BRDF.metal */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.metal; path = BRDF.metal; sourceTree = "<group>"; };
 		957E3C041E4B671A00C10FB2 /* BRDF.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BRDF.h; sourceTree = "<group>"; };
@@ -1107,7 +1105,7 @@
 				954C17182306802A0049FF79 /* ColorSpace.h */,
 				95644A4D230C39C700EA856C /* Gizmo.metal */,
 				950CF3822322A4A4008F581E /* ScreenSpaceReflection.metal */,
-				9532B1FA23259CC0006B9ECA /* Blur.metal */,
+				956F9B0E232C098B00F29A77 /* Blur.h */,
 			);
 			path = Shaders;
 			sourceTree = "<group>";
@@ -1752,7 +1750,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				9532B1FB23259CC0006B9ECA /* Blur.metal in Sources */,
 				950CF3842322A4B5008F581E /* ScreenSpaceReflection.metal in Sources */,
 				95EFB7D222C7AD5A00813903 /* MGPShadowManager.m in Sources */,
 				959C8303227F424900C2C245 /* BRDF.metal in Sources */,
@@ -1815,7 +1812,6 @@
 				95F40BC922AD76EA00F747D2 /* MGPRenderer.m in Sources */,
 				95F40BCA22AD76EA00F747D2 /* MGPGBuffer.m in Sources */,
 				950C345922C5B05D004C32CA /* MGPShadowBuffer.m in Sources */,
-				9532B1FC23259CC0006B9ECA /* Blur.metal in Sources */,
 				95F40BCB22AD76EA00F747D2 /* MGPMesh.m in Sources */,
 				95F40BCC22AD76EA00F747D2 /* MGPImageBasedLighting.m in Sources */,
 				95FBFD4F229465ED002BA1E0 /* main.m in Sources */,

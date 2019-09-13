@@ -9,6 +9,7 @@
 #include <metal_stdlib>
 #include "SharedStructures.h"
 #include "CommonMath.h"
+#include "Blur.h"
 
 using namespace metal;
 
@@ -63,4 +64,108 @@ kernel void ssao(texture2d<float> normal [[texture(0)]],
     
     occlusion /= float(num_samples);
     output.write(occlusion * intensity, thread_pos);
+}
+
+kernel void ssao_blur_horizontal(texture2d<float> ssao [[texture(0)]],
+                                 texture2d<float, access::write> output [[texture(1)]],
+                                 uint2 thread_pos [[thread_position_in_grid]],
+                                 uint2 thread_group_pos [[thread_position_in_threadgroup]]) {
+    if(thread_pos.x >= ssao.get_width() ||
+       thread_pos.y >= ssao.get_height())
+        return;
+    
+    threadgroup float group_vals[22][16] = {};
+    
+    // read values by threadgroup
+    float val = ssao.read(thread_pos).r;
+    uint2 groupval_pos = thread_group_pos + uint2(3, 0);
+    group_vals[groupval_pos.x][groupval_pos.y] = val;
+    if(thread_group_pos.x == 0) {
+        if(thread_pos.x == 0) {
+            group_vals[groupval_pos.x-1][groupval_pos.y] = val;
+            group_vals[groupval_pos.x-2][groupval_pos.y] = val;
+            group_vals[groupval_pos.x-3][groupval_pos.y] = val;
+        }
+        else {
+            group_vals[groupval_pos.x-1][groupval_pos.y] = ssao.read(thread_pos-uint2(1,0)).r;
+            group_vals[groupval_pos.x-2][groupval_pos.y] = ssao.read(thread_pos-uint2(2,0)).r;
+            group_vals[groupval_pos.x-3][groupval_pos.y] =  ssao.read(thread_pos-uint2(3,0)).r;
+        }
+    }
+    else if(thread_group_pos.x == 15) {
+        if(thread_pos.x + 1 == ssao.get_width()) {
+            group_vals[groupval_pos.x+1][groupval_pos.y] = val;
+            group_vals[groupval_pos.x+2][groupval_pos.y] = val;
+            group_vals[groupval_pos.x+3][groupval_pos.y] = val;
+        }
+        else {
+            group_vals[groupval_pos.x+1][groupval_pos.y] = ssao.read(thread_pos+uint2(1,0)).r;
+            group_vals[groupval_pos.x+2][groupval_pos.y] = ssao.read(thread_pos+uint2(2,0)).r;
+            group_vals[groupval_pos.x+3][groupval_pos.y] =  ssao.read(thread_pos+uint2(3,0)).r;
+        }
+    }
+    
+    threadgroup_barrier(mem_flags::mem_threadgroup);
+    
+    // horizontal blur
+    float a = group_vals[groupval_pos.x-3][groupval_pos.y];
+    float b = group_vals[groupval_pos.x-2][groupval_pos.y];
+    float c = group_vals[groupval_pos.x-1][groupval_pos.y];
+    float d = group_vals[groupval_pos.x][groupval_pos.y];
+    float e = group_vals[groupval_pos.x+1][groupval_pos.y];
+    float f = group_vals[groupval_pos.x+2][groupval_pos.y];
+    float g = group_vals[groupval_pos.x+3][groupval_pos.y];
+    output.write(blur_gaussian(a,b,c,d,e,f,g),thread_pos);
+}
+
+kernel void ssao_blur_vertical(texture2d<float> ssao [[texture(0)]],
+                               texture2d<float, access::write> output [[texture(1)]],
+                               uint2 thread_pos [[thread_position_in_grid]],
+                               uint2 thread_group_pos [[thread_position_in_threadgroup]]) {
+    if(thread_pos.x >= ssao.get_width() ||
+       thread_pos.y >= ssao.get_height())
+        return;
+    
+    threadgroup float group_vals[16][22] = {};
+    
+    // read values by threadgroup
+    float val = ssao.read(thread_pos).r;
+    uint2 groupval_pos = thread_group_pos + uint2(0, 3);
+    group_vals[groupval_pos.x][groupval_pos.y] = val;
+    if(thread_group_pos.y == 0) {
+        if(thread_pos.y == 0) {
+            group_vals[groupval_pos.x][groupval_pos.y-1] = val;
+            group_vals[groupval_pos.x][groupval_pos.y-2] = val;
+            group_vals[groupval_pos.x][groupval_pos.y-3] = val;
+        }
+        else {
+            group_vals[groupval_pos.x][groupval_pos.y-1] = ssao.read(thread_pos-uint2(0,1)).r;
+            group_vals[groupval_pos.x][groupval_pos.y-2] = ssao.read(thread_pos-uint2(0,2)).r;
+            group_vals[groupval_pos.x][groupval_pos.y-3] =  ssao.read(thread_pos-uint2(0,3)).r;
+        }
+    }
+    else if(thread_group_pos.y == 15) {
+        if(thread_pos.y + 1 == ssao.get_height()) {
+            group_vals[groupval_pos.x][groupval_pos.y+1] = val;
+            group_vals[groupval_pos.x][groupval_pos.y+2] = val;
+            group_vals[groupval_pos.x][groupval_pos.y+3] = val;
+        }
+        else {
+            group_vals[groupval_pos.x][groupval_pos.y+1] = ssao.read(thread_pos+uint2(0,1)).r;
+            group_vals[groupval_pos.x][groupval_pos.y+2] = ssao.read(thread_pos+uint2(0,2)).r;
+            group_vals[groupval_pos.x][groupval_pos.y+3] =  ssao.read(thread_pos+uint2(0,3)).r;
+        }
+    }
+    
+    threadgroup_barrier(mem_flags::mem_threadgroup);
+    
+    // vertical blur
+    float a = group_vals[groupval_pos.x][groupval_pos.y-3];
+    float b = group_vals[groupval_pos.x][groupval_pos.y-2];
+    float c = group_vals[groupval_pos.x][groupval_pos.y-1];
+    float d = group_vals[groupval_pos.x][groupval_pos.y];
+    float e = group_vals[groupval_pos.x][groupval_pos.y+1];
+    float f = group_vals[groupval_pos.x][groupval_pos.y+2];
+    float g = group_vals[groupval_pos.x][groupval_pos.y+3];
+    output.write(blur_gaussian(a,b,c,d,e,f,g),thread_pos);
 }
