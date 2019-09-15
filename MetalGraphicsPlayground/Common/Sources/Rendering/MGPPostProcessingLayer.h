@@ -31,6 +31,8 @@ typedef NS_ENUM(NSUInteger, MGPPostProcessingRenderingOrder) {
 - (void)render:(id<MTLCommandBuffer>)buffer;
 - (void)resize:(CGSize)newSize;
 
+@property (nonatomic, getter=isEnabled) BOOL enabled;
+
 @end
 
 @interface MGPPostProcessingLayer : NSObject <MGPPostProcessingLayer>

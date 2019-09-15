@@ -9,10 +9,11 @@
 #import <Cocoa/Cocoa.h>
 
 @class MGPView;
+@class SimpleRenderer;
 @interface AppDelegate : NSObject <NSApplicationDelegate>
 
 @property (weak) IBOutlet MGPView *view;
-@property (nonatomic) float vignette, attenuation;
+@property (readonly) SimpleRenderer *renderer;
 
 @end
 

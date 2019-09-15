@@ -15,6 +15,11 @@ NS_ASSUME_NONNULL_BEGIN
 @interface DeferredRenderer : MGPRenderer <MGPViewDelegate>
 
 @property (readwrite) float roughness, metalic, anisotropy;
+
+@property (readwrite) NSUInteger gBufferIndex;
+@property (readwrite) BOOL ssaoOn, ssrOn;
+@property (readwrite) float ssaoIntensity, ssaoRadius;
+@property (readwrite) NSUInteger ssaoNumSamples;
 @property (readwrite) float vignette, attenuation;
 @property (readwrite) unsigned int numLights;
 

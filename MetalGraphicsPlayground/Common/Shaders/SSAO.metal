@@ -24,9 +24,14 @@ kernel void ssao(texture2d<float> normal [[texture(0)]],
     if(output.get_width() <= thread_pos.x || output.get_height() <= thread_pos.y)
         return;
     
+    const uint num_samples = ssao_props.num_samples;
+    const float sample_bias = ssao_props.bias;
+    const float radius = ssao_props.radius;
+    const float intensity = ssao_props.intensity;
+    
     uint downscale = (uint)(pow(2.0, ssao_props.downsample) + 0.00001);
     uint2 coords = thread_pos * downscale;
-    uint2 size = uint2(output.get_width(), output.get_height()) * downscale;
+    uint2 size = uint2(output.get_width(), output.get_height()) * downscale - uint2(1, 1);
     
     float3 n = normalize(normal.read(coords).xyz * 2.0 - 1.0);
     float3 t = normalize(tangent.read(coords).xyz * 2.0 - 1.0);
@@ -34,12 +39,6 @@ kernel void ssao(texture2d<float> normal [[texture(0)]],
     float depth_value = depth.read(coords).r;
     
     float3 view_pos = view_pos_from_depth(camera_props.projectionInverse, coords, size, depth_value);
-    
-    const uint num_samples = ssao_props.num_samples;
-    const float sample_bias = ssao_props.bias;
-    const float radius = ssao_props.radius;
-    const float intensity = ssao_props.intensity;
-    
     float occlusion = 0;
     for(uint i = 0; i < num_samples; i++) {
         float3 sample = random_samples[i];
@@ -93,16 +92,14 @@ kernel void ssao_blur_horizontal(texture2d<float> ssao [[texture(0)]],
         }
     }
     else if(thread_group_pos.x == 15) {
-        if(thread_pos.x + 1 == ssao.get_width()) {
-            group_vals[groupval_pos.x+1][groupval_pos.y] = val;
-            group_vals[groupval_pos.x+2][groupval_pos.y] = val;
-            group_vals[groupval_pos.x+3][groupval_pos.y] = val;
-        }
-        else {
-            group_vals[groupval_pos.x+1][groupval_pos.y] = ssao.read(thread_pos+uint2(1,0)).r;
-            group_vals[groupval_pos.x+2][groupval_pos.y] = ssao.read(thread_pos+uint2(2,0)).r;
-            group_vals[groupval_pos.x+3][groupval_pos.y] =  ssao.read(thread_pos+uint2(3,0)).r;
-        }
+        group_vals[groupval_pos.x+1][groupval_pos.y] = ssao.read(thread_pos+uint2(1,0)).r;
+        group_vals[groupval_pos.x+2][groupval_pos.y] = ssao.read(thread_pos+uint2(2,0)).r;
+        group_vals[groupval_pos.x+3][groupval_pos.y] =  ssao.read(thread_pos+uint2(3,0)).r;
+    }
+    else if(thread_pos.x + 1 == ssao.get_width()) {
+        group_vals[groupval_pos.x+1][groupval_pos.y] = val;
+        group_vals[groupval_pos.x+2][groupval_pos.y] = val;
+        group_vals[groupval_pos.x+3][groupval_pos.y] = val;
     }
     
     threadgroup_barrier(mem_flags::mem_threadgroup);
@@ -145,16 +142,14 @@ kernel void ssao_blur_vertical(texture2d<float> ssao [[texture(0)]],
         }
     }
     else if(thread_group_pos.y == 15) {
-        if(thread_pos.y + 1 == ssao.get_height()) {
-            group_vals[groupval_pos.x][groupval_pos.y+1] = val;
-            group_vals[groupval_pos.x][groupval_pos.y+2] = val;
-            group_vals[groupval_pos.x][groupval_pos.y+3] = val;
-        }
-        else {
-            group_vals[groupval_pos.x][groupval_pos.y+1] = ssao.read(thread_pos+uint2(0,1)).r;
-            group_vals[groupval_pos.x][groupval_pos.y+2] = ssao.read(thread_pos+uint2(0,2)).r;
-            group_vals[groupval_pos.x][groupval_pos.y+3] =  ssao.read(thread_pos+uint2(0,3)).r;
-        }
+        group_vals[groupval_pos.x][groupval_pos.y+1] = ssao.read(thread_pos+uint2(0,1)).r;
+        group_vals[groupval_pos.x][groupval_pos.y+2] = ssao.read(thread_pos+uint2(0,2)).r;
+        group_vals[groupval_pos.x][groupval_pos.y+3] =  ssao.read(thread_pos+uint2(0,3)).r;
+    }
+    else if(thread_pos.y + 1 == ssao.get_height()) {
+        group_vals[groupval_pos.x][groupval_pos.y+1] = val;
+        group_vals[groupval_pos.x][groupval_pos.y+2] = val;
+        group_vals[groupval_pos.x][groupval_pos.y+3] = val;
     }
     
     threadgroup_barrier(mem_flags::mem_threadgroup);

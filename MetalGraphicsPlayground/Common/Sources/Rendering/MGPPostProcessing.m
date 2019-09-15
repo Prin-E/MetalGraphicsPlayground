@@ -108,7 +108,8 @@ NSString * const MGPPostProcessingErrorDomain = @"MGPPostProcessingErrorDomain";
     [list removeAllObjects];
     for(NSInteger i = 0; i < _layers.count; i++) {
         if(_layers[i].renderingOrder >= renderingOrder) {
-            if(_layers[i].renderingOrder < renderingOrder + 1000) {
+            if(_layers[i].renderingOrder < renderingOrder + 1000 &&
+               _layers[i].isEnabled) {
                 [list addObject: _layers[i]];
             }
             else {

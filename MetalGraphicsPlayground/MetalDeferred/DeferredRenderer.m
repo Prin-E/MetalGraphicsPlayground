@@ -607,6 +607,7 @@ const float kCameraSpeed = 100;
     // skybox pass
     _renderPassSkybox.colorAttachments[0].texture = self.view.currentDrawable.texture;
     _renderPassSkybox.depthAttachment.texture = _skyboxDepthTexture;
+    _renderPassSkybox.depthAttachment.storeAction = MTLStoreActionDontCare;
     id<MTLRenderCommandEncoder> skyboxPassEncoder = [commandBuffer renderCommandEncoderWithDescriptor: _renderPassSkybox];
     [self renderSkybox:skyboxPassEncoder];
     

@@ -21,6 +21,7 @@ NSString * const MGPPostProcessingLayerErrorDomain = @"MGPPostProcessingLayerErr
 }
 
 @synthesize postProcessing = _postProcessing;
+@synthesize enabled = _enabled;
 
 - (instancetype)init {
     @throw [NSException exceptionWithName: MGPPostProcessingLayerErrorDomain
@@ -36,6 +37,7 @@ NSString * const MGPPostProcessingLayerErrorDomain = @"MGPPostProcessingLayerErr
     if(self) {
         _device = device;
         _library = library;
+        _enabled = YES;
     }
     return self;
 }

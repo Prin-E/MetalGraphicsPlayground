@@ -103,6 +103,7 @@ const float kCameraSpeed = 1;
     
     // Post-processing
     MGPPostProcessing *_postProcess;
+    MGPPostProcessingLayerSSAO *_ssao;
     MGPPostProcessingLayerScreenSpaceReflection *_ssr;
     
     // Shadow
@@ -212,6 +213,11 @@ const float kCameraSpeed = 1;
         _numLights = 2;
         _roughness = 1.0f;
         _metalic = 0.0f;
+        self.ssaoIntensity = 1.0f;
+        self.ssaoNumSamples = 32;
+        self.ssaoRadius = 1.0f;
+        self.attenuation = 0.5f;
+        self.vignette = 0.25f;
         [self initUniformBuffers];
         [self initAssets];
     }
@@ -289,13 +295,7 @@ const float kCameraSpeed = 1;
                                    error: nil];
     
     // build render pipeline
-    MGPGBufferShadingFunctionConstants shadingConstants = {};
-    shadingConstants.hasIBLIrradianceMap = _IBLs.count > 0;
-    shadingConstants.hasIBLSpecularMap = _IBLs.count > 0;
-    shadingConstants.hasSSAOMap = YES;
     _renderPipelineLighting = [_gBuffer lightingPipelineStateWithError: nil];
-    _renderPipelineShading = [_gBuffer shadingPipelineStateWithConstants: shadingConstants
-                                                                   error: nil];
     
     MTLRenderPipelineDescriptor *renderPipelineDescriptorPresent = [[MTLRenderPipelineDescriptor alloc] init];
     renderPipelineDescriptorPresent.colorAttachments[0].pixelFormat = MTLPixelFormatBGRA8Unorm_sRGB;
@@ -366,18 +366,16 @@ const float kCameraSpeed = 1;
     _postProcess.cameraBuffer = _cameraPropsBuffer;
     MGPPostProcessingLayerSSAO *ssao = [[MGPPostProcessingLayerSSAO alloc] initWithDevice: self.device
                                                                                  library: self.defaultLibrary];
-    ssao.intensity = 0.9f;
-    ssao.radius = 0.5f;
     ssao.bias = 0.02f;
-    ssao.numSamples = 32;
     [_postProcess addLayer: ssao];
     MGPPostProcessingLayerScreenSpaceReflection *ssr = [[MGPPostProcessingLayerScreenSpaceReflection alloc] initWithDevice:self.device
                                                                                                                    library:self.defaultLibrary];
     ssr.step = 1.0;
-    ssr.iteration = 16;
+    ssr.iteration = 32;
     ssr.opacity = 1.0;
     [_postProcess addLayer: ssr];
     [_postProcess resize: _gBuffer.size];
+    _ssao = ssao;
     _ssr = ssr;
     
     _gizmos = [[MGPGizmos alloc] initWithDevice:self.device
@@ -408,6 +406,11 @@ const float kCameraSpeed = 1;
     [self _updateCamera: deltaTime];
     [self _updateUniformBuffers: deltaTime];
     _postProcess.currentBufferIndex = _currentBufferIndex;
+    _ssao.enabled = _ssaoOn;
+    _ssao.intensity = _ssaoIntensity;
+    _ssao.numSamples = (uint32_t)_ssaoNumSamples;
+    _ssao.radius = _ssaoRadius;
+    _ssr.enabled = _ssrOn;
     _ssr.vignette = _vignette;
     _ssr.attenuation = _attenuation;
 }
@@ -597,6 +600,7 @@ const float kCameraSpeed = 1;
     // skybox pass
     _renderPassSkybox.colorAttachments[0].texture = self.view.currentDrawable.texture;
     _renderPassSkybox.depthAttachment.texture = _skyboxDepthTexture;
+    _renderPassSkybox.depthAttachment.storeAction = MTLStoreActionDontCare;
     id<MTLRenderCommandEncoder> skyboxPassEncoder = [commandBuffer renderCommandEncoderWithDescriptor: _renderPassSkybox];
     [self renderSkybox:skyboxPassEncoder];
     
@@ -899,6 +903,13 @@ const float kCameraSpeed = 1;
 }
 
 - (void)renderShading:(id<MTLRenderCommandEncoder>)encoder {
+    MGPGBufferShadingFunctionConstants shadingConstants = {};
+    shadingConstants.hasIBLIrradianceMap = _IBLs.count > 0;
+    shadingConstants.hasIBLSpecularMap = _IBLs.count > 0;
+    shadingConstants.hasSSAOMap = _ssaoOn;
+    _renderPipelineShading = [_gBuffer shadingPipelineStateWithConstants: shadingConstants
+                                                                   error: nil];
+    
     encoder.label = @"Shading";
     [encoder setRenderPipelineState: _renderPipelineShading];
     [encoder setCullMode: MTLCullModeBack];
@@ -948,13 +959,30 @@ const float kCameraSpeed = 1;
     [encoder setVertexBuffer: _commonVertexBuffer
                       offset: 0
                      atIndex: 0];
-    [encoder setFragmentTexture: _gBuffer.output
+    [encoder setFragmentTexture: [self _presentationGBuferTexture]
                         atIndex: 0];
     [encoder drawPrimitives: MTLPrimitiveTypeTriangle
                 vertexStart: 0
                 vertexCount: 6];
     
     [encoder endEncoding];
+}
+
+- (id<MTLTexture>)_presentationGBuferTexture {
+    switch(_gBufferIndex) {
+        case 1:
+            return _gBuffer.albedo;
+        case 2:
+            return _gBuffer.normal;
+        case 3:
+            return _gBuffer.tangent;
+        case 4:
+            return _gBuffer.shading;
+        case 5:
+            return _ssao.ssaoTexture;
+        default:
+            return _gBuffer.output;
+    }
 }
 
 - (void)resize:(CGSize)newSize {
