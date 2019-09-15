@@ -40,7 +40,9 @@ typedef struct __attribute__((__aligned__(256))) {
     vector_float3 position;
     float intensity;
     vector_float3 color;
+    float radius;
     float shadow_bias;
+    uint8_t type;       // 0 : directional, 1 : point
     bool cast_shadow;
 } light_t;
 
@@ -49,6 +51,10 @@ typedef struct __attribute__((__aligned__(256))) {
     unsigned int num_light;
     matrix_float4x4 light_projection;
 } light_global_t;
+
+typedef struct __attribute__((__aligned__(256))) {
+    
+} light_cull_t;
 
 typedef struct __attribute__((__aligned__(256))) {
     float roughness;
@@ -120,7 +126,8 @@ typedef enum {
     fcv_srgb_texture,
     fcv_uses_ibl_irradiance_map,
     fcv_uses_ibl_specular_map,
-    fcv_uses_ssao_map
+    fcv_uses_ssao_map,
+    fcv_light_cull_tile_size
 } function_constant_values;
 
 // vertex attribute

@@ -28,6 +28,8 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)beginFrame;
 - (void)endFrame;
 
+- (void)waitGpu;
+
 @end
 
 NS_ASSUME_NONNULL_END

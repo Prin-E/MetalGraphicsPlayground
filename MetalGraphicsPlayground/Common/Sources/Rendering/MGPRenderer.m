@@ -80,4 +80,11 @@
     dispatch_semaphore_signal(_semaphore);
 }
 
+#pragma mark - Synchronization
+- (void)waitGpu {
+    id<MTLCommandBuffer> emptyBuffer = [_queue commandBuffer];
+    [emptyBuffer commit];
+    [emptyBuffer waitUntilCompleted];
+}
+
 @end

@@ -40,6 +40,8 @@
 		953EAB901B9B5E9B0024994F /* Shaders.metal in Sources */ = {isa = PBXBuildFile; fileRef = 953EAB8F1B9B5E9B0024994F /* Shaders.metal */; };
 		954A2C3A1C14400000EB58E3 /* lego.mtl in Resources */ = {isa = PBXBuildFile; fileRef = 954A2C381C14400000EB58E3 /* lego.mtl */; };
 		954A2C3B1C14400000EB58E3 /* lego.obj in Resources */ = {isa = PBXBuildFile; fileRef = 954A2C391C14400000EB58E3 /* lego.obj */; };
+		954A40F3232D9E0800D09CD4 /* LightCulling.metal in Sources */ = {isa = PBXBuildFile; fileRef = 954A40F2232D9E0800D09CD4 /* LightCulling.metal */; };
+		954A40F4232D9E0800D09CD4 /* LightCulling.metal in Sources */ = {isa = PBXBuildFile; fileRef = 954A40F2232D9E0800D09CD4 /* LightCulling.metal */; };
 		954F28B91C1452A700D4D915 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 954F28B81C1452A700D4D915 /* AppDelegate.m */; };
 		954F28BC1C1452A700D4D915 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 954F28BB1C1452A700D4D915 /* main.m */; };
 		954F28BE1C1452A700D4D915 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 954F28BD1C1452A700D4D915 /* Assets.xcassets */; };
@@ -294,6 +296,7 @@
 		953EAB911B9B5EB80024994F /* SharedStructures.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SharedStructures.h; sourceTree = "<group>"; };
 		954A2C381C14400000EB58E3 /* lego.mtl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = lego.mtl; sourceTree = "<group>"; };
 		954A2C391C14400000EB58E3 /* lego.obj */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = lego.obj; sourceTree = "<group>"; };
+		954A40F2232D9E0800D09CD4 /* LightCulling.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = LightCulling.metal; sourceTree = "<group>"; };
 		954C17182306802A0049FF79 /* ColorSpace.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ColorSpace.h; sourceTree = "<group>"; };
 		954F28B51C1452A700D4D915 /* MetalShadowMapping.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MetalShadowMapping.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		954F28B71C1452A700D4D915 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
@@ -1106,6 +1109,7 @@
 				95644A4D230C39C700EA856C /* Gizmo.metal */,
 				950CF3822322A4A4008F581E /* ScreenSpaceReflection.metal */,
 				956F9B0E232C098B00F29A77 /* Blur.h */,
+				954A40F2232D9E0800D09CD4 /* LightCulling.metal */,
 			);
 			path = Shaders;
 			sourceTree = "<group>";
@@ -1775,6 +1779,7 @@
 				95A4D9292283F1E0004653B6 /* MGPImageBasedLighting.m in Sources */,
 				95F4CB2A2279937200F51454 /* MGPGBuffer.m in Sources */,
 				958852D92302C3DC005218C8 /* MGPFrustum.m in Sources */,
+				954A40F3232D9E0800D09CD4 /* LightCulling.metal in Sources */,
 				959A344E227B59750034AA82 /* DeferredRenderer.m in Sources */,
 				958955CB227736F700414591 /* MGPRenderer.m in Sources */,
 				958852DD23032798005218C8 /* MGPBoundingVolume.m in Sources */,
@@ -1791,6 +1796,7 @@
 				950CF3852322A4BA008F581E /* ScreenSpaceReflection.metal in Sources */,
 				95B80A77230DC165006051B5 /* Gizmo.metal in Sources */,
 				959B8730231AD9DC00CAF261 /* MGPSceneNode.m in Sources */,
+				954A40F4232D9E0800D09CD4 /* LightCulling.metal in Sources */,
 				95F002AE22CD0841000A951B /* MGPPostProcessing.m in Sources */,
 				95F002AF22CD0841000A951B /* MGPPostProcessingLayer.m in Sources */,
 				95F40BC122AD76EA00F747D2 /* GBuffer.metal in Sources */,
