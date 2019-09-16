@@ -88,6 +88,7 @@ const float kCameraSpeed = 1;
     id<MTLRenderPipelineState> _renderPipelinePresent;
     MTLRenderPassDescriptor *_renderPassSkybox;
     MTLRenderPassDescriptor *_renderPassPresent;
+    id<MTLComputePipelineState> _computePipelineLightCulling;
     
     // depth-stencil
     id<MTLDepthStencilState> _depthStencil;
@@ -100,6 +101,7 @@ const float kCameraSpeed = 1;
     
     // Lights
     NSMutableArray<MGPLight *> *_lights;
+    id<MTLBuffer> _lightCullBuffer;
     
     // Post-processing
     MGPPostProcessing *_postProcess;
@@ -210,7 +212,7 @@ const float kCameraSpeed = 1;
     self = [super init];
     if(self) {
         _animate = NO;
-        _numLights = 2;
+        _numLights = 10;
         _roughness = 1.0f;
         _metalic = 0.0f;
         self.ssaoIntensity = 1.0f;
@@ -340,6 +342,11 @@ const float kCameraSpeed = 1;
     for(int i = 0; i < kNumLight; i++) {
         [_lights addObject: [[MGPLight alloc] init]];
     }
+    
+    // light culling
+    _lightCullBuffer = [self.device newBufferWithLength: 8100*16*4 options:MTLResourceStorageModePrivate];
+    _computePipelineLightCulling = [self.device newComputePipelineStateWithFunction: [self.defaultLibrary newFunctionWithName: @"cull_lights"]
+                                                                              error: nil];
     
     // camera
     _camera = [[MGPCamera alloc] init];
@@ -518,15 +525,27 @@ const float kCameraSpeed = 1;
         light.color = light_colors[i];
         light.intensity = light_intensities[i];
         light.direction = simd_make_float3(dir);
-        light.position = -light.direction * 30.0f;
-        light.castShadows = YES;
-        light.shadowBias = 0.001f;
+        
+        // 2 dir.light, 8 point light
+        if(i < 2) {
+            light.position = -light.direction * 30.0f;
+            light.castShadows = YES;
+            light.shadowBias = 0.001f;
+            light.type = MGPLightTypeDirectional;
+        }
+        else {
+            light.position = -light.direction * 3.0f;
+            light.intensity *= 10;
+            light.radius = 2.5f;
+            light.type = MGPLightTypePoint;
+        }
         
         // light properties -> buffer
         light_t *light_props_ptr = &light_props[_currentBufferIndex * kNumLight + i];
         *light_props_ptr = light.shaderProperties;
     }
     light_globals[_currentBufferIndex].num_light = _numLights;
+    light_globals[_currentBufferIndex].first_point_light_index = 2;
     light_globals[_currentBufferIndex].ambient_color = vector3(0.1f, 0.1f, 0.1f);
     light_globals[_currentBufferIndex].light_projection = matrix_from_perspective_fov_aspectLH(DEG_TO_RAD(60.0f), _gBuffer.size.width / _gBuffer.size.height, 1.0f, 80.0f);
     
@@ -618,6 +637,10 @@ const float kCameraSpeed = 1;
     // Post-process before light pass
     [_postProcess render: commandBuffer
        forRenderingOrder: MGPPostProcessingRenderingOrderBeforeLightPass];
+    
+    // Light cull pass
+    id<MTLComputeCommandEncoder> lightCullPassEncoder = [commandBuffer computeCommandEncoder];
+    [self computeLightCullGrid:lightCullPassEncoder];
     
     // G-buffer light-accumulation pass
     // render 4 lights per each draw call
@@ -899,6 +922,35 @@ const float kCameraSpeed = 1;
                     vertexCount: 6];
     }
     
+    [encoder endEncoding];
+}
+
+- (void)computeLightCullGrid:(id<MTLComputeCommandEncoder>)encoder {
+    encoder.label = @"Light Culling";
+    
+    [encoder setComputePipelineState: _computePipelineLightCulling];
+    NSUInteger tileSize = 16;
+    NSUInteger width = _gBuffer.size.width + 0.5;
+    NSUInteger height = _gBuffer.size.width + 0.5;
+    width = (width + tileSize - 1) % tileSize;
+    height = (height + tileSize - 1) % tileSize;
+    MTLSize threadSize = MTLSizeMake(width, height, 1);
+    [encoder setBuffer: _lightCullBuffer
+                offset: 0
+               atIndex: 0];
+    [encoder setBuffer: _lightPropsBuffer
+                offset: _currentBufferIndex * sizeof(light_t) * kNumLight
+               atIndex: 1];
+    [encoder setBuffer: _lightGlobalBuffer
+                offset: _currentBufferIndex * sizeof(light_global_t)
+               atIndex: 2];
+    [encoder setBuffer: _cameraPropsBuffer
+                offset: _currentBufferIndex * sizeof(camera_props_t)
+               atIndex: 3];
+    [encoder setTexture: _gBuffer.depth
+                atIndex: 0];
+    [encoder dispatchThreadgroups:threadSize
+            threadsPerThreadgroup:MTLSizeMake(tileSize, tileSize, 1)];
     [encoder endEncoding];
 }
 

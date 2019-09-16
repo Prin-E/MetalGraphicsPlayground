@@ -202,9 +202,14 @@ fragment half4 gbuffer_light_frag(ScreenFragment in [[stage_in]],
                                               lights[i].light_view[2].z);
             light_dir_invert = (camera_props.view * float4(light_dir_invert, 0.0)).xyz;
             
-            // world-space pos
-            // we don't need it for directional light right now,
-            //float3 light_pos = lights[i].position;
+            float light_dist = 1.0;
+            if(lights[i].type == 1) {
+                float3 light_pos = lights[i].position;
+                float3 pos_to_light = world_pos.xyz - light_pos.xyz;
+                light_dist = max(0.25, length(pos_to_light));
+                light_dir_invert = pos_to_light / light_dist;
+            }
+            
             float3 light_color = lights[i].color;
             float light_intensity = lights[i].intensity;
             float3 v = normalize(-view_pos.xyz);
@@ -232,7 +237,7 @@ fragment half4 gbuffer_light_frag(ScreenFragment in [[stage_in]],
             shading_params.t_v = t_v;
             shading_params.b_v = b_v;
             
-            out_color.xyz += lit * calculate_brdf(shading_params) * shading_values.z;
+            out_color.xyz += lit * calculate_brdf(shading_params) * shading_values.z / (light_dist * light_dist);
         }
     }
     return half4(out_color);

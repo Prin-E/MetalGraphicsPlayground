@@ -47,14 +47,11 @@ typedef struct __attribute__((__aligned__(256))) {
 } light_t;
 
 typedef struct __attribute__((__aligned__(256))) {
-    vector_float3 ambient_color;
-    unsigned int num_light;
     matrix_float4x4 light_projection;
+    vector_float3 ambient_color;
+    unsigned int num_light;                 // max num : 64 (dir.light : 16)
+    unsigned int first_point_light_index;
 } light_global_t;
-
-typedef struct __attribute__((__aligned__(256))) {
-    
-} light_cull_t;
 
 typedef struct __attribute__((__aligned__(256))) {
     float roughness;
