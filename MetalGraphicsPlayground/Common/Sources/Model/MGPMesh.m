@@ -129,13 +129,13 @@
             NSMutableString *URLString = nil;
             if(property.type == MDLMaterialPropertyTypeURL ||
                [url checkResourceIsReachableAndReturnError: nil]) {
-                URLString = [[NSMutableString alloc] initWithString:[url absoluteString]];
+                URLString = [[NSMutableString alloc] initWithString:[url path]];
             } else {
                 URLString = [[NSMutableString alloc] initWithString:@"file://"];
                 [URLString appendString:property.stringValue];
             }
             
-            NSURL *textureURL = [NSURL URLWithString:URLString];
+            NSURL *textureURL = [NSURL fileURLWithPath:URLString];
             NSString *textureName = [URLString lastPathComponent];
             NSError *error = nil;
             

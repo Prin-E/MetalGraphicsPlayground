@@ -56,7 +56,7 @@
                                  userInfo: nil];
         return nil;
     }
-    NSURL *url = [NSURL URLWithString: [NSString stringWithFormat: @"file://%@", filePath]];
+    NSURL *url = [NSURL fileURLWithPath:filePath];
     return [self newTextureFromURL: url
                              usage: textureUsage
                        storageMode: storageMode
@@ -67,7 +67,7 @@
                               usage:(MTLTextureUsage)textureUsage
                         storageMode:(MTLStorageMode)storageMode
                               error:(NSError * _Nullable __autoreleasing *)error {
-    if(url.absoluteString.length == 0) {
+    if(url.path.length == 0) {
         if(error) {
             *error = [NSError errorWithDomain: NSURLErrorDomain
                                          code: 0
@@ -80,7 +80,7 @@
         return nil;
     }
     
-    NSString *absolutePath = [url absoluteString];
+    NSString *absolutePath = [url path];
     
     if([absolutePath.pathExtension.lowercaseString isEqualToString: @"dds"]) {
         // Because MetalKit texture loader doesn't support DDS file loading,
@@ -107,9 +107,7 @@
                            storageMode:(MTLStorageMode)storageMode
                                  error:(NSError * _Nullable __autoreleasing *)error {
     
-    NSString *filePath = url.absoluteString;
-    filePath = [filePath stringByReplacingOccurrencesOfString: @"file://"
-                                                   withString: @""];
+    NSString *filePath = url.path;
     
     id<MTLTexture> texture = nil;
     @autoreleasepool {
