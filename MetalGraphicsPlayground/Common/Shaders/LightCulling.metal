@@ -72,7 +72,7 @@ kernel void cull_lights(texture2d<float> depth [[texture(0)]],
     tile_planes[1] = tile_viewproj_mat[3] - tile_viewproj_mat[0];
     tile_planes[2] = tile_viewproj_mat[3] + tile_viewproj_mat[1];
     tile_planes[3] = tile_viewproj_mat[3] - tile_viewproj_mat[1];
-    tile_planes[4] = tile_viewproj_mat[3] + tile_viewproj_mat[2];
+    tile_planes[4] = tile_viewproj_mat[3];
     tile_planes[5] = tile_viewproj_mat[3] - tile_viewproj_mat[2];
     for(uint i = 0; i < 6; i++) {
         tile_planes[i] *= rsqrt(dot(tile_planes[i].xyz, tile_planes[i].xyz));
