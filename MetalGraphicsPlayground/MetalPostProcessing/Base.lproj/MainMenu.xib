@@ -695,30 +695,11 @@
                         <rect key="frame" x="0.0" y="120" width="480" height="360"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                     </customView>
-                    <segmentedControl verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="cLp-bT-uM7">
-                        <rect key="frame" x="89" y="96" width="319" height="16"/>
-                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES"/>
-                        <segmentedCell key="cell" controlSize="mini" borderStyle="border" alignment="left" style="rounded" trackingMode="selectOne" id="DHq-CT-j7i">
-                            <font key="font" metaFont="label" size="9"/>
-                            <segments>
-                                <segment label="Output" selected="YES"/>
-                                <segment label="Albedo" tag="1"/>
-                                <segment label="Normal"/>
-                                <segment label="Tangent"/>
-                                <segment label="Shading"/>
-                                <segment label="SSAO"/>
-                                <segment label="SSR"/>
-                            </segments>
-                        </segmentedCell>
-                        <connections>
-                            <binding destination="Voe-Tx-rLC" name="selectedIndex" keyPath="self.renderer.gBufferIndex" id="bbM-16-mkK"/>
-                        </connections>
-                    </segmentedControl>
                     <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="C7L-jj-EDR">
                         <rect key="frame" x="18" y="97" width="66" height="14"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxY="YES"/>
                         <textFieldCell key="cell" controlSize="small" lineBreakMode="clipping" title="G-buffer" id="LAI-S1-sXW">
-                            <font key="font" metaFont="controlContent" size="11"/>
+                            <font key="font" metaFont="menu" size="11"/>
                             <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
                             <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
@@ -728,7 +709,7 @@
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES"/>
                         <buttonCell key="cell" type="check" title="SSAO" bezelStyle="regularSquare" imagePosition="left" controlSize="small" state="on" inset="2" id="XOC-yO-dfd">
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
-                            <font key="font" metaFont="controlContent" size="11"/>
+                            <font key="font" metaFont="menu" size="11"/>
                         </buttonCell>
                         <connections>
                             <binding destination="Voe-Tx-rLC" name="value" keyPath="self.renderer.ssaoOn" id="8bt-xJ-bcp"/>
@@ -808,7 +789,7 @@
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES"/>
                         <buttonCell key="cell" type="check" title="Reflection" bezelStyle="regularSquare" imagePosition="left" controlSize="small" state="on" inset="2" id="udc-cf-FkM">
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
-                            <font key="font" metaFont="controlContent" size="11"/>
+                            <font key="font" metaFont="menu" size="11"/>
                         </buttonCell>
                         <connections>
                             <binding destination="Voe-Tx-rLC" name="value" keyPath="self.renderer.ssrOn" id="Zov-KY-CQC"/>
@@ -830,6 +811,25 @@
                             <binding destination="Voe-Tx-rLC" name="value" keyPath="self.renderer.vignette" id="6tM-kc-CKU"/>
                         </connections>
                     </slider>
+                    <segmentedControl verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="cLp-bT-uM7">
+                        <rect key="frame" x="89" y="96" width="354" height="16"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES"/>
+                        <segmentedCell key="cell" controlSize="mini" borderStyle="border" alignment="left" style="rounded" trackingMode="selectOne" id="DHq-CT-j7i">
+                            <font key="font" metaFont="label" size="9"/>
+                            <segments>
+                                <segment label="Output" selected="YES"/>
+                                <segment label="Albedo" tag="1"/>
+                                <segment label="Normal"/>
+                                <segment label="Tangent"/>
+                                <segment label="Shading"/>
+                                <segment label="SSAO"/>
+                                <segment label="LightCulling"/>
+                            </segments>
+                        </segmentedCell>
+                        <connections>
+                            <binding destination="Voe-Tx-rLC" name="selectedIndex" keyPath="self.renderer.gBufferIndex" id="bbM-16-mkK"/>
+                        </connections>
+                    </segmentedControl>
                 </subviews>
             </view>
             <point key="canvasLocation" x="131" y="-54"/>

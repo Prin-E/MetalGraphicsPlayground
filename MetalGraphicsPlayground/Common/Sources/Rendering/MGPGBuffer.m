@@ -187,7 +187,7 @@
         
         // depth attachments
         _renderPassDescriptor.depthAttachment.loadAction = MTLLoadActionClear;
-        _renderPassDescriptor.depthAttachment.storeAction = MTLStoreActionDontCare;
+        _renderPassDescriptor.depthAttachment.storeAction = MTLStoreActionStore;
     }
     
     // assign or replace textures

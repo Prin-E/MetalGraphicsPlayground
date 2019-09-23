@@ -80,6 +80,7 @@ static NSUInteger _MGPLightCounter = 0;
     light.cast_shadow = _castShadows;
     light.shadow_bias = _shadowBias;
     light.type = (uint8_t)_type;
+    light.radius = _radius;
     return light;
 }
 

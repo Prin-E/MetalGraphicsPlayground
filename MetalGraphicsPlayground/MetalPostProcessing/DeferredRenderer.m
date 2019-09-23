@@ -40,6 +40,7 @@ const float kLightIntensityBase = 1.0f;
 const float kLightIntensityVariation = 1.0f;
 const size_t kShadowResolution = 512;
 const float kCameraSpeed = 1;
+const size_t kLightCullBufferSize = 8100*4*16;
 
 #define DEG_TO_RAD(x) ((x)*0.0174532925)
 
@@ -89,6 +90,7 @@ const float kCameraSpeed = 1;
     MTLRenderPassDescriptor *_renderPassSkybox;
     MTLRenderPassDescriptor *_renderPassPresent;
     id<MTLComputePipelineState> _computePipelineLightCulling;
+    id<MTLRenderPipelineState> _renderPipelineLightCullTile;
     
     // depth-stencil
     id<MTLDepthStencilState> _depthStencil;
@@ -212,7 +214,7 @@ const float kCameraSpeed = 1;
     self = [super init];
     if(self) {
         _animate = NO;
-        _numLights = 10;
+        _numLights = 20;
         _roughness = 1.0f;
         _metalic = 0.0f;
         self.ssaoIntensity = 1.0f;
@@ -319,6 +321,18 @@ const float kCameraSpeed = 1;
     _renderPipelineSkybox = [self.device newRenderPipelineStateWithDescriptor: renderPipelineDescriptorSkybox
                                                                         error: nil];
     
+    MTLRenderPipelineDescriptor *renderPipelineDescriptorLightCullTile = [[MTLRenderPipelineDescriptor alloc] init];
+    renderPipelineDescriptorLightCullTile.colorAttachments[0].pixelFormat = MTLPixelFormatBGRA8Unorm_sRGB;
+    renderPipelineDescriptorLightCullTile.colorAttachments[0].blendingEnabled = YES;
+    renderPipelineDescriptorLightCullTile.colorAttachments[0].sourceRGBBlendFactor = MTLBlendFactorSourceAlpha;
+    renderPipelineDescriptorLightCullTile.colorAttachments[0].destinationRGBBlendFactor = MTLBlendFactorOneMinusSourceAlpha;
+    renderPipelineDescriptorLightCullTile.colorAttachments[0].sourceAlphaBlendFactor = MTLBlendFactorOne;
+    renderPipelineDescriptorLightCullTile.colorAttachments[0].sourceAlphaBlendFactor = MTLBlendFactorOne;
+    renderPipelineDescriptorLightCullTile.vertexFunction = [self.defaultLibrary newFunctionWithName: @"screen_vert"];
+    renderPipelineDescriptorLightCullTile.fragmentFunction = [self.defaultLibrary newFunctionWithName: @"lightcull_frag"];
+    _renderPipelineLightCullTile = [self.device newRenderPipelineStateWithDescriptor: renderPipelineDescriptorLightCullTile
+                                                                         error: nil];
+    
     // render pass
     _renderPassSkybox = [[MTLRenderPassDescriptor alloc] init];
     _renderPassSkybox.colorAttachments[0].loadAction = MTLLoadActionClear;
@@ -344,7 +358,8 @@ const float kCameraSpeed = 1;
     }
     
     // light culling
-    _lightCullBuffer = [self.device newBufferWithLength: 8100*16*4 options:MTLResourceStorageModePrivate];
+    _lightCullBuffer = [self.device newBufferWithLength: kLightCullBufferSize
+                                                options:MTLResourceStorageModePrivate];
     _computePipelineLightCulling = [self.device newComputePipelineStateWithFunction: [self.defaultLibrary newFunctionWithName: @"cull_lights"]
                                                                               error: nil];
     
@@ -504,6 +519,7 @@ const float kCameraSpeed = 1;
     static simd_float3 light_colors[kNumLight];
     static float light_intensities[kNumLight];
     static simd_float4 light_dirs[kNumLight];
+    static simd_float3 light_positions[kNumLight];
     static BOOL init_light_value = NO;
     if(!init_light_value) {
         init_light_value = YES;
@@ -513,6 +529,10 @@ const float kCameraSpeed = 1;
             light_dirs[i] = simd_normalize(vector4(rand() / (float)RAND_MAX - 0.5f,
                                                    -rand() / (float)RAND_MAX - 0.25f,
                                                    rand() / (float)RAND_MAX - 0.5f, 0.0f));
+            light_positions[i] = vector3((rand() / (float)RAND_MAX - 0.5f) * 8.0f,
+                                         (rand() / (float)RAND_MAX) * 6.0f + 2.0f,
+                                         (rand() / (float)RAND_MAX - 0.5f) * 8.0f);
+            //light_positions[i] = simd_make_float3(0,0.5,0);
         }
     }
     
@@ -534,9 +554,9 @@ const float kCameraSpeed = 1;
             light.type = MGPLightTypeDirectional;
         }
         else {
-            light.position = -light.direction * 3.0f;
-            light.intensity *= 10;
-            light.radius = 2.5f;
+            light.position = light_positions[i];
+            light.intensity *= 1;
+            light.radius = 1.0f;
             light.type = MGPLightTypePoint;
         }
         
@@ -754,6 +774,7 @@ const float kCameraSpeed = 1;
             }
             
             // Gizmo
+            /*
             if(bindTextures && _drawGizmos) {
                 if([volume class] == [MGPBoundingSphere class]) {
                     MGPBoundingSphere *sphere = volume;
@@ -761,6 +782,7 @@ const float kCameraSpeed = 1;
                                                     radius:sphere.radius];
                 }
             }
+            */
             
             // Texture binding
             if(bindTextures) {
@@ -931,9 +953,9 @@ const float kCameraSpeed = 1;
     [encoder setComputePipelineState: _computePipelineLightCulling];
     NSUInteger tileSize = 16;
     NSUInteger width = _gBuffer.size.width + 0.5;
-    NSUInteger height = _gBuffer.size.width + 0.5;
-    width = (width + tileSize - 1) % tileSize;
-    height = (height + tileSize - 1) % tileSize;
+    NSUInteger height = _gBuffer.size.height + 0.5;
+    width = (width + tileSize - 1) / tileSize;
+    height = (height + tileSize - 1) / tileSize;
     MTLSize threadSize = MTLSizeMake(width, height, 1);
     [encoder setBuffer: _lightCullBuffer
                 offset: 0
@@ -1006,7 +1028,17 @@ const float kCameraSpeed = 1;
 - (void)renderFramebuffer:(id<MTLRenderCommandEncoder>)encoder {
     encoder.label = @"Present";
     
-    [encoder setRenderPipelineState: _renderPipelinePresent];
+    if(_gBufferIndex == 6) {
+        // Draw light-culling tiles
+        [encoder setRenderPipelineState: _renderPipelineLightCullTile];
+        [encoder setFragmentBuffer: _lightCullBuffer
+                            offset: 0
+                           atIndex: 0];
+    }
+    else {
+        [encoder setRenderPipelineState: _renderPipelinePresent];
+    }
+    
     [encoder setCullMode: MTLCullModeBack];
     [encoder setVertexBuffer: _commonVertexBuffer
                       offset: 0
