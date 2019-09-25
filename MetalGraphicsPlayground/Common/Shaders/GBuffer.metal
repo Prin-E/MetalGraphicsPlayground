@@ -200,18 +200,20 @@ fragment half4 gbuffer_light_frag(ScreenFragment in [[stage_in]],
             float3 light_dir_invert = -float3(lights[i].light_view[0].z,
                                               lights[i].light_view[1].z,
                                               lights[i].light_view[2].z);
-            light_dir_invert = (camera_props.view * float4(light_dir_invert, 0.0)).xyz;
             
             float light_dist = 1.0;
             if(lights[i].type == 1) {
                 float3 light_pos = lights[i].position;
-                float3 pos_to_light = world_pos.xyz - light_pos.xyz;
-                light_dist = max(0.25, length(pos_to_light));
+                float3 pos_to_light = light_pos.xyz - world_pos.xyz;
+                light_dist = max(0.1, length(pos_to_light));
                 light_dir_invert = pos_to_light / light_dist;
             }
             
+            light_dir_invert = (camera_props.view * float4(light_dir_invert, 0.0)).xyz;
+
             float3 light_color = lights[i].color;
             float light_intensity = lights[i].intensity;
+            light_intensity *= (1.0f - smoothstep(lights[i].radius * 0.75, lights[i].radius, light_dist));
             float3 v = normalize(-view_pos.xyz);
             float3 h = normalize(light_dir_invert + v);
             float h_v = max(0.001, saturate(dot(h, v)));

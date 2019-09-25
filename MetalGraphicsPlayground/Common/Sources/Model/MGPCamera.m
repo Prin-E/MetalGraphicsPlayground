@@ -136,6 +136,8 @@
         props.viewInverse = _cameraToWorldMatrix;
         props.projectionInverse = _projectionInverseMatrix;
         props.viewProjectionInverse = simd_mul(_cameraToWorldMatrix, _projectionInverseMatrix);
+        props.nearPlane = _projectionState.nearPlane;
+        props.farPlane = _projectionState.farPlane;
         return props;
     }
 }

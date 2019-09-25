@@ -57,6 +57,12 @@ kernel void cull_lights(texture2d<float> depth [[texture(0)]],
     // construct tile matrix, frustum planes
     float tile_min_depth = as_type<float>(atomic_load_explicit(&min_depth_value, memory_order_relaxed));
     float tile_max_depth = as_type<float>(atomic_load_explicit(&max_depth_value, memory_order_relaxed));
+    // from MiniEngine (does it work??)
+    /*
+    float rcp_z_magic = camera_props.nearPlane / (camera_props.farPlane - camera_props.nearPlane);
+    float tile_min_depth = (1.0 / atomic_load_explicit(&min_depth_value, memory_order_relaxed) - 1.0) * rcp_z_magic;
+    float tile_max_depth = (1.0 / atomic_load_explicit(&max_depth_value, memory_order_relaxed) - 1.0) * rcp_z_magic;
+     */
     float tile_depth_range = max(FLT_MIN, tile_max_depth - tile_min_depth);
     
     float4x4 viewproj_mat = camera_props.viewProjection;
@@ -75,7 +81,7 @@ kernel void cull_lights(texture2d<float> depth [[texture(0)]],
     tile_planes[1] = tile_viewproj_mat[3] - tile_viewproj_mat[0];
     tile_planes[2] = tile_viewproj_mat[3] + tile_viewproj_mat[1];
     tile_planes[3] = tile_viewproj_mat[3] - tile_viewproj_mat[1];
-    tile_planes[4] = tile_viewproj_mat[3];
+    tile_planes[4] = tile_viewproj_mat[3] + tile_viewproj_mat[2];
     tile_planes[5] = tile_viewproj_mat[3] - tile_viewproj_mat[2];
     for(uint i = 0; i < 6; i++) {
         tile_planes[i] *= rsqrt(dot(tile_planes[i].xyz, tile_planes[i].xyz));
@@ -140,11 +146,11 @@ fragment half4 lightcull_frag(ScreenFragment in [[stage_in]],
         tile.x = tile.x >> 1;
     }
     while(tile.y != 0) {
-        tile_color.y += (1.0 / 4.0) * (tile.y & 1);
+        tile_color.y += (1.0 / 12.0) * (tile.y & 1);
         tile.y = tile.y >> 1;
     }
     while(tile.z != 0) {
-        tile_color.y += (1.0 / 4.0) * (tile.z & 1);
+        tile_color.y += (1.0 / 12.0) * (tile.z & 1);
         tile.z = tile.z >> 1;
     }
     tile_color.xyz = pow(tile_color.xyz, 2.2);

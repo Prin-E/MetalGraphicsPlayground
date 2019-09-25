@@ -168,6 +168,10 @@ const size_t kLightCullBufferSize = 8100*4*16;
         _cull = !_cull;
         NSLog(@"Cull : %d", _cull);
     }
+    if(theEvent.keyCode == 49) {
+        // space
+        NSLog(@"camera (%.3f, %.3f, %.3f)", _camera.position.x, _camera.position.y, _camera.position.z);
+    }
 }
 
 - (void)view:(MGPView *)view keyUp:(NSEvent *)theEvent {
@@ -214,7 +218,7 @@ const size_t kLightCullBufferSize = 8100*4*16;
     self = [super init];
     if(self) {
         _animate = NO;
-        _numLights = 20;
+        _numLights = 28;
         _roughness = 1.0f;
         _metalic = 0.0f;
         self.ssaoIntensity = 1.0f;
@@ -521,18 +525,25 @@ const size_t kLightCullBufferSize = 8100*4*16;
     static simd_float4 light_dirs[kNumLight];
     static simd_float3 light_positions[kNumLight];
     static BOOL init_light_value = NO;
+    static uint32_t first_point_light_index = 2;
     if(!init_light_value) {
         init_light_value = YES;
         for(int i = 0; i < kNumLight; i++) {
             light_colors[i] = vector3(rand() / (float)RAND_MAX, rand() / (float)RAND_MAX, rand() / (float)RAND_MAX);
             light_intensities[i] = kLightIntensityBase + rand() / (float)RAND_MAX * kLightIntensityVariation;
+            if(i >= first_point_light_index) {
+                light_intensities[i] += rand() / (float)RAND_MAX;
+            }
             light_dirs[i] = simd_normalize(vector4(rand() / (float)RAND_MAX - 0.5f,
                                                    -rand() / (float)RAND_MAX - 0.25f,
                                                    rand() / (float)RAND_MAX - 0.5f, 0.0f));
+            light_positions[i] = simd_make_float3(-17.0f + 1.0f * i,
+                                                  0.75f,
+                                                  -1.0f + 2.0f * (i % 2));/*
             light_positions[i] = vector3((rand() / (float)RAND_MAX - 0.5f) * 8.0f,
                                          (rand() / (float)RAND_MAX) * 6.0f + 2.0f,
                                          (rand() / (float)RAND_MAX - 0.5f) * 8.0f);
-            //light_positions[i] = simd_make_float3(0,0.5,0);
+                                                                           */
         }
     }
     
@@ -547,7 +558,7 @@ const size_t kLightCullBufferSize = 8100*4*16;
         light.direction = simd_make_float3(dir);
         
         // 2 dir.light, 8 point light
-        if(i < 2) {
+        if(i < first_point_light_index) {
             light.position = -light.direction * 30.0f;
             light.castShadows = YES;
             light.shadowBias = 0.001f;
@@ -555,8 +566,7 @@ const size_t kLightCullBufferSize = 8100*4*16;
         }
         else {
             light.position = light_positions[i];
-            light.intensity *= 1;
-            light.radius = 1.0f;
+            light.radius = 2.0f;
             light.type = MGPLightTypePoint;
         }
         
@@ -565,7 +575,7 @@ const size_t kLightCullBufferSize = 8100*4*16;
         *light_props_ptr = light.shaderProperties;
     }
     light_globals[_currentBufferIndex].num_light = _numLights;
-    light_globals[_currentBufferIndex].first_point_light_index = 2;
+    light_globals[_currentBufferIndex].first_point_light_index = first_point_light_index;
     light_globals[_currentBufferIndex].ambient_color = vector3(0.1f, 0.1f, 0.1f);
     light_globals[_currentBufferIndex].light_projection = matrix_from_perspective_fov_aspectLH(DEG_TO_RAD(60.0f), _gBuffer.size.width / _gBuffer.size.height, 1.0f, 80.0f);
     

@@ -9,6 +9,7 @@
 #import <Foundation/Foundation.h>
 #import "../Common/Sources/Rendering/MGPRenderer.h"
 #import "../Common/Sources/View/MGPView.h"
+#import <simd/simd.h>
 
 NS_ASSUME_NONNULL_BEGIN
 
