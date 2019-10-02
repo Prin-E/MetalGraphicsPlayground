@@ -24,7 +24,7 @@ You can check framework sources codes in **Common** directory!
   * Directional Light
   * Point Light
   * Shadow (Bilinear, PCF)
-  * Light Culling (Tile-based))
+  * Light Culling (Tile-based)
 * Post-processing
   * Screen-Space Ambient Occlusion
   * Screen-Space Reflection
@@ -110,7 +110,7 @@ You can check framework sources codes in **Common** directory!
 * Screen-Space Ambient Occlusion
 * Screen-Space Reflection
 * Frustum Culling (Sphere)
-* Light Culling (Tile-basd)
+* Light Culling (Tile-based)
 * Gizmos
 * TODO
   * Color grading (Tone mapping)
