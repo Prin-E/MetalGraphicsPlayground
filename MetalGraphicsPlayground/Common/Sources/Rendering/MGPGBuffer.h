@@ -72,6 +72,8 @@ typedef struct MGPGBufferShadingFunctionConstants {
 - (id<MTLRenderPipelineState>)lightingPipelineStateWithError: (NSError **)error;
 - (id<MTLRenderPipelineState>)shadingPipelineStateWithConstants: (MGPGBufferShadingFunctionConstants)constants
                                                           error: (NSError **)error;
+- (id<MTLRenderPipelineState>)nonLightCulledShadingPipelineStateWithConstants: (MGPGBufferShadingFunctionConstants)constants
+                                                          error: (NSError **)error;
 
 @end
 

@@ -15,14 +15,24 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface DeferredRenderer : MGPRenderer <MGPViewDelegate>
 
+// Material props
 @property (readwrite) float roughness, metalic, anisotropy;
 
+// G-buffer
 @property (readwrite) NSUInteger gBufferIndex;
+
+// Post-processing params
 @property (readwrite) BOOL ssaoOn, ssrOn;
 @property (readwrite) float ssaoIntensity, ssaoRadius;
 @property (readwrite) NSUInteger ssaoNumSamples;
 @property (readwrite) float vignette, attenuation;
+
+// Lights
 @property (readwrite) unsigned int numLights;
+
+// Light culling
+@property (readwrite) BOOL lightCullOn;
+@property (readwrite) uint lightGridTileSize;
 
 @end
 

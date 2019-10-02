@@ -11,10 +11,9 @@
 #include "SharedStructures.h"
 #include "CommonStages.h"
 #include "CommonVariables.h"
+#include "LightingCommon.h"
 
 using namespace metal;
-
-constant uint tile_size = 16;//[[function_constant(fcv_light_cull_tile_size)]];
 
 // uint4 per grid cell : origin=top-left
 // [ dir_light_shadow | dir_light ] [ point_light_1~32 ] [ point_light_33~64 ] [ unused ]
@@ -31,6 +30,7 @@ kernel void cull_lights(texture2d<float> depth [[texture(0)]],
     threadgroup atomic_uint min_depth_value;
     threadgroup atomic_uint max_depth_value;
     threadgroup atomic_uint light_bit_mask[4];
+    const uint tile_size = light_globals.tile_size;
     
     if(thread_index_in_group == 0)
     {
@@ -91,7 +91,7 @@ kernel void cull_lights(texture2d<float> depth [[texture(0)]],
     for(uint light_index = thread_index_in_group; light_index < light_globals.first_point_light_index; light_index += tile_size * tile_size) {
         // directional lights; will not be culled
         constant light_t &light = lights[light_index];
-        uint bit_index = uint(light.cast_shadow) * 16 + light_index;
+        uint bit_index = uint(light.cast_shadow) * MAX_NUM_DIRECTIONAL_LIGHTS + light_index;
         atomic_fetch_or_explicit(&light_bit_mask[0], 1 << bit_index, memory_order_relaxed);
     }
     
@@ -129,7 +129,9 @@ kernel void cull_lights(texture2d<float> depth [[texture(0)]],
 // (Debug) Tile state rendering
 fragment half4 lightcull_frag(ScreenFragment in [[stage_in]],
                               device uint4 *light_cull_buffer [[buffer(0)]],
+                              constant light_global_t &light_globals [[buffer(1)]],
                               texture2d<half> output [[texture(0)]]) {
+    const uint tile_size = light_globals.tile_size;
     half4 output_color = output.sample(linear_clamp_to_edge, in.uv);
     
     const uint width = output.get_width();

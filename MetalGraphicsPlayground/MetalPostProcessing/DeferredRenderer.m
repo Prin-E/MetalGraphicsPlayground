@@ -218,9 +218,10 @@ const size_t kLightCullBufferSize = 8100*4*16;
     self = [super init];
     if(self) {
         _animate = NO;
-        _numLights = 28;
+        _numLights = 64;
         _roughness = 1.0f;
         _metalic = 0.0f;
+        _lightGridTileSize = 16;
         self.ssaoIntensity = 1.0f;
         self.ssaoNumSamples = 32;
         self.ssaoRadius = 1.0f;
@@ -537,13 +538,9 @@ const size_t kLightCullBufferSize = 8100*4*16;
             light_dirs[i] = simd_normalize(vector4(rand() / (float)RAND_MAX - 0.5f,
                                                    -rand() / (float)RAND_MAX - 0.25f,
                                                    rand() / (float)RAND_MAX - 0.5f, 0.0f));
-            light_positions[i] = simd_make_float3(-17.0f + 1.0f * i,
-                                                  0.75f,
-                                                  -1.0f + 2.0f * (i % 2));/*
-            light_positions[i] = vector3((rand() / (float)RAND_MAX - 0.5f) * 8.0f,
-                                         (rand() / (float)RAND_MAX) * 6.0f + 2.0f,
-                                         (rand() / (float)RAND_MAX - 0.5f) * 8.0f);
-                                                                           */
+            light_positions[i] = simd_make_float3(-11.0f + 0.333f * i,
+                                                  0.5f + 0.5f * (i % 2),
+                                                  -2.0f + 2.0f * (i % 4));
         }
     }
     
@@ -578,6 +575,7 @@ const size_t kLightCullBufferSize = 8100*4*16;
     light_globals[_currentBufferIndex].first_point_light_index = first_point_light_index;
     light_globals[_currentBufferIndex].ambient_color = vector3(0.1f, 0.1f, 0.1f);
     light_globals[_currentBufferIndex].light_projection = matrix_from_perspective_fov_aspectLH(DEG_TO_RAD(60.0f), _gBuffer.size.width / _gBuffer.size.height, 1.0f, 80.0f);
+    light_globals[_currentBufferIndex].tile_size = _lightGridTileSize;
     
     // Synchronize buffers
     memcpy(_cameraPropsBuffer.contents + _currentBufferIndex * sizeof(camera_props_t),
@@ -668,24 +666,27 @@ const size_t kLightCullBufferSize = 8100*4*16;
     [_postProcess render: commandBuffer
        forRenderingOrder: MGPPostProcessingRenderingOrderBeforeLightPass];
     
-    // Light cull pass
-    id<MTLComputeCommandEncoder> lightCullPassEncoder = [commandBuffer computeCommandEncoder];
-    [self computeLightCullGrid:lightCullPassEncoder];
-    
-    // G-buffer light-accumulation pass
-    // render 4 lights per each draw call
-    const NSUInteger lightCountPerDrawCall = 4;
-    id<MTLRenderCommandEncoder> lightingPassEncoder = [commandBuffer renderCommandEncoderWithDescriptor: _gBuffer.lightingPassBaseDescriptor];
-    [self renderLighting:lightingPassEncoder
-               fromIndex:0
-                 toIndex:lightCountPerDrawCall-1
-        countPerDrawCall:lightCountPerDrawCall];
-    if(_numLights > lightCountPerDrawCall) {
-        lightingPassEncoder = [commandBuffer renderCommandEncoderWithDescriptor: _gBuffer.lightingPassAddDescriptor];
+    if(_lightCullOn) {
+        // Light cull pass
+        id<MTLComputeCommandEncoder> lightCullPassEncoder = [commandBuffer computeCommandEncoder];
+        [self computeLightCullGrid:lightCullPassEncoder];
+    }
+    else {
+        // G-buffer light-accumulation pass
+        // render 4 lights per each draw call
+        const NSUInteger lightCountPerDrawCall = 4;
+        id<MTLRenderCommandEncoder> lightingPassEncoder = [commandBuffer renderCommandEncoderWithDescriptor: _gBuffer.lightingPassBaseDescriptor];
         [self renderLighting:lightingPassEncoder
-                   fromIndex:lightCountPerDrawCall
-                     toIndex:_numLights-1
+                   fromIndex:0
+                     toIndex:lightCountPerDrawCall-1
             countPerDrawCall:lightCountPerDrawCall];
+        if(_numLights > lightCountPerDrawCall) {
+            lightingPassEncoder = [commandBuffer renderCommandEncoderWithDescriptor: _gBuffer.lightingPassAddDescriptor];
+            [self renderLighting:lightingPassEncoder
+                       fromIndex:lightCountPerDrawCall
+                         toIndex:_numLights-1
+                countPerDrawCall:lightCountPerDrawCall];
+        }
     }
     
     // Post-process before shade pass
@@ -942,11 +943,11 @@ const size_t kLightCullBufferSize = 8100*4*16;
                                                                              resolution: kShadowResolution
                                                                           cascadeLevels: 1];
                 [encoder setFragmentTexture: shadowBuffer.texture
-                                    atIndex: j+11];
+                                    atIndex: j+attachment_shadow_map];
             }
             else {
                 [encoder setFragmentTexture: nil
-                                    atIndex: j+11];
+                                    atIndex: j+attachment_shadow_map];
             }
         }
         [encoder drawPrimitives: MTLPrimitiveTypeTriangle
@@ -961,7 +962,7 @@ const size_t kLightCullBufferSize = 8100*4*16;
     encoder.label = @"Light Culling";
     
     [encoder setComputePipelineState: _computePipelineLightCulling];
-    NSUInteger tileSize = 16;
+    NSUInteger tileSize = _lightGridTileSize;
     NSUInteger width = _gBuffer.size.width + 0.5;
     NSUInteger height = _gBuffer.size.height + 0.5;
     width = (width + tileSize - 1) / tileSize;
@@ -991,8 +992,15 @@ const size_t kLightCullBufferSize = 8100*4*16;
     shadingConstants.hasIBLIrradianceMap = _IBLs.count > 0;
     shadingConstants.hasIBLSpecularMap = _IBLs.count > 0;
     shadingConstants.hasSSAOMap = _ssaoOn;
-    _renderPipelineShading = [_gBuffer shadingPipelineStateWithConstants: shadingConstants
-                                                                   error: nil];
+    
+    if(_lightCullOn) {
+        _renderPipelineShading = [_gBuffer shadingPipelineStateWithConstants: shadingConstants
+                                                                       error: nil];
+    }
+    else {
+        _renderPipelineShading = [_gBuffer nonLightCulledShadingPipelineStateWithConstants: shadingConstants
+                                                                       error: nil];
+    }
     
     encoder.label = @"Shading";
     [encoder setRenderPipelineState: _renderPipelineShading];
@@ -1006,6 +1014,12 @@ const size_t kLightCullBufferSize = 8100*4*16;
     [encoder setFragmentBuffer: _lightGlobalBuffer
                         offset: _currentBufferIndex * sizeof(light_global_t)
                        atIndex: 2];
+    [encoder setFragmentBuffer: _lightPropsBuffer
+                        offset: _currentBufferIndex * sizeof(light_t) * kNumLight
+                       atIndex: 3];
+    [encoder setFragmentBuffer: _lightCullBuffer
+                        offset: 0
+                       atIndex: 4];
     [encoder setFragmentTexture: _gBuffer.albedo
                         atIndex: attachment_albedo];
     [encoder setFragmentTexture: _gBuffer.normal
@@ -1014,8 +1028,14 @@ const size_t kLightCullBufferSize = 8100*4*16;
                         atIndex: attachment_shading];
     [encoder setFragmentTexture: _gBuffer.depth
                         atIndex: attachment_depth];
-    [encoder setFragmentTexture: _gBuffer.lighting
-                        atIndex: attachment_light];
+    [encoder setFragmentTexture: _gBuffer.tangent
+                        atIndex: attachment_tangent];
+    [encoder setFragmentTexture: _gBuffer.depth
+                        atIndex: attachment_depth];
+    if(!_lightCullOn) {
+        [encoder setFragmentTexture: _gBuffer.lighting
+                            atIndex: attachment_light];
+    }
     if(_IBLs.count > 0) {
         [encoder setFragmentTexture: _IBLs[_renderingIBLIndex].irradianceMap
                             atIndex: attachment_irradiance];
@@ -1027,6 +1047,19 @@ const size_t kLightCullBufferSize = 8100*4*16;
     if(_postProcess.layers.count > 0) {
         [encoder setFragmentTexture: ((MGPPostProcessingLayerSSAO *)_postProcess[0]).ssaoTexture
                             atIndex: attachment_ssao];
+    }
+    for(NSUInteger i = 0; i < light_globals[_currentBufferIndex].first_point_light_index; i++) {
+        if(_lights[i].castShadows) {
+            MGPShadowBuffer *shadowBuffer = [_shadowManager newShadowBufferForLight: _lights[i]
+                                                                         resolution: kShadowResolution
+                                                                      cascadeLevels: 1];
+            [encoder setFragmentTexture: shadowBuffer.texture
+                                atIndex: i+attachment_shadow_map];
+        }
+        else {
+            [encoder setFragmentTexture: nil
+                                atIndex: i+attachment_shadow_map];
+        }
     }
     [encoder drawPrimitives: MTLPrimitiveTypeTriangle
                 vertexStart: 0
@@ -1044,6 +1077,9 @@ const size_t kLightCullBufferSize = 8100*4*16;
         [encoder setFragmentBuffer: _lightCullBuffer
                             offset: 0
                            atIndex: 0];
+        [encoder setFragmentBuffer: _lightGlobalBuffer
+                            offset: _currentBufferIndex * sizeof(light_global_t)
+                           atIndex: 1];
     }
     else {
         [encoder setRenderPipelineState: _renderPipelinePresent];

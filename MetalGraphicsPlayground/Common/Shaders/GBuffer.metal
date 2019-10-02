@@ -14,6 +14,7 @@
 #include "CommonMath.h"
 #include "ColorSpace.h"
 #include "Shadow.h"
+#include "Lighting.h"
 
 using namespace metal;
 
@@ -42,7 +43,7 @@ typedef struct {
 
 // g-buffer fragment input data
 typedef struct {
-    float4 clipPos      [[position]];
+    float4 clip_pos      [[position]];
     float2 uv;
     float3 normal;
     float3 tangent;
@@ -58,7 +59,7 @@ typedef struct {
     half4 tangent   [[color(attachment_tangent)]];
 } GBufferOutput;
 
-// g-buffer
+#pragma mark - Prepass
 vertex GBufferFragment gbuffer_prepass_vert(GBufferVertex in [[stage_in]],
                                     constant camera_props_t &cameraProps [[buffer(1)]],
                                     constant instance_props_t *instanceProps [[buffer(2)]],
@@ -66,7 +67,7 @@ vertex GBufferFragment gbuffer_prepass_vert(GBufferVertex in [[stage_in]],
     GBufferFragment out;
     float4 v = float4(in.pos, 1.0);
     float4x4 modelview = cameraProps.view * instanceProps[iid].model;
-    out.clipPos = cameraProps.projection * modelview * v;
+    out.clip_pos = cameraProps.projection * modelview * v;
     out.normal = (modelview * float4(in.normal, 0.0)).xyz;
     out.tangent = (modelview * float4(in.tangent, 0.0)).xyz;
     out.bitangent = cross(out.tangent, out.normal);
@@ -148,6 +149,95 @@ fragment GBufferOutput gbuffer_prepass_frag(GBufferFragment in [[stage_in]],
     return out;
 }
 
+#pragma mark - Shading
+vertex ScreenFragment gbuffer_shade_vert(constant ScreenVertex *in [[buffer(0)]],
+                                    uint vid [[vertex_id]]) {
+    ScreenFragment out;
+    out.clip_pos = float4(in[vid].pos, 1.0);
+    out.uv = (out.clip_pos.xy + 1.0) * 0.5;
+    out.uv.y = 1.0 - out.uv.y;
+    return out;
+}
+
+fragment half4 gbuffer_shade_frag(ScreenFragment in [[stage_in]],
+                                  constant camera_props_t &camera_props [[buffer(1)]],
+                                  constant light_global_t &light_global [[buffer(2)]],
+                                  constant light_t *lights [[buffer(3)]],
+                                  device uint4 *light_cull_buffer [[buffer(4)]],
+                                  texture2d<half> albedo [[texture(attachment_albedo)]],
+                                  texture2d<half> normal [[texture(attachment_normal)]],
+                                  texture2d<half> shading [[texture(attachment_shading)]],
+                                  texture2d<half> tangent [[texture(attachment_tangent)]],
+                                  texture2d<float> depth [[texture(attachment_depth)]],
+                                  texturecube<half> irradiance [[texture(attachment_irradiance), function_constant(uses_ibl_irradiance_map)]],
+                                  texturecube<half> prefilteredSpecular [[texture(attachment_prefiltered_specular), function_constant(uses_ibl_specular_map)]],
+                                  texture2d<half> brdfLookup [[texture(attachment_brdf_lookup), function_constant(uses_ibl_specular_map)]],
+                                  texture2d<half> ssao [[texture(attachment_ssao), function_constant(uses_ssao_map)]],
+                                  array<texture2d<float>,MAX_NUM_DIRECTIONAL_LIGHTS> shadow_maps [[texture(attachment_shadow_map)]]) {
+    float4 out_color = float4(0.0, 0.0, 0.0, 1.0);
+    
+    float4 n_c = float4(normal.sample(linear, in.uv));
+    if(n_c.w == 0.0)
+        return half4(0, 0, 0, 0);
+    float3 n = normalize((n_c.xyz - 0.5) * 2.0);
+    float4 t_c = float4(tangent.sample(linear, in.uv));
+    float3 t = normalize((t_c.xyz - 0.5) * 2.0);
+    float3 view_pos = view_pos_from_depth(camera_props.projectionInverse, in.uv, depth.sample(nearest_clamp_to_edge, in.uv).r);
+    float3 v = normalize(-view_pos);
+    float n_v = max(0.001, saturate(dot(n, v)));
+    float3 albedo_color = float3(albedo.sample(linear, in.uv).xyz);
+    half4 shading_props_color = shading.sample(linear, in.uv);
+    half roughness = shading_props_color.x;
+    half metalic = shading_props_color.y;
+    half occlusion = shading_props_color.z;
+    
+    // SSAO
+    half ao = 1.0;
+    if(uses_ssao_map) {
+        ao = 1.0 - ssao.sample(linear, in.uv).r;
+    }
+    
+    // global ambient color
+    out_color.xyz += ao * light_global.ambient_color * albedo_color * occlusion;
+    
+    // irradiance
+    float3 k_s = float3(0);
+    if(uses_ibl_irradiance_map) {
+        float3 irradiance_color = float3(irradiance.sample(linear, n).xyz);
+        k_s = fresnel(mix(0.04, albedo_color, metalic), n_v);
+        float3 k_d = (float3(1.0) - k_s) * (1.0 - metalic);
+        out_color.xyz += ao * k_d * irradiance_color * albedo_color * occlusion;
+    }
+    
+    // prefiltered specular
+    if(uses_ibl_specular_map) {
+        float mip_index = roughness * prefilteredSpecular.get_num_mip_levels();
+        float3 prefiltered_color = float3(prefilteredSpecular.sample(linear, n, level(mip_index)).xyz);
+        float3 environment_brdf = float3(brdfLookup.sample(linear_clamp_to_edge, float2(roughness, n_v)).xyz);
+        out_color.xyz += ao * k_s * prefiltered_color * (albedo_color * environment_brdf.x + environment_brdf.y);
+    }
+    
+    // lit
+    const uint tile_size = light_global.tile_size;
+    uint light_cull_grid_dim_x = uint((albedo.get_width() + tile_size - 1) / tile_size);
+    uint2 pixel_pos = uint2(albedo.get_width() * in.uv.x, albedo.get_height() * in.uv.y);
+    uint2 grid_pos = pixel_pos / tile_size;
+    uint light_cull_grid_index = grid_pos.y * light_cull_grid_dim_x + grid_pos.x;
+    
+    out_color.xyz += calculate_lit_color(view_pos,
+                                         n,
+                                         t,
+                                         shading_props_color,
+                                         camera_props,
+                                         light_global,
+                                         lights,
+                                         light_cull_buffer[light_cull_grid_index],
+                                         shadow_maps) * albedo_color;
+    
+    return half4(out_color);
+}
+
+#pragma mark - Pipelines for non-light culled (legacy)
 // lighting
 vertex ScreenFragment gbuffer_light_vert(constant ScreenVertex *in [[buffer(0)]],
                                     uint vid [[vertex_id]]) {
@@ -167,7 +257,7 @@ fragment half4 gbuffer_light_frag(ScreenFragment in [[stage_in]],
                                   texture2d<half> shading [[texture(attachment_shading)]],
                                   texture2d<half> tangent [[texture(attachment_tangent)]],
                                   texture2d<float> depth [[texture(attachment_depth)]],
-                                  array<texture2d<float>,32> shadow_maps [[texture(11)]]) {
+                                  array<texture2d<float>,MAX_NUM_DIRECTIONAL_LIGHTS> shadow_maps [[texture(attachment_shadow_map)]]) {
     float4 out_color = float4(0.0, 0.0, 0.0, 0.0);
     
     // shared values
@@ -192,7 +282,7 @@ fragment half4 gbuffer_light_frag(ScreenFragment in [[stage_in]],
     float4 world_pos = camera_props.viewInverse * view_pos;
     
     // calculate lights
-    for(uint i = 0; i < 4; i++) {        
+    for(uint i = 0; i < 4; i++) {
         float lit = get_shadow_lit(shadow_maps[i], lights[i], light_global, world_pos);
         
         if(lit > 0.0) {
@@ -245,17 +335,7 @@ fragment half4 gbuffer_light_frag(ScreenFragment in [[stage_in]],
     return half4(out_color);
 }
 
-// shading
-vertex ScreenFragment gbuffer_shade_vert(constant ScreenVertex *in [[buffer(0)]],
-                                    uint vid [[vertex_id]]) {
-    ScreenFragment out;
-    out.clip_pos = float4(in[vid].pos, 1.0);
-    out.uv = (out.clip_pos.xy + 1.0) * 0.5;
-    out.uv.y = 1.0 - out.uv.y;
-    return out;
-}
-
-fragment half4 gbuffer_shade_frag(ScreenFragment in [[stage_in]],
+fragment half4 gbuffer_shade_old_frag(ScreenFragment in [[stage_in]],
                                   constant camera_props_t &cameraProps [[buffer(1)]],
                                   constant light_global_t &light_global [[buffer(2)]],
                                   texture2d<half> albedo [[texture(attachment_albedo)]],

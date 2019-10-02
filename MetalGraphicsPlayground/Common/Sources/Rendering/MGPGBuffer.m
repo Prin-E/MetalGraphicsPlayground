@@ -29,6 +29,7 @@
     NSMutableDictionary<NSNumber *, id<MTLRenderPipelineState>> *_renderPipelineDict;
     id<MTLRenderPipelineState> _lightingPipelineState;
     NSMutableDictionary<NSNumber *, id<MTLRenderPipelineState>> *_shadingPipelineDict;
+    NSMutableDictionary<NSNumber *, id<MTLRenderPipelineState>> *_nonLightCulledShadingPipelineDict;
 }
 
 #pragma mark - Initialization
@@ -375,6 +376,45 @@
         renderPipelineState = [_device newRenderPipelineStateWithDescriptor: _shadingPipelineDescriptor
                                                                       error: error];
         _shadingPipelineDict[key] = renderPipelineState;
+    }
+    return renderPipelineState;
+}
+
+- (id<MTLRenderPipelineState>)nonLightCulledShadingPipelineStateWithConstants: (MGPGBufferShadingFunctionConstants)constants
+                                                                        error: (NSError **)error; {
+    if(error != nil) {
+        *error = nil;
+    }
+    
+    NSUInteger bitflag = 0;
+    bitflag |= constants.hasIBLIrradianceMap ? (1L << fcv_uses_ibl_irradiance_map) : 0;
+    bitflag |= constants.hasIBLSpecularMap ? (1L << fcv_uses_ibl_specular_map) : 0;
+    bitflag |= constants.hasSSAOMap ? (1L << fcv_uses_ssao_map) : 0;
+    
+    NSNumber *key = @(bitflag);
+    id<MTLRenderPipelineState> renderPipelineState = [_nonLightCulledShadingPipelineDict objectForKey: key];
+    if(renderPipelineState == nil) {
+        // make function constant values object
+        MTLFunctionConstantValues *constantValues = [MTLFunctionConstantValues new];
+        [constantValues setConstantValue: &constants.hasIBLIrradianceMap
+                                    type: MTLDataTypeBool
+                                 atIndex: fcv_uses_ibl_irradiance_map];
+        [constantValues setConstantValue: &constants.hasIBLSpecularMap
+                                    type: MTLDataTypeBool
+                                 atIndex: fcv_uses_ibl_specular_map];
+        [constantValues setConstantValue: &constants.hasSSAOMap
+                                    type: MTLDataTypeBool
+                                 atIndex: fcv_uses_ssao_map];
+        
+        _shadingPipelineDescriptor.vertexFunction = [_library newFunctionWithName: @"gbuffer_shade_vert"
+                                                                  constantValues: constantValues
+                                                                           error: error];
+        _shadingPipelineDescriptor.fragmentFunction = [_library newFunctionWithName: @"gbuffer_shade_old_frag"
+                                                                    constantValues: constantValues
+                                                                             error: error];
+        renderPipelineState = [_device newRenderPipelineStateWithDescriptor: _shadingPipelineDescriptor
+                                                                      error: error];
+        _nonLightCulledShadingPipelineDict[key] = renderPipelineState;
     }
     return renderPipelineState;
 }

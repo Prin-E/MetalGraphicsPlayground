@@ -52,6 +52,7 @@ typedef struct __attribute__((__aligned__(256))) {
     vector_float3 ambient_color;
     unsigned int num_light;                 // max num : 64 (dir.light : 16)
     unsigned int first_point_light_index;
+    unsigned int tile_size;                 // 16~32
 } light_global_t;
 
 typedef struct __attribute__((__aligned__(256))) {
@@ -110,6 +111,7 @@ typedef enum {
     attachment_prefiltered_specular,
     attachment_brdf_lookup,
     attachment_ssao,
+    attachment_shadow_map,
     attachment_total
 } attachment_index;
 
