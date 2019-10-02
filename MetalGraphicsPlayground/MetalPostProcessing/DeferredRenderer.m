@@ -8,6 +8,7 @@
 
 #import "DeferredRenderer.h"
 #import "../Common/Shaders/SharedStructures.h"
+#import "../Common/Shaders/LightingCommon.h"
 #import "../Common/Sources/Rendering/MGPGBuffer.h"
 #import "../Common/Sources/Model/MGPMesh.h"
 #import "../Common/Sources/Model/MGPImageBasedLighting.h"
@@ -35,7 +36,7 @@
 
 const size_t kMaxBuffersInFlight = 3;
 const size_t kNumInstance = 1;
-const uint32_t kNumLight = 128;
+const uint32_t kNumLight = MAX_NUM_LIGHTS;
 const float kLightIntensityBase = 1.0f;
 const float kLightIntensityVariation = 1.0f;
 const size_t kShadowResolution = 512;
@@ -217,9 +218,9 @@ const size_t kLightCullBufferSize = 8100*4*16;
     self = [super init];
     if(self) {
         _animate = NO;
-        _numLights = 64;
         _roughness = 1.0f;
         _metalic = 0.0f;
+        self.numLights = 64;
         self.cullOn = YES;
         self.ssaoIntensity = 1.0f;
         self.ssaoNumSamples = 32;
@@ -571,6 +572,9 @@ const size_t kLightCullBufferSize = 8100*4*16;
         light_t *light_props_ptr = &light_props[_currentBufferIndex * kNumLight + i];
         *light_props_ptr = light.shaderProperties;
     }
+    for(NSUInteger i = _numLights; i < kNumLight; i++) {
+        _lights[i].intensity = 0;
+    }
     light_globals[_currentBufferIndex].num_light = _numLights;
     light_globals[_currentBufferIndex].first_point_light_index = first_point_light_index;
     light_globals[_currentBufferIndex].ambient_color = vector3(0.1f, 0.1f, 0.1f);
@@ -678,7 +682,7 @@ const size_t kLightCullBufferSize = 8100*4*16;
         id<MTLRenderCommandEncoder> lightingPassEncoder = [commandBuffer renderCommandEncoderWithDescriptor: _gBuffer.lightingPassBaseDescriptor];
         [self renderLighting:lightingPassEncoder
                    fromIndex:0
-                     toIndex:lightCountPerDrawCall-1
+                     toIndex:MIN(_numLights,lightCountPerDrawCall)-1
             countPerDrawCall:lightCountPerDrawCall];
         if(_numLights > lightCountPerDrawCall) {
             lightingPassEncoder = [commandBuffer renderCommandEncoderWithDescriptor: _gBuffer.lightingPassAddDescriptor];

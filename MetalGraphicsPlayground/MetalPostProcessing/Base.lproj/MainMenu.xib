@@ -698,7 +698,7 @@
                         <rect key="frame" x="18" y="117" width="66" height="14"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxY="YES"/>
                         <textFieldCell key="cell" controlSize="small" lineBreakMode="clipping" title="G-buffer" id="LAI-S1-sXW">
-                            <font key="font" metaFont="menu" size="11"/>
+                            <font key="font" metaFont="controlContent" size="11"/>
                             <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
                             <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
@@ -708,7 +708,7 @@
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES"/>
                         <buttonCell key="cell" type="check" title="SSAO" bezelStyle="regularSquare" imagePosition="left" controlSize="small" state="on" inset="2" id="XOC-yO-dfd">
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
-                            <font key="font" metaFont="menu" size="11"/>
+                            <font key="font" metaFont="controlContent" size="11"/>
                         </buttonCell>
                         <connections>
                             <binding destination="Voe-Tx-rLC" name="value" keyPath="self.renderer.ssaoOn" id="8bt-xJ-bcp"/>
@@ -797,7 +797,7 @@
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES"/>
                         <buttonCell key="cell" type="check" title="Reflection" bezelStyle="regularSquare" imagePosition="left" controlSize="small" state="on" inset="2" id="udc-cf-FkM">
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
-                            <font key="font" metaFont="menu" size="11"/>
+                            <font key="font" metaFont="controlContent" size="11"/>
                         </buttonCell>
                         <connections>
                             <binding destination="Voe-Tx-rLC" name="value" keyPath="self.renderer.ssrOn" id="Zov-KY-CQC"/>
@@ -808,7 +808,7 @@
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES"/>
                         <buttonCell key="cell" type="check" title="Light Cull" bezelStyle="regularSquare" imagePosition="left" controlSize="small" state="on" inset="2" id="ZTF-v9-0aj">
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
-                            <font key="font" metaFont="menu" size="11"/>
+                            <font key="font" metaFont="controlContent" size="11"/>
                         </buttonCell>
                         <connections>
                             <binding destination="Voe-Tx-rLC" name="value" keyPath="self.renderer.lightCullOn" id="nyL-V5-aDL"/>
@@ -871,12 +871,29 @@
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES"/>
                         <buttonCell key="cell" type="check" title="Frustum Cull" bezelStyle="regularSquare" imagePosition="left" controlSize="small" state="on" inset="2" id="sqa-iF-UKW">
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
-                            <font key="font" metaFont="menu" size="11"/>
+                            <font key="font" metaFont="controlContent" size="11"/>
                         </buttonCell>
                         <connections>
                             <binding destination="Voe-Tx-rLC" name="value" keyPath="self.renderer.cullOn" id="Upo-s2-lFs"/>
                         </connections>
                     </button>
+                    <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="euJ-d3-uHS">
+                        <rect key="frame" x="281" y="39" width="55" height="11"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxY="YES"/>
+                        <textFieldCell key="cell" controlSize="mini" lineBreakMode="clipping" title="Num.Lights" id="Dve-4F-oyT">
+                            <font key="font" metaFont="menu" size="9"/>
+                            <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                            <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                        </textFieldCell>
+                    </textField>
+                    <slider verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="F4l-PP-gkP">
+                        <rect key="frame" x="343" y="39" width="105" height="10"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES"/>
+                        <sliderCell key="cell" controlSize="mini" continuous="YES" state="on" alignment="left" minValue="2" maxValue="64" doubleValue="2" tickMarkPosition="above" sliderType="linear" id="luP-gT-fa6"/>
+                        <connections>
+                            <binding destination="Voe-Tx-rLC" name="value" keyPath="self.renderer.numLights" id="NLn-J4-HXx"/>
+                        </connections>
+                    </slider>
                 </subviews>
             </view>
             <point key="canvasLocation" x="131" y="-54"/>
