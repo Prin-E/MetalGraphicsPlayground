@@ -18,6 +18,9 @@ NS_ASSUME_NONNULL_BEGIN
 // Material props
 @property (readwrite) float roughness, metalic, anisotropy;
 
+// Frustum culling
+@property (readwrite) BOOL cullOn;
+
 // G-buffer
 @property (readwrite) NSUInteger gBufferIndex;
 

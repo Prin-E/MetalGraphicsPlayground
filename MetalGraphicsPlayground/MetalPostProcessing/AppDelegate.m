@@ -20,10 +20,11 @@
 @implementation AppDelegate
 
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification {
+    [self willChangeValueForKey: @"renderer"];
     renderer = [[DeferredRenderer alloc] init];
     _view.renderer = renderer;
+    [self didChangeValueForKey: @"renderer"];
 }
-
 
 - (void)applicationWillTerminate:(NSNotification *)aNotification {
     // Insert code here to tear down your application

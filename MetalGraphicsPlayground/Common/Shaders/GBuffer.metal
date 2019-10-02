@@ -150,20 +150,11 @@ fragment GBufferOutput gbuffer_prepass_frag(GBufferFragment in [[stage_in]],
 }
 
 #pragma mark - Shading
-vertex ScreenFragment gbuffer_shade_vert(constant ScreenVertex *in [[buffer(0)]],
-                                    uint vid [[vertex_id]]) {
-    ScreenFragment out;
-    out.clip_pos = float4(in[vid].pos, 1.0);
-    out.uv = (out.clip_pos.xy + 1.0) * 0.5;
-    out.uv.y = 1.0 - out.uv.y;
-    return out;
-}
-
 fragment half4 gbuffer_shade_frag(ScreenFragment in [[stage_in]],
-                                  constant camera_props_t &camera_props [[buffer(1)]],
-                                  constant light_global_t &light_global [[buffer(2)]],
-                                  constant light_t *lights [[buffer(3)]],
-                                  device uint4 *light_cull_buffer [[buffer(4)]],
+                                  constant camera_props_t &camera_props [[buffer(0)]],
+                                  constant light_global_t &light_global [[buffer(1)]],
+                                  constant light_t *lights [[buffer(2)]],
+                                  device uint4 *light_cull_buffer [[buffer(3)]],
                                   texture2d<half> albedo [[texture(attachment_albedo)]],
                                   texture2d<half> normal [[texture(attachment_normal)]],
                                   texture2d<half> shading [[texture(attachment_shading)]],
@@ -238,21 +229,11 @@ fragment half4 gbuffer_shade_frag(ScreenFragment in [[stage_in]],
 }
 
 #pragma mark - Pipelines for non-light culled (legacy)
-// lighting
-vertex ScreenFragment gbuffer_light_vert(constant ScreenVertex *in [[buffer(0)]],
-                                    uint vid [[vertex_id]]) {
-    ScreenFragment out;
-    out.clip_pos = float4(in[vid].pos, 1.0);
-    out.uv = (out.clip_pos.xy + 1.0) * 0.5;
-    out.uv.y = 1.0 - out.uv.y;
-    return out;
-}
-
 // TODO : use argument buffer for optimizing resource-bindings
 fragment half4 gbuffer_light_frag(ScreenFragment in [[stage_in]],
+                                  constant camera_props_t &camera_props [[buffer(0)]],
                                   constant light_t *lights [[buffer(1)]],
                                   constant light_global_t &light_global [[buffer(2)]],
-                                  constant camera_props_t &camera_props [[buffer(3)]],
                                   texture2d<half> normal [[texture(attachment_normal)]],
                                   texture2d<half> shading [[texture(attachment_shading)]],
                                   texture2d<half> tangent [[texture(attachment_tangent)]],
@@ -336,8 +317,8 @@ fragment half4 gbuffer_light_frag(ScreenFragment in [[stage_in]],
 }
 
 fragment half4 gbuffer_shade_old_frag(ScreenFragment in [[stage_in]],
-                                  constant camera_props_t &cameraProps [[buffer(1)]],
-                                  constant light_global_t &light_global [[buffer(2)]],
+                                  constant camera_props_t &cameraProps [[buffer(0)]],
+                                  constant light_global_t &light_global [[buffer(1)]],
                                   texture2d<half> albedo [[texture(attachment_albedo)]],
                                   texture2d<half> normal [[texture(attachment_normal)]],
                                   texture2d<half> shading [[texture(attachment_shading)]],

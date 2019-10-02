@@ -12,18 +12,19 @@
 
 using namespace metal;
 
-vertex ScreenFragment screen_vert(constant ScreenVertex *in [[buffer(0)]],
-                                  uint vid [[vertex_id]]) {
+vertex ScreenFragment screen_vert(uint vid [[vertex_id]]) {
+    // from "Vertex Shader Tricks" by AMD - GDC 2014
     ScreenFragment out;
-    out.clip_pos = float4(in[vid].pos, 1.0);
-    out.uv = (out.clip_pos.xy + 1.0) * 0.5;
-    out.uv.y = 1.0 - out.uv.y;
+    out.clip_pos = float4((float)(vid / 2) * 4.0 - 1.0,
+                          (float)(vid % 2) * 4.0 - 1.0,
+                          0.0,
+                          1.0);
+    out.uv = float2((float)(vid / 2) * 2.0, 1.0 - (float)(vid % 2) * 2.0);
     return out;
 }
 
 fragment half4 screen_frag(ScreenFragment in [[stage_in]],
-                            texture2d<half> tex [[texture(0)]]) {
-    
+                           texture2d<half> tex [[texture(0)]]) {
     half4 out_color = tex.sample(linear, in.uv);
     return out_color;
 }

@@ -64,7 +64,6 @@ const size_t kLightCullBufferSize = 8100*4*16;
     MGPCamera *_camera;
     BOOL _isOrthographic;
     BOOL _drawGizmos;
-    BOOL _cull;
     
     // props
     id<MTLBuffer> _cameraPropsBuffer;
@@ -165,8 +164,8 @@ const size_t kLightCullBufferSize = 8100*4*16;
     }
     if(theEvent.keyCode == 19) {
         // 2
-        _cull = !_cull;
-        NSLog(@"Cull : %d", _cull);
+        self.cullOn = !self.cullOn;
+        NSLog(@"Cull : %d", self.cullOn);
     }
     if(theEvent.keyCode == 49) {
         // space
@@ -221,12 +220,13 @@ const size_t kLightCullBufferSize = 8100*4*16;
         _numLights = 64;
         _roughness = 1.0f;
         _metalic = 0.0f;
-        _lightGridTileSize = 16;
+        self.cullOn = YES;
         self.ssaoIntensity = 1.0f;
         self.ssaoNumSamples = 32;
         self.ssaoRadius = 1.0f;
         self.attenuation = 0.5f;
         self.vignette = 0.25f;
+        self.lightGridTileSize = 16;
         [self initUniformBuffers];
         [self initAssets];
     }
@@ -779,13 +779,12 @@ const size_t kLightCullBufferSize = 8100*4*16;
             id<MGPBoundingVolume> volume = submesh.volume;
             
             // Culling
-            if(_cull) {
+            if(_cullOn) {
                 if([volume isCulledInFrustum:localSpaceFrustum])
                     continue;
             }
             
             // Gizmo
-            /*
             if(bindTextures && _drawGizmos) {
                 if([volume class] == [MGPBoundingSphere class]) {
                     MGPBoundingSphere *sphere = volume;
@@ -793,7 +792,6 @@ const size_t kLightCullBufferSize = 8100*4*16;
                                                     radius:sphere.radius];
                 }
             }
-            */
             
             // Texture binding
             if(bindTextures) {
@@ -914,15 +912,12 @@ const size_t kLightCullBufferSize = 8100*4*16;
     encoder.label = [NSString stringWithFormat: @"Lighting %@", lightFromIndex == 0 ? @"Base" : @"Add"];
     [encoder setRenderPipelineState: _renderPipelineLighting];
     [encoder setCullMode: MTLCullModeBack];
-    [encoder setVertexBuffer: _commonVertexBuffer
-                      offset: 0
-                     atIndex: 0];
+    [encoder setFragmentBuffer: _cameraPropsBuffer
+                        offset: _currentBufferIndex * sizeof(camera_props_t)
+                       atIndex: 0];
     [encoder setFragmentBuffer: _lightGlobalBuffer
                         offset: _currentBufferIndex * sizeof(light_global_t)
                        atIndex: 2];
-    [encoder setFragmentBuffer: _cameraPropsBuffer
-                        offset: _currentBufferIndex * sizeof(camera_props_t)
-                       atIndex: 3];
     [encoder setFragmentTexture: _gBuffer.normal
                         atIndex: attachment_normal];
     [encoder setFragmentTexture: _gBuffer.shading
@@ -1005,21 +1000,18 @@ const size_t kLightCullBufferSize = 8100*4*16;
     encoder.label = @"Shading";
     [encoder setRenderPipelineState: _renderPipelineShading];
     [encoder setCullMode: MTLCullModeBack];
-    [encoder setVertexBuffer: _commonVertexBuffer
-                      offset: 0
-                     atIndex: 0];
     [encoder setFragmentBuffer: _cameraPropsBuffer
                         offset: _currentBufferIndex * sizeof(camera_props_t)
-                       atIndex: 1];
+                       atIndex: 0];
     [encoder setFragmentBuffer: _lightGlobalBuffer
                         offset: _currentBufferIndex * sizeof(light_global_t)
-                       atIndex: 2];
+                       atIndex: 1];
     [encoder setFragmentBuffer: _lightPropsBuffer
                         offset: _currentBufferIndex * sizeof(light_t) * kNumLight
-                       atIndex: 3];
+                       atIndex: 2];
     [encoder setFragmentBuffer: _lightCullBuffer
                         offset: 0
-                       atIndex: 4];
+                       atIndex: 3];
     [encoder setFragmentTexture: _gBuffer.albedo
                         atIndex: attachment_albedo];
     [encoder setFragmentTexture: _gBuffer.normal
@@ -1086,9 +1078,6 @@ const size_t kLightCullBufferSize = 8100*4*16;
     }
     
     [encoder setCullMode: MTLCullModeBack];
-    [encoder setVertexBuffer: _commonVertexBuffer
-                      offset: 0
-                     atIndex: 0];
     [encoder setFragmentTexture: [self _presentationGBuferTexture]
                         atIndex: 0];
     [encoder drawPrimitives: MTLPrimitiveTypeTriangle

@@ -13,10 +13,6 @@
 using namespace metal;
 
 typedef struct {
-    float3 pos;
-} ScreenVertex;
-
-typedef struct {
     float4 clip_pos      [[position]];
     float2 uv;
 } ScreenFragment;

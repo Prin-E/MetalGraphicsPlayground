@@ -156,7 +156,7 @@
     desc.colorAttachments[0].rgbBlendOperation = MTLBlendOperationAdd;
     desc.colorAttachments[0].sourceRGBBlendFactor = MTLBlendFactorOne;
     desc.colorAttachments[0].destinationRGBBlendFactor = MTLBlendFactorOne;
-    desc.vertexFunction = [_library newFunctionWithName:@"gbuffer_light_vert"];
+    desc.vertexFunction = [_library newFunctionWithName:@"screen_vert"];
     desc.fragmentFunction = [_library newFunctionWithName:@"gbuffer_light_frag"];
     _lightingPipelineDescriptor = desc;
 }
@@ -367,7 +367,7 @@
                                     type: MTLDataTypeBool
                                  atIndex: fcv_uses_ssao_map];
         
-        _shadingPipelineDescriptor.vertexFunction = [_library newFunctionWithName: @"gbuffer_shade_vert"
+        _shadingPipelineDescriptor.vertexFunction = [_library newFunctionWithName: @"screen_vert"
                                                                   constantValues: constantValues
                                                                            error: error];
         _shadingPipelineDescriptor.fragmentFunction = [_library newFunctionWithName: @"gbuffer_shade_frag"
@@ -406,7 +406,7 @@
                                     type: MTLDataTypeBool
                                  atIndex: fcv_uses_ssao_map];
         
-        _shadingPipelineDescriptor.vertexFunction = [_library newFunctionWithName: @"gbuffer_shade_vert"
+        _shadingPipelineDescriptor.vertexFunction = [_library newFunctionWithName: @"screen_vert"
                                                                   constantValues: constantValues
                                                                            error: error];
         _shadingPipelineDescriptor.fragmentFunction = [_library newFunctionWithName: @"gbuffer_shade_old_frag"
