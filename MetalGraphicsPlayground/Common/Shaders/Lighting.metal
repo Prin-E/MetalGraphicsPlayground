@@ -47,6 +47,118 @@ void fill_shading_params_for_light(thread shading_t &shading_params,
     shading_params.b_v = b_v;
 }
 
+float3 calculate_directional_shadow_lit_color(float3 v,
+                                              float4 world_pos,
+                                              float3 view_normal,
+                                              float3 view_tangent,
+                                              float3 view_bitangent,
+                                              half4 shading_values,
+                                              constant camera_props_t &camera_props,
+                                              constant light_global_t &light_global,
+                                              constant light_t *lights,
+                                              shadow_array shadow_maps,
+                                              shading_t shading_params,
+                                              uint bitmask,
+                                              uint index_offset) {
+    float3 lit_color = float3(0);
+    uint light_index = index_offset;
+    while(bitmask) {
+        if(bitmask & 0x1) {
+            constant light_t &light = lights[light_index];
+            float lit = get_shadow_lit(shadow_maps[light_index], light, light_global, world_pos);
+
+            if(lit > 0) {
+                // query light direction from view matrix
+                float3 l = -float3(light.light_view[0].z,
+                                   light.light_view[1].z,
+                                   light.light_view[2].z);
+                l = (camera_props.view * float4(l, 0.0)).xyz;
+
+                // fill shading parameters
+                fill_shading_params_for_light(shading_params, light, l, v, view_normal, view_tangent, view_bitangent);
+                
+                // calculate and append lit color
+                lit_color += calculate_brdf(shading_params) * shading_values.z * lit;
+            }
+        }
+        bitmask >>= 1;
+        light_index += 1;
+    }
+    return lit_color;
+}
+
+float3 calculate_directional_lit_color(float3 v,
+                                       float4 world_pos,
+                                       float3 view_normal,
+                                       float3 view_tangent,
+                                       float3 view_bitangent,
+                                       half4 shading_values,
+                                       constant camera_props_t &camera_props,
+                                       constant light_t *lights,
+                                       shading_t shading_params,
+                                       uint bitmask,
+                                       uint index_offset) {
+    float3 lit_color = float3(0);
+    uint light_index = index_offset;
+    while(bitmask) {
+        if(bitmask & 0x1) {
+            constant light_t &light = lights[light_index];
+
+            // query light direction from view matrix
+            float3 l = -float3(light.light_view[0].z,
+                               light.light_view[1].z,
+                               light.light_view[2].z);
+            l = (camera_props.view * float4(l, 0.0)).xyz;
+
+            // fill shading parameters
+            fill_shading_params_for_light(shading_params, light, l, v, view_normal, view_tangent, view_bitangent);
+            
+            // calculate and append lit color
+            lit_color += calculate_brdf(shading_params) * shading_values.z;
+        }
+        bitmask >>= 1;
+        light_index += 1;
+    }
+    return lit_color;
+}
+
+float3 calculate_pointlight_lit_color(float3 v,
+                                      float4 world_pos,
+                                      float3 view_normal,
+                                      float3 view_tangent,
+                                      float3 view_bitangent,
+                                      half4 shading_values,
+                                      constant camera_props_t &camera_props,
+                                      constant light_t *lights,
+                                      shading_t shading_params,
+                                      uint bitmask,
+                                      uint index_offset) {
+    
+    float3 lit_color = float3(0);
+    uint light_index = index_offset;
+    while(bitmask) {
+        if(bitmask & 0x1) {
+            constant light_t &light = lights[light_index];
+            float light_dist = 1.0;
+            float3 light_pos = light.position;
+            float3 pos_to_light = light_pos.xyz - world_pos.xyz;
+            light_dist = max(0.1, length(pos_to_light));
+            float3 l = pos_to_light / light_dist;
+            l = (camera_props.view * float4(l, 0.0)).xyz;
+            
+            // fill shading parameters
+            fill_shading_params_for_light(shading_params, light, l, v, view_normal, view_tangent, view_bitangent);
+            shading_params.light *= (1.0f - smoothstep(light.radius * 0.75, light.radius, light_dist));
+            
+            // calculate and append lit color
+            lit_color += calculate_brdf(shading_params) * shading_values.z / (light_dist * light_dist);
+        }
+        bitmask >>= 1;
+        light_index += 1;
+    }
+    return lit_color;
+}
+
 float3 calculate_lit_color(float3 view_pos,
                            float3 view_normal,
                            float3 view_tangent,
@@ -55,8 +167,11 @@ float3 calculate_lit_color(float3 view_pos,
                            constant light_global_t &light_global,
                            constant light_t *lights,
                            uint4 light_cull_cell,
-                           array<texture2d<float>,MAX_NUM_DIRECTIONAL_LIGHTS> shadow_maps) {
+                           shadow_array shadow_maps) {
     float3 lit_color = float3(0);
+    
+    if(shading_values.z < 0.0001)
+        return lit_color;
     
     // prepare
     float4 world_pos = camera_props.viewInverse * float4(view_pos, 1.0);
@@ -69,78 +184,14 @@ float3 calculate_lit_color(float3 view_pos,
     shading_params.anisotropy = shading_values.w * 2.0 - 1.0;
     
     // directional light (with shadow)
-    uint bitmask_dirlight_shadow = light_cull_cell.x >> 16;
-    uint dirlight_index = 0;
-    while(bitmask_dirlight_shadow) {
-        if(bitmask_dirlight_shadow & 0x1) {
-            constant light_t &light = lights[dirlight_index];
-            float lit = get_shadow_lit(shadow_maps[dirlight_index], light, light_global, world_pos);
-
-            // query light direction from view matrix
-            float3 l = -float3(light.light_view[0].z,
-                                              light.light_view[1].z,
-                                              light.light_view[2].z);
-            l = (camera_props.view * float4(l, 0.0)).xyz;
-
-            if(lit > 0) {
-                // fill shading parameters
-                fill_shading_params_for_light(shading_params, light, l, v, view_normal, view_tangent, view_bitangent);
-                
-                // calculate and append lit color
-                lit_color += calculate_brdf(shading_params) * shading_values.z * lit;
-            }
-        }
-        bitmask_dirlight_shadow >>= 1;
-        dirlight_index += 1;
-    }
+    lit_color += calculate_directional_shadow_lit_color(v, world_pos, view_normal, view_tangent, view_bitangent, shading_values, camera_props, light_global, lights, shadow_maps, shading_params, light_cull_cell.x >> 16, 0);
     
     // directional light
-    uint bitmask_dirlight = light_cull_cell.x & 0xFF;
-    dirlight_index = 0;
-    while(bitmask_dirlight) {
-        if(bitmask_dirlight & 0x1) {
-            constant light_t &light = lights[dirlight_index];
+    lit_color += calculate_directional_lit_color(v, world_pos, view_normal, view_tangent, view_bitangent, shading_values, camera_props, lights, shading_params, light_cull_cell.x & 0xFF, 0);
 
-            // query light direction from view matrix
-            float3 l = -float3(light.light_view[0].z,
-                                              light.light_view[1].z,
-                                              light.light_view[2].z);
-            l = (camera_props.view * float4(l, 0.0)).xyz;
-
-            // fill shading parameters
-            fill_shading_params_for_light(shading_params, light, l, v, view_normal, view_tangent, view_bitangent);
-            
-            // calculate and append lit color
-            lit_color += calculate_brdf(shading_params) * shading_values.z;
-        }
-        bitmask_dirlight >>= 1;
-        dirlight_index += 1;
-    }
-    
     // point light
-    uint2 bitmask_pointlight = uint2(light_cull_cell.y, light_cull_cell.z);
-    for(uint i = light_global.first_point_light_index,
-        to = light_global.num_light;
-        i < to; i++) {
-        uint element_index = i / 32;
-        uint bit_index = i % 32;
-        if((bitmask_pointlight[element_index] & (1 << bit_index))) {
-            constant light_t &light = lights[i];
-            float light_dist = 1.0;
-            float3 light_pos = light.position;
-            float3 pos_to_light = light_pos.xyz - world_pos.xyz;
-            light_dist = max(0.1, length(pos_to_light));
-            float3 l = pos_to_light / light_dist;
-            l = (camera_props.view * float4(l, 0.0)).xyz;
-            
-            // fill shading parameters
-            fill_shading_params_for_light(shading_params, light, l, v, view_normal, view_tangent, view_bitangent);
-            shading_params.light *= (1.0f - smoothstep(lights[i].radius * 0.75, lights[i].radius, light_dist));
-            
-            // calculate and append lit color
-            lit_color += calculate_brdf(shading_params) * shading_values.z / (light_dist * light_dist);
-        }
-    }
+    lit_color += calculate_pointlight_lit_color(v, world_pos, view_normal, view_tangent, view_bitangent, shading_values, camera_props, lights, shading_params, light_cull_cell.y, 0);
+    lit_color += calculate_pointlight_lit_color(v, world_pos, view_normal, view_tangent, view_bitangent, shading_values, camera_props, lights, shading_params, light_cull_cell.z, 32);
     
     return lit_color;
 }

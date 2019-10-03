@@ -238,7 +238,7 @@ fragment half4 gbuffer_light_frag(ScreenFragment in [[stage_in]],
                                   texture2d<half> shading [[texture(attachment_shading)]],
                                   texture2d<half> tangent [[texture(attachment_tangent)]],
                                   texture2d<float> depth [[texture(attachment_depth)]],
-                                  array<texture2d<float>,MAX_NUM_DIRECTIONAL_LIGHTS> shadow_maps [[texture(attachment_shadow_map)]]) {
+                                  shadow_array shadow_maps [[texture(attachment_shadow_map)]]) {
     float4 out_color = float4(0.0, 0.0, 0.0, 0.0);
     
     // shared values

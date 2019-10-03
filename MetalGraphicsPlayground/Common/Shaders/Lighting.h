@@ -13,6 +13,8 @@
 #include "LightingCommon.h"
 #include "BRDF.h"
 
+typedef array<texture2d<float>,MAX_NUM_DIRECTIONAL_LIGHTS> shadow_array;
+
 void fill_shading_params_for_light(thread shading_t &shading_params,
                                    constant light_t &light,
                                    float3 l,
@@ -29,7 +31,7 @@ float3 calculate_lit_color(float3 view_pos,
                            constant light_global_t &light_global,
                            constant light_t *lights,
                            uint4 light_cull_cell,
-                           array<texture2d<float>,MAX_NUM_DIRECTIONAL_LIGHTS> shadow_maps);
+                           shadow_array shadow_maps);
 
 
 #endif /* Lighting_h */
