@@ -9,11 +9,11 @@
 #import <Cocoa/Cocoa.h>
 
 @class MGPView;
-@class SimpleRenderer;
+@class DeferredRenderer;
 @interface AppDelegate : NSObject <NSApplicationDelegate>
 
 @property (weak) IBOutlet MGPView *view;
-@property (readonly) SimpleRenderer *renderer;
+@property (readonly) DeferredRenderer *renderer;
 
 @end
 

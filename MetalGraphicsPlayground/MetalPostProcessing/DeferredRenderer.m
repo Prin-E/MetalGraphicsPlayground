@@ -609,6 +609,9 @@ const size_t kLightCullBufferSize = 8100*4*16;
 - (void)render {
     [self beginFrame];
     
+    static CFTimeInterval CPUStartTime = 0, CPUEndTime = 0;
+    CPUStartTime = NSDate.timeIntervalSinceReferenceDate;
+    
     if(_IBLs.count > 0) {
         if(_IBLs[_currentIBLIndex].isAnyRenderingRequired) {
             [self performPrefilterPass];
@@ -619,6 +622,8 @@ const size_t kLightCullBufferSize = 8100*4*16;
     }
     
     [self performRenderingPassWithCompletionHandler:^{
+        CPUEndTime = NSDate.timeIntervalSinceReferenceDate;
+        self->_CPUTime = (CPUEndTime - CPUStartTime);
         [self endFrame];
     }];
     
@@ -722,14 +727,15 @@ const size_t kLightCullBufferSize = 8100*4*16;
     
     // calculate GPU time
     if(@available(macOS 10.15, *)) {
-        static CFTimeInterval startTime, endTime;
+        static CFTimeInterval GPUStartTime, GPUEndTime;
         static CGFloat elapsed = 0.0f;
         [commandBuffer addCompletedHandler:^(id<MTLCommandBuffer> buffer) {
-            startTime = buffer.GPUStartTime;
-            endTime = buffer.GPUEndTime;
-            elapsed += endTime - startTime;
+            GPUStartTime = buffer.GPUStartTime;
+            GPUEndTime = buffer.GPUEndTime;
+            self->_GPUTime = GPUEndTime - GPUStartTime;
+            elapsed += self->_GPUTime;
             if(elapsed >= 2.0f) {
-                NSLog(@"GPU Time : %.2fms", (endTime - startTime) * 1000.0f);
+                NSLog(@"GPU Time : %.2fms", (self->_GPUTime) * 1000.0f);
                 elapsed -= 2.0f;
             }
         }];

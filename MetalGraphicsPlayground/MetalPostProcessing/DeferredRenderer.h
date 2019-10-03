@@ -37,6 +37,9 @@ NS_ASSUME_NONNULL_BEGIN
 @property (readwrite) BOOL lightCullOn;
 @property (readwrite) uint lightGridTileSize;
 
+// Profiling
+@property (readonly) float CPUTime, GPUTime;
+
 @end
 
 NS_ASSUME_NONNULL_END
