@@ -114,7 +114,7 @@ fragment GBufferOutput gbuffer_prepass_frag(GBufferFragment in [[stage_in]],
     if(has_normal_map) {
         half4 nc = normalMap.sample(linear, in.uv);
         nc = nc * 2.0 - 1.0;
-        n = normalize(in.normal * nc.z + in.tangent * nc.x + in.bitangent * nc.y);
+        n = normalize(normalize(n) * nc.z + normalize(t) * nc.x + normalize(b) * nc.y);
     }
     else {
         n = normalize(n);

@@ -32,8 +32,6 @@
 #define LERP(x,y,t) ((x)*(1.0-(t))+(y)*(t))
 #endif
 
-#define USE_IBL 0
-
 const size_t kMaxBuffersInFlight = 3;
 const size_t kNumInstance = 1;
 const uint32_t kNumLight = MAX_NUM_LIGHTS;
@@ -124,7 +122,7 @@ const size_t kLightCullBufferSize = 8100*4*16;
 - (void)view:(MGPView *)view keyDown:(NSEvent *)theEvent {
     if(theEvent.keyCode == 49) {
         // space key
-        _animate = !_animate;
+        self.animate = !self.animate;
     }
     if(theEvent.keyCode == 13) {
         // w
@@ -216,7 +214,6 @@ const size_t kLightCullBufferSize = 8100*4*16;
 - (instancetype)init {
     self = [super init];
     if(self) {
-        _animate = NO;
         _roughness = 1.0f;
         _metalic = 0.0f;
         self.numLights = 64;
@@ -260,9 +257,7 @@ const size_t kLightCullBufferSize = 8100*4*16;
     
     // IBL
     _IBLs = [NSMutableArray array];
-    
-#if USE_IBL
-    NSArray<NSString*> *skyboxNames = @[@"Tropical_Beach_3k"];
+    NSArray<NSString*> *skyboxNames = @[@"Milkyway_small"];
     for(NSInteger i = 0; i < skyboxNames.count; i++) {
         NSString *skyboxImagePath = [[NSBundle mainBundle] pathForResource:skyboxNames[i]
                                                                     ofType:@"hdr"];
@@ -273,20 +268,39 @@ const size_t kLightCullBufferSize = 8100*4*16;
                                                                                                            width:skyboxWidth
                                                                                                           height:skyboxHeight
                                                                                                        mipmapped:NO];
-        skyboxTextureDescriptor.usage = MTLTextureUsageShaderRead;
-        id<MTLTexture> skyboxTexture = [self.device newTextureWithDescriptor: skyboxTextureDescriptor];
-        [skyboxTexture replaceRegion:MTLRegionMake2D(0, 0, skyboxWidth, skyboxHeight)
+        
+        // Create intermediate texture for upload
+        id<MTLTexture> skyboxIntermediateTexture = [self.device newTextureWithDescriptor: skyboxTextureDescriptor];
+        [skyboxIntermediateTexture replaceRegion:MTLRegionMake2D(0, 0, skyboxWidth, skyboxHeight)
                          mipmapLevel:0
                            withBytes:skyboxImageData
                          bytesPerRow:16*skyboxWidth];
         stbi_image_free(skyboxImageData);
+        
+        // Create GPU-only texture and blit pixels
+        skyboxTextureDescriptor.usage = MTLTextureUsageShaderRead;
+        skyboxTextureDescriptor.storageMode = MTLStorageModePrivate;
+        id<MTLTexture> skyboxTexture = [self.device newTextureWithDescriptor: skyboxTextureDescriptor];
+        id<MTLCommandBuffer> blitBuffer = [self.queue commandBuffer];
+        id<MTLBlitCommandEncoder> blit = [blitBuffer blitCommandEncoder];
+        [blit copyFromTexture:skyboxIntermediateTexture
+                  sourceSlice:0
+                  sourceLevel:0
+                 sourceOrigin:MTLOriginMake(0, 0, 0)
+                   sourceSize:MTLSizeMake(skyboxWidth, skyboxHeight, 1)
+                    toTexture:skyboxTexture
+             destinationSlice:0
+             destinationLevel:0
+            destinationOrigin:MTLOriginMake(0, 0, 0)];
+        [blit endEncoding];
+        [blitBuffer commit];
+        [blitBuffer waitUntilCompleted];
         
         MGPImageBasedLighting *IBL = [[MGPImageBasedLighting alloc] initWithDevice: self.device
                                                                            library: self.defaultLibrary
                                                                 equirectangularMap: skyboxTexture];
         [_IBLs addObject: IBL];
     }
-#endif
     
     // vertex descriptor
     MDLVertexDescriptor *mdlVertexDescriptor = MTKModelIOVertexDescriptorFromMetal(_gBuffer.baseVertexDescriptor);
@@ -580,7 +594,7 @@ const size_t kLightCullBufferSize = 8100*4*16;
     }
     light_globals[_currentBufferIndex].num_light = _numLights;
     light_globals[_currentBufferIndex].first_point_light_index = first_point_light_index;
-    light_globals[_currentBufferIndex].ambient_color = vector3(0.1f, 0.1f, 0.1f);
+    light_globals[_currentBufferIndex].ambient_color = _IBLOn ? simd_make_float3(0, 0, 0) : simd_make_float3(0.1f, 0.1f, 0.1f);
     light_globals[_currentBufferIndex].light_projection = matrix_from_perspective_fov_aspectLH(DEG_TO_RAD(60.0f), _gBuffer.size.width / _gBuffer.size.height, 1.0f, 80.0f);
     light_globals[_currentBufferIndex].tile_size = _lightGridTileSize;
     
@@ -615,7 +629,7 @@ const size_t kLightCullBufferSize = 8100*4*16;
     static CFTimeInterval CPUStartTime = 0, CPUEndTime = 0;
     CPUStartTime = NSDate.timeIntervalSinceReferenceDate;
     
-    if(_IBLs.count > 0) {
+    if(_IBLOn) {
         if(_IBLs[_currentIBLIndex].isAnyRenderingRequired) {
             [self performPrefilterPass];
         }
@@ -753,7 +767,7 @@ const size_t kLightCullBufferSize = 8100*4*16;
     [encoder setDepthStencilState: _depthStencil];
     [encoder setCullMode: MTLCullModeBack];
     
-    if(_IBLs.count > 0) {
+    if(_IBLOn) {
         [encoder setVertexBuffer: _commonVertexBuffer
                           offset: 256
                          atIndex: 0];
@@ -997,8 +1011,8 @@ const size_t kLightCullBufferSize = 8100*4*16;
 
 - (void)renderShading:(id<MTLRenderCommandEncoder>)encoder {
     MGPGBufferShadingFunctionConstants shadingConstants = {};
-    shadingConstants.hasIBLIrradianceMap = _IBLs.count > 0;
-    shadingConstants.hasIBLSpecularMap = _IBLs.count > 0;
+    shadingConstants.hasIBLIrradianceMap = _IBLOn;
+    shadingConstants.hasIBLSpecularMap = _IBLOn;
     shadingConstants.hasSSAOMap = _ssaoOn;
     
     if(_lightCullOn) {
@@ -1041,7 +1055,7 @@ const size_t kLightCullBufferSize = 8100*4*16;
         [encoder setFragmentTexture: _gBuffer.lighting
                             atIndex: attachment_light];
     }
-    if(_IBLs.count > 0) {
+    if(_IBLOn) {
         [encoder setFragmentTexture: _IBLs[_renderingIBLIndex].irradianceMap
                             atIndex: attachment_irradiance];
         [encoder setFragmentTexture: _IBLs[_renderingIBLIndex].prefilteredSpecularMap

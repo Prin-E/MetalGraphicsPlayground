@@ -248,13 +248,33 @@ const float kCameraSpeed = 100;
                                                                                                            width:skyboxWidth
                                                                                                           height:skyboxHeight
                                                                                                        mipmapped:NO];
-        skyboxTextureDescriptor.usage = MTLTextureUsageShaderRead;
-        id<MTLTexture> skyboxTexture = [self.device newTextureWithDescriptor: skyboxTextureDescriptor];
-        [skyboxTexture replaceRegion:MTLRegionMake2D(0, 0, skyboxWidth, skyboxHeight)
-                                      mipmapLevel:0
-                                        withBytes:skyboxImageData
-                                      bytesPerRow:16*skyboxWidth];
+        
+        // Create intermediate texture for upload
+        id<MTLTexture> skyboxIntermediateTexture = [self.device newTextureWithDescriptor: skyboxTextureDescriptor];
+        [skyboxIntermediateTexture replaceRegion:MTLRegionMake2D(0, 0, skyboxWidth, skyboxHeight)
+                         mipmapLevel:0
+                           withBytes:skyboxImageData
+                         bytesPerRow:16*skyboxWidth];
         stbi_image_free(skyboxImageData);
+        
+        // Create GPU-only texture and blit pixels
+        skyboxTextureDescriptor.usage = MTLTextureUsageShaderRead;
+        skyboxTextureDescriptor.storageMode = MTLStorageModePrivate;
+        id<MTLTexture> skyboxTexture = [self.device newTextureWithDescriptor: skyboxTextureDescriptor];
+        id<MTLCommandBuffer> blitBuffer = [self.queue commandBuffer];
+        id<MTLBlitCommandEncoder> blit = [blitBuffer blitCommandEncoder];
+        [blit copyFromTexture:skyboxIntermediateTexture
+                  sourceSlice:0
+                  sourceLevel:0
+                 sourceOrigin:MTLOriginMake(0, 0, 0)
+                   sourceSize:MTLSizeMake(skyboxWidth, skyboxHeight, 1)
+                    toTexture:skyboxTexture
+             destinationSlice:0
+             destinationLevel:0
+            destinationOrigin:MTLOriginMake(0, 0, 0)];
+        [blit endEncoding];
+        [blitBuffer commit];
+        [blitBuffer waitUntilCompleted];
         
         MGPImageBasedLighting *IBL = [[MGPImageBasedLighting alloc] initWithDevice: self.device
                                                                            library: self.defaultLibrary

@@ -42,6 +42,7 @@
 		954A2C3B1C14400000EB58E3 /* lego.obj in Resources */ = {isa = PBXBuildFile; fileRef = 954A2C391C14400000EB58E3 /* lego.obj */; };
 		954A40F3232D9E0800D09CD4 /* LightCulling.metal in Sources */ = {isa = PBXBuildFile; fileRef = 954A40F2232D9E0800D09CD4 /* LightCulling.metal */; };
 		954A40F4232D9E0800D09CD4 /* LightCulling.metal in Sources */ = {isa = PBXBuildFile; fileRef = 954A40F2232D9E0800D09CD4 /* LightCulling.metal */; };
+		954B112E2346F143007C5BAB /* Milkyway_small.hdr in Resources */ = {isa = PBXBuildFile; fileRef = 95EFEC3822AE97BE0091C698 /* Milkyway_small.hdr */; };
 		954F28B91C1452A700D4D915 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 954F28B81C1452A700D4D915 /* AppDelegate.m */; };
 		954F28BC1C1452A700D4D915 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 954F28BB1C1452A700D4D915 /* main.m */; };
 		954F28BE1C1452A700D4D915 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 954F28BD1C1452A700D4D915 /* Assets.xcassets */; };
@@ -202,7 +203,6 @@
 		95EFD8DC22AF941800D4C0F5 /* DDSTextureLoader.mm in Sources */ = {isa = PBXBuildFile; fileRef = 95EFD8D922AF941800D4C0F5 /* DDSTextureLoader.mm */; };
 		95EFD8DD22AF958500D4C0F5 /* MGPTextureLoader.m in Sources */ = {isa = PBXBuildFile; fileRef = 95EFEC4C22AEAE3B0091C698 /* MGPTextureLoader.m */; };
 		95EFEC3222AE94480091C698 /* sponza.h3d in Resources */ = {isa = PBXBuildFile; fileRef = 95EFEC3122AE94480091C698 /* sponza.h3d */; };
-		95EFEC3A22AE97C40091C698 /* Tropical_Beach_3k.hdr in Resources */ = {isa = PBXBuildFile; fileRef = 95EFEC3922AE97C40091C698 /* Tropical_Beach_3k.hdr */; };
 		95EFEC3F22AE98640091C698 /* bush_restaurant_1k.hdr in Resources */ = {isa = PBXBuildFile; fileRef = 95EFEC3622AE97AF0091C698 /* bush_restaurant_1k.hdr */; };
 		95EFEC4022AE98640091C698 /* Factory_Catwalk_2k.hdr in Resources */ = {isa = PBXBuildFile; fileRef = 95EFEC3722AE97B70091C698 /* Factory_Catwalk_2k.hdr */; };
 		95EFEC4122AE98640091C698 /* Milkyway_small.hdr in Resources */ = {isa = PBXBuildFile; fileRef = 95EFEC3822AE97BE0091C698 /* Milkyway_small.hdr */; };
@@ -1584,6 +1584,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				954B112E2346F143007C5BAB /* Milkyway_small.hdr in Resources */,
 				959F3A9722BFDA3200D1F4D4 /* background.dds in Resources */,
 				959F3AB922BFDA3200D1F4D4 /* sponza_curtain_spec.dds in Resources */,
 				959F3A8D22BFDA3200D1F4D4 /* sponza_fabric_blue_diff.dds in Resources */,
@@ -1644,7 +1645,6 @@
 				959F3ABE22BFDA3200D1F4D4 /* vase_diff.dds in Resources */,
 				959F3A9D22BFDA3200D1F4D4 /* sponza_ceiling_a_diff.dds in Resources */,
 				959F3A9522BFDA3200D1F4D4 /* sponza_arch_spec.dds in Resources */,
-				95EFEC3A22AE97C40091C698 /* Tropical_Beach_3k.hdr in Resources */,
 				959F3AA422BFDA3200D1F4D4 /* sponza_column_b_ddn.dds in Resources */,
 				959F3AA322BFDA3200D1F4D4 /* sponza_curtain_green_diff.dds in Resources */,
 				95FBFD4C229465ED002BA1E0 /* MainMenu.xib in Resources */,

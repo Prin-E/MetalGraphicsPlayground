@@ -16,7 +16,7 @@
 using namespace metal;
 
 typedef struct {
-    float4 clipPos [[position]];
+    float4 clip_pos [[position]];
     float3 pos;
     uint rid [[render_target_array_index]];
 } EnvironmentFragment;
@@ -28,7 +28,7 @@ vertex EnvironmentFragment environment_vert(constant float3 *in [[buffer(0)]],
                                             uint iid [[instance_id]]) {
     EnvironmentFragment out;
     float3 pos = in[vid];
-    out.clipPos = float4(pos, 1.0);
+    out.clip_pos = float4(pos, 1.0);
     out.pos = cubeVertices[6*iid+vid];
     out.rid = iid;
     return out;

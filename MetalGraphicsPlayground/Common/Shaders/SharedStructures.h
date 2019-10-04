@@ -32,7 +32,6 @@ typedef struct {
 
 typedef struct __attribute__((__aligned__(256))) {
     matrix_float4x4 model;
-    matrix_float4x4 modelView;
     material_t material;
 } instance_props_t;
 
@@ -81,25 +80,7 @@ typedef struct __attribute__((__aligned__(256))) {
     float radius;
 } gizmo_props_t;
 
-typedef enum {
-    attachment_gbuffer_light_albedo,
-    attachment_gbuffer_light_normal,
-    attachment_gbuffer_light_pos,
-    attachment_gbuffer_light_shading,
-    attachment_gbuffer_light_tangent,
-    attachment_gbuffer_light_irradiance,
-    attachment_gbuffer_light_prefiltered_specular,
-    attachment_gbuffer_light_brdf_lookup,
-    attachment_gbuffer_light_ssao,
-    attachment_gbuffer_light_total
-} attachment_gbuffer_light_index;
-
-typedef enum {
-    attachment_gbuffer_shade_albedo,
-    attachment_gbuffer_shade_light,
-    attachment_gbuffer_shade_total
-} attachment_gbuffer_shade_index;
-
+// attachment
 typedef enum {
     attachment_albedo,
     attachment_normal,
@@ -115,6 +96,7 @@ typedef enum {
     attachment_total
 } attachment_index;
 
+// function constant value
 typedef enum {
     fcv_albedo,
     fcv_normal,
