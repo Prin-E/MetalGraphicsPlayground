@@ -53,7 +53,6 @@ const size_t kLightCullBufferSize = 8100*4*16;
     
     size_t _currentBufferIndex;
     float _elapsedTime;
-    bool _animate;
     float _animationTime;
     
     BOOL _moveFlags[6];     // Front, Back, Left, Right, Up, Down
@@ -563,8 +562,12 @@ const size_t kLightCullBufferSize = 8100*4*16;
             light.type = MGPLightTypeDirectional;
         }
         else {
-            light.position = light_positions[i];
-            light.radius = 2.0f;
+            light.position = light_positions[i] +
+            simd_make_float3(0.5 * sinf(M_PI * (_animationTime + light_colors[i].x)),
+                             0.5 * sinf(M_PI * (_animationTime + light_colors[i].x)),
+                             0.5 * sinf(M_PI * (_animationTime + light_colors[i].z)));
+            light.intensity += light_colors[i].y * 2.5f;
+            light.radius = 2.0f + light_colors[i].z;
             light.type = MGPLightTypePoint;
         }
         
