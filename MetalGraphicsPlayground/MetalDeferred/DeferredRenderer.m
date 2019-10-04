@@ -339,7 +339,7 @@ const float kCameraSpeed = 100;
     _renderPipelinePrepass = [_gBuffer renderPipelineStateWithConstants: prepassConstants
                                                                   error: nil];
     _renderPipelineLighting = [_gBuffer lightingPipelineStateWithError: nil];
-    _renderPipelineShading = [_gBuffer shadingPipelineStateWithConstants: shadingConstants
+    _renderPipelineShading = [_gBuffer nonLightCulledShadingPipelineStateWithConstants: shadingConstants
                                                                    error: nil];
     
     MGPGBufferPrepassFunctionConstants prepassTestConstants = {};
@@ -741,15 +741,12 @@ const float kCameraSpeed = 100;
     encoder.label = [NSString stringWithFormat: @"Lighting %@", lightFromIndex == 0 ? @"Base" : @"Add"];
     [encoder setRenderPipelineState: _renderPipelineLighting];
     [encoder setCullMode: MTLCullModeBack];
-    [encoder setVertexBuffer: _commonVertexBuffer
-                      offset: 0
-                     atIndex: 0];
+    [encoder setFragmentBuffer: _cameraPropsBuffer
+                        offset: _currentBufferIndex * sizeof(camera_props_t)
+                       atIndex: 0];
     [encoder setFragmentBuffer: _lightGlobalBuffer
                         offset: _currentBufferIndex * sizeof(light_global_t)
                        atIndex: 2];
-    [encoder setFragmentBuffer: _cameraPropsBuffer
-                        offset: _currentBufferIndex * sizeof(camera_props_t)
-                       atIndex: 3];
     [encoder setFragmentTexture: _gBuffer.normal
                         atIndex: attachment_normal];
     [encoder setFragmentTexture: _gBuffer.shading
@@ -770,11 +767,11 @@ const float kCameraSpeed = 100;
                                                                              resolution: kShadowResolution
                                                                           cascadeLevels: 1];
                 [encoder setFragmentTexture: shadowBuffer.texture
-                                    atIndex: j+11];
+                                    atIndex: j+attachment_shadow_map];
             }
             else {
                 [encoder setFragmentTexture: nil
-                                    atIndex: j+11];
+                                    atIndex: j+attachment_shadow_map];
             }
         }
         [encoder drawPrimitives: MTLPrimitiveTypeTriangle
@@ -789,14 +786,14 @@ const float kCameraSpeed = 100;
     encoder.label = @"Shading";
     [encoder setRenderPipelineState: _renderPipelineShading];
     [encoder setCullMode: MTLCullModeBack];
-    [encoder setVertexBuffer: _commonVertexBuffer
-                      offset: 0
-                     atIndex: 0];
     [encoder setFragmentBuffer: _cameraPropsBuffer
                         offset: _currentBufferIndex * sizeof(camera_props_t)
-                       atIndex: 1];
+                       atIndex: 0];
     [encoder setFragmentBuffer: _lightGlobalBuffer
                         offset: _currentBufferIndex * sizeof(light_global_t)
+                       atIndex: 1];
+    [encoder setFragmentBuffer: _lightPropsBuffer
+                        offset: _currentBufferIndex * sizeof(light_t) * kNumLight
                        atIndex: 2];
     [encoder setFragmentTexture: _gBuffer.albedo
                         atIndex: attachment_albedo];
@@ -804,6 +801,10 @@ const float kCameraSpeed = 100;
                         atIndex: attachment_normal];
     [encoder setFragmentTexture: _gBuffer.shading
                         atIndex: attachment_shading];
+    [encoder setFragmentTexture: _gBuffer.depth
+                        atIndex: attachment_depth];
+    [encoder setFragmentTexture: _gBuffer.tangent
+                        atIndex: attachment_tangent];
     [encoder setFragmentTexture: _gBuffer.depth
                         atIndex: attachment_depth];
     [encoder setFragmentTexture: _gBuffer.lighting
