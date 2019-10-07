@@ -12,9 +12,13 @@ You can check framework sources codes in **Common** directory!
 **Features**
 * Deferred Rendering
   * Light pre-pass based
-  * G-buffer pass : Albedo, Normal, Tangent, Shading, Depth
-  * Light pass : Light + Shadow Accumulation
-  * Shade pass : Convolution
+    * G-buffer pass : Albedo, Normal, Tangent, Shading, Depth
+    * Light pass : Light + Shadow Accumulation
+    * Shade pass : Convolution
+  * Tile deferred
+    * G-buffer pass : Albedo, Normal, Tangent, Shading, Depth
+    * Light culling pass
+    * Shade pass : Convolution
 * Image based Lighting
   * HDRI Image (Equirectangular map -> Cubemap)
   * Split-sum approximation model
@@ -39,7 +43,7 @@ You can check framework sources codes in **Common** directory!
 
 [<img src="https://img.youtube.com/vi/Z3z76WkNG6U/0.jpg" alt="Image based Lighting" width="320" height="240">](https://www.youtube.com/watch?v=Z3z76WkNG6U)
 [<img src="https://img.youtube.com/vi/aeZVjN5krqk/0.jpg" alt="Physically based Rendering" width="320" height="240">](https://www.youtube.com/watch?v=aeZVjN5krqk)
-[<img src="https://img.youtube.com/vi/aQeWSRoBLfU/0.jpg" alt="Light and Shadows" width="320" height="240">](https://www.youtube.com/watch?v=aQeWSRoBLfU)
+[<img src="https://img.youtube.com/vi/_raZEvfcWY4/0.jpg" alt="Light and Shadows" width="320" height="240">](https://www.youtube.com/watch?v=_raZEvfcWY4)
 [<img src="https://img.youtube.com/vi/K6zhDj0YyPQ/0.jpg" alt="Post Processing" width="320" height="240">](https://www.youtube.com/watch?v=K6zhDj0YyPQ)
 
 ## MetalTextureLOD
