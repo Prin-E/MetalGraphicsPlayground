@@ -8,6 +8,8 @@
 
 #import <Foundation/Foundation.h>
 #import <simd/simd.h>
+#import "SharedStructures.h"
+#import "MGPProjectionState.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -21,6 +23,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (instancetype)initWithCamera: (MGPCamera *)camera;
 - (void)setPlanesForCamera: (MGPCamera *)camera;
+- (void)setPlanesWithProjectionState:(MGPProjectionState)projectionState
+                              matrix:(simd_float4x4)matrix;
 - (void)setPlanesForLight: (MGPLight *)light;
 
 - (void)multiplyMatrix: (simd_float4x4)matrix;

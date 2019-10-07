@@ -81,6 +81,16 @@
 		95644A4E230C39C700EA856C /* Gizmo.metal in Sources */ = {isa = PBXBuildFile; fileRef = 95644A4D230C39C700EA856C /* Gizmo.metal */; };
 		95644A51230C3B3400EA856C /* MGPGizmos.m in Sources */ = {isa = PBXBuildFile; fileRef = 95644A50230C3B3400EA856C /* MGPGizmos.m */; };
 		95644A52230C3B3400EA856C /* MGPGizmos.m in Sources */ = {isa = PBXBuildFile; fileRef = 95644A50230C3B3400EA856C /* MGPGizmos.m */; };
+		9564B69F234AC2FC00DC394A /* MGPSceneNodeComponent.m in Sources */ = {isa = PBXBuildFile; fileRef = 9564B69E234AC2FC00DC394A /* MGPSceneNodeComponent.m */; };
+		9564B6A0234AC2FC00DC394A /* MGPSceneNodeComponent.m in Sources */ = {isa = PBXBuildFile; fileRef = 9564B69E234AC2FC00DC394A /* MGPSceneNodeComponent.m */; };
+		9564B6A3234AC6B900DC394A /* MGPSceneRenderer.m in Sources */ = {isa = PBXBuildFile; fileRef = 9564B6A2234AC6B900DC394A /* MGPSceneRenderer.m */; };
+		9564B6A4234AC6B900DC394A /* MGPSceneRenderer.m in Sources */ = {isa = PBXBuildFile; fileRef = 9564B6A2234AC6B900DC394A /* MGPSceneRenderer.m */; };
+		9564B6A7234B0B7400DC394A /* MGPLightComponent.m in Sources */ = {isa = PBXBuildFile; fileRef = 9564B6A6234B0B7400DC394A /* MGPLightComponent.m */; };
+		9564B6A8234B0B7400DC394A /* MGPLightComponent.m in Sources */ = {isa = PBXBuildFile; fileRef = 9564B6A6234B0B7400DC394A /* MGPLightComponent.m */; };
+		9564B6AB234B0D3500DC394A /* MGPMeshComponent.m in Sources */ = {isa = PBXBuildFile; fileRef = 9564B6AA234B0D3400DC394A /* MGPMeshComponent.m */; };
+		9564B6AC234B0D3500DC394A /* MGPMeshComponent.m in Sources */ = {isa = PBXBuildFile; fileRef = 9564B6AA234B0D3400DC394A /* MGPMeshComponent.m */; };
+		9564B6AF234B0D6900DC394A /* MGPCameraComponent.m in Sources */ = {isa = PBXBuildFile; fileRef = 9564B6AE234B0D6900DC394A /* MGPCameraComponent.m */; };
+		9564B6B0234B0D6900DC394A /* MGPCameraComponent.m in Sources */ = {isa = PBXBuildFile; fileRef = 9564B6AE234B0D6900DC394A /* MGPCameraComponent.m */; };
 		9564D3E71C1F17CC00C6E316 /* negx.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 9564D3E11C1F17CC00C6E316 /* negx.jpg */; };
 		9564D3E81C1F17CC00C6E316 /* negy.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 9564D3E21C1F17CC00C6E316 /* negy.jpg */; };
 		9564D3E91C1F17CC00C6E316 /* negz.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 9564D3E31C1F17CC00C6E316 /* negz.jpg */; };
@@ -349,6 +359,16 @@
 		95644A4D230C39C700EA856C /* Gizmo.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = Gizmo.metal; sourceTree = "<group>"; };
 		95644A4F230C3B3400EA856C /* MGPGizmos.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MGPGizmos.h; sourceTree = "<group>"; };
 		95644A50230C3B3400EA856C /* MGPGizmos.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MGPGizmos.m; sourceTree = "<group>"; };
+		9564B69D234AC2FC00DC394A /* MGPSceneNodeComponent.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MGPSceneNodeComponent.h; sourceTree = "<group>"; };
+		9564B69E234AC2FC00DC394A /* MGPSceneNodeComponent.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MGPSceneNodeComponent.m; sourceTree = "<group>"; };
+		9564B6A1234AC6B900DC394A /* MGPSceneRenderer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MGPSceneRenderer.h; sourceTree = "<group>"; };
+		9564B6A2234AC6B900DC394A /* MGPSceneRenderer.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MGPSceneRenderer.m; sourceTree = "<group>"; };
+		9564B6A5234B0B7400DC394A /* MGPLightComponent.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MGPLightComponent.h; sourceTree = "<group>"; };
+		9564B6A6234B0B7400DC394A /* MGPLightComponent.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MGPLightComponent.m; sourceTree = "<group>"; };
+		9564B6A9234B0D3400DC394A /* MGPMeshComponent.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MGPMeshComponent.h; sourceTree = "<group>"; };
+		9564B6AA234B0D3400DC394A /* MGPMeshComponent.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MGPMeshComponent.m; sourceTree = "<group>"; };
+		9564B6AD234B0D6900DC394A /* MGPCameraComponent.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MGPCameraComponent.h; sourceTree = "<group>"; };
+		9564B6AE234B0D6900DC394A /* MGPCameraComponent.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MGPCameraComponent.m; sourceTree = "<group>"; };
 		9564D3E11C1F17CC00C6E316 /* negx.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = negx.jpg; sourceTree = "<group>"; };
 		9564D3E21C1F17CC00C6E316 /* negy.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = negy.jpg; sourceTree = "<group>"; };
 		9564D3E31C1F17CC00C6E316 /* negz.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = negz.jpg; sourceTree = "<group>"; };
@@ -1065,6 +1085,14 @@
 				95F002AA22CCEEFF000A951B /* MGPScene.m */,
 				959B872D231AD9DC00CAF261 /* MGPSceneNode.h */,
 				959B872E231AD9DC00CAF261 /* MGPSceneNode.m */,
+				9564B69D234AC2FC00DC394A /* MGPSceneNodeComponent.h */,
+				9564B69E234AC2FC00DC394A /* MGPSceneNodeComponent.m */,
+				9564B6A5234B0B7400DC394A /* MGPLightComponent.h */,
+				9564B6A6234B0B7400DC394A /* MGPLightComponent.m */,
+				9564B6A9234B0D3400DC394A /* MGPMeshComponent.h */,
+				9564B6AA234B0D3400DC394A /* MGPMeshComponent.m */,
+				9564B6AD234B0D6900DC394A /* MGPCameraComponent.h */,
+				9564B6AE234B0D6900DC394A /* MGPCameraComponent.m */,
 				958852D323029A16005218C8 /* MGPPlane.h */,
 				958852D423029A16005218C8 /* MGPPlane.m */,
 				958852D72302C3DC005218C8 /* MGPFrustum.h */,
@@ -1081,6 +1109,8 @@
 			children = (
 				958955C9227736F700414591 /* MGPRenderer.h */,
 				958955CA227736F700414591 /* MGPRenderer.m */,
+				9564B6A1234AC6B900DC394A /* MGPSceneRenderer.h */,
+				9564B6A2234AC6B900DC394A /* MGPSceneRenderer.m */,
 				95F4CB282279937200F51454 /* MGPGBuffer.h */,
 				95F4CB292279937200F51454 /* MGPGBuffer.m */,
 				952C964722C0A1D9004C8C34 /* MGPPostProcessing.h */,
@@ -1765,6 +1795,7 @@
 				950CF3842322A4B5008F581E /* ScreenSpaceReflection.metal in Sources */,
 				95EFB7D222C7AD5A00813903 /* MGPShadowManager.m in Sources */,
 				959C8303227F424900C2C245 /* BRDF.metal in Sources */,
+				9564B6A3234AC6B900DC394A /* MGPSceneRenderer.m in Sources */,
 				95A4D93022840E5B004653B6 /* Skybox.metal in Sources */,
 				959B872F231AD9DC00CAF261 /* MGPSceneNode.m in Sources */,
 				958852D523029A16005218C8 /* MGPPlane.m in Sources */,
@@ -1772,12 +1803,14 @@
 				950C345822C5B05D004C32CA /* MGPShadowBuffer.m in Sources */,
 				95FBFD56229466DC002BA1E0 /* MGPCamera.m in Sources */,
 				9551CC062344E21100861132 /* Lighting.metal in Sources */,
+				9564B6AF234B0D6900DC394A /* MGPCameraComponent.m in Sources */,
 				95A4D93522846F99004653B6 /* CommonStages.metal in Sources */,
 				95F002AD22CCEFB5000A951B /* MGPPostProcessingLayer.m in Sources */,
 				95F0F94522C1FEA6002AF368 /* SSAO.metal in Sources */,
 				95BED31C2286746B006E5C2F /* CommonMath.metal in Sources */,
 				959C8301227F409E00C2C245 /* ImageBasedLighting.metal in Sources */,
 				95F6725722D7867300B630A7 /* Shadow.metal in Sources */,
+				9564B6A7234B0B7400DC394A /* MGPLightComponent.m in Sources */,
 				95765E40227D81060053D66D /* MetalMath.c in Sources */,
 				95765E3F227D7EEA0053D66D /* MGPMesh.m in Sources */,
 				95F5E09D2276255900445BB0 /* main.m in Sources */,
@@ -1787,12 +1820,14 @@
 				958955C82277369B00414591 /* MGPView.m in Sources */,
 				95A4D9292283F1E0004653B6 /* MGPImageBasedLighting.m in Sources */,
 				95F4CB2A2279937200F51454 /* MGPGBuffer.m in Sources */,
+				9564B6AB234B0D3500DC394A /* MGPMeshComponent.m in Sources */,
 				958852D92302C3DC005218C8 /* MGPFrustum.m in Sources */,
 				954A40F3232D9E0800D09CD4 /* LightCulling.metal in Sources */,
 				959A344E227B59750034AA82 /* DeferredRenderer.m in Sources */,
 				958955CB227736F700414591 /* MGPRenderer.m in Sources */,
 				958852DD23032798005218C8 /* MGPBoundingVolume.m in Sources */,
 				95EFD8DD22AF958500D4C0F5 /* MGPTextureLoader.m in Sources */,
+				9564B69F234AC2FC00DC394A /* MGPSceneNodeComponent.m in Sources */,
 				95EFD8DB22AF941800D4C0F5 /* DDSTextureLoader.mm in Sources */,
 				95F002AC22CCEFB5000A951B /* MGPPostProcessing.m in Sources */,
 			);
@@ -1803,17 +1838,21 @@
 			buildActionMask = 2147483647;
 			files = (
 				950CF3852322A4BA008F581E /* ScreenSpaceReflection.metal in Sources */,
+				9564B6A0234AC2FC00DC394A /* MGPSceneNodeComponent.m in Sources */,
 				95B80A77230DC165006051B5 /* Gizmo.metal in Sources */,
+				9564B6A4234AC6B900DC394A /* MGPSceneRenderer.m in Sources */,
 				959B8730231AD9DC00CAF261 /* MGPSceneNode.m in Sources */,
 				954A40F4232D9E0800D09CD4 /* LightCulling.metal in Sources */,
 				95F002AE22CD0841000A951B /* MGPPostProcessing.m in Sources */,
 				95F002AF22CD0841000A951B /* MGPPostProcessingLayer.m in Sources */,
 				95F40BC122AD76EA00F747D2 /* GBuffer.metal in Sources */,
+				9564B6A8234B0B7400DC394A /* MGPLightComponent.m in Sources */,
 				958852D623029A16005218C8 /* MGPPlane.m in Sources */,
 				95F6725822D7867300B630A7 /* Shadow.metal in Sources */,
 				95F40BC222AD76EA00F747D2 /* BRDF.metal in Sources */,
 				95F002AB22CCEEFF000A951B /* MGPScene.m in Sources */,
 				95EFD8DC22AF941800D4C0F5 /* DDSTextureLoader.mm in Sources */,
+				9564B6B0234B0D6900DC394A /* MGPCameraComponent.m in Sources */,
 				95F40BC322AD76EA00F747D2 /* ImageBasedLighting.metal in Sources */,
 				95F40BC422AD76EA00F747D2 /* Skybox.metal in Sources */,
 				95F40BC522AD76EA00F747D2 /* CommonStages.metal in Sources */,
@@ -1837,6 +1876,7 @@
 				95FBFD47229465EB002BA1E0 /* AppDelegate.m in Sources */,
 				958852DE23032798005218C8 /* MGPBoundingVolume.m in Sources */,
 				95F0F94622C1FEA6002AF368 /* SSAO.metal in Sources */,
+				9564B6AC234B0D3500DC394A /* MGPMeshComponent.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

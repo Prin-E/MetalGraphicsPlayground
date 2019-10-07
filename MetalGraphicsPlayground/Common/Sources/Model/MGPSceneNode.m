@@ -8,10 +8,12 @@
 
 #import "MGPSceneNode.h"
 #import "../Utility/MetalMath.h"
+#import "MGPSceneNodeComponent.h"
 
 @implementation MGPSceneNode {
     NSMutableArray<MGPSceneNode *> *_children;
-    matrix_float4x4 _localToParentMatrix, _parentToLocalMatrix;
+    NSMutableArray<MGPSceneNodeComponent *> *_components;
+    simd_float4x4 _localToParentRotationMatrix, _parentToLocalRotationMatrix;
     simd_float3 _position, _rotation, _scale;
 }
 
@@ -23,6 +25,8 @@
         _parentToLocalMatrix = matrix_identity_float4x4;
         _localToWorldMatrix = matrix_identity_float4x4;
         _worldToLocalMatrix = matrix_identity_float4x4;
+        _localToWorldRotationMatrix = matrix_identity_float4x4;
+        _worldToLocalRotationMatrix = matrix_identity_float4x4;
         _scale = simd_make_float3(1, 1, 1);
     }
     return self;
@@ -49,10 +53,7 @@
     _localToParentMatrix.columns[3].xyz = position;
     _parentToLocalMatrix.columns[3].xyz = simd_make_float3(0);
     _parentToLocalMatrix.columns[3].xyz = -simd_mul(_parentToLocalMatrix, simd_make_float4(position, 1.0)).xyz;
-    if(_parent) {
-        _localToWorldMatrix = simd_mul(_parent.localToWorldMatrix, _localToParentMatrix);
-        _worldToLocalMatrix = simd_mul(_parent.worldToLocalMatrix, _parentToLocalMatrix);
-    }
+    [self _calculateLocalWorldMatrices];
 }
 
 - (simd_float3)rotation {
@@ -85,11 +86,54 @@
         [_children removeObject: node];
 }
 
+#pragma mark - Components
+- (void)addComponent: (MGPSceneNodeComponent *)component {
+    if(component.node == nil) {
+        [_components addObject: component];
+        component.node = self;
+    }
+    else {
+        @throw [NSException exceptionWithName:@"MGPSceneNodeErrorDomain"
+                                       reason:@"Component is already attached to another node!"
+                                     userInfo:@{}];
+    }
+}
+
+- (MGPSceneNodeComponent *)componentAtIndex: (NSUInteger)index {
+    return [_components objectAtIndex:index];
+}
+
+- (MGPSceneNodeComponent *)componentOfType: (Class)theClass {
+    for(MGPSceneNodeComponent *elem in _components) {
+        if(elem.class == theClass)
+            return elem;
+    }
+    return nil;
+}
+
+- (void)removeComponentAtIndex: (NSUInteger)index {
+    [_components removeObjectAtIndex:index];
+}
+
+- (void)removeAllComponents {
+    [_components removeAllObjects];
+}
+
+- (void)removeComponentOfType: (Class)theClass {
+    for(NSUInteger i = 0; i < _components.count; i++) {
+        MGPSceneNodeComponent *comp = [_components objectAtIndex:i];
+        if(comp.class == theClass)
+            [_components removeObjectAtIndex:i--];
+    }
+}
+
 #pragma mark - Matrix operations
 - (void)_generateMatrices {
     // get rotation matrix
     simd_float4x4 localToParentMatrix = matrix_from_euler(_rotation);
     simd_float4x4 parentToLocalMatrix = simd_transpose(localToParentMatrix);
+    _localToParentRotationMatrix = localToParentMatrix;
+    _parentToLocalRotationMatrix = parentToLocalMatrix;
     
     // apply scales
     simd_float3 scaleDiv1 = 1.0 / _scale;
@@ -108,9 +152,28 @@
     // replace current matrices
     _localToParentMatrix = localToParentMatrix;
     _parentToLocalMatrix = parentToLocalMatrix;
+    
+    [self _calculateLocalWorldMatrices];
+}
+
+- (void)_calculateLocalWorldMatrices {
     if(_parent) {
         _localToWorldMatrix = simd_mul(_parent.localToWorldMatrix, _localToParentMatrix);
         _worldToLocalMatrix = simd_mul(_parent.worldToLocalMatrix, _parentToLocalMatrix);
+        _localToWorldRotationMatrix = simd_mul(_parent.localToWorldRotationMatrix, _localToParentRotationMatrix);
+        _worldToLocalRotationMatrix = simd_mul(_parent.worldToLocalRotationMatrix, _parentToLocalRotationMatrix);
+    }
+    else {
+        _localToWorldMatrix = _localToParentMatrix;
+        _worldToLocalMatrix = _parentToLocalMatrix;
+        _localToWorldRotationMatrix = _localToParentRotationMatrix;
+        _worldToLocalRotationMatrix = _parentToLocalRotationMatrix;
+    }
+    
+    if(_children.count > 0) {
+        for(MGPSceneNode *child in _children) {
+            [child _calculateLocalWorldMatrices];
+        }
     }
 }
 

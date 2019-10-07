@@ -11,6 +11,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+@class MGPSceneNodeComponent;
 @interface MGPSceneNode : NSObject
 
 // On/Off
@@ -21,6 +22,9 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic) matrix_float4x4 parentToLocalMatrix;
 @property (nonatomic, readonly) matrix_float4x4 localToWorldMatrix;
 @property (nonatomic, readonly) matrix_float4x4 worldToLocalMatrix;
+
+@property (nonatomic, readonly) matrix_float4x4 localToWorldRotationMatrix;
+@property (nonatomic, readonly) matrix_float4x4 worldToLocalRotationMatrix;
 
 // Transform (Local)
 @property (nonatomic) simd_float3 position;
@@ -33,6 +37,16 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)addChild: (MGPSceneNode *)node;
 - (void)removeChild: (MGPSceneNode *)node;
+
+// Components
+@property (nonatomic, readonly) NSArray<MGPSceneNodeComponent *> *components;
+
+- (void)addComponent: (MGPSceneNodeComponent *)component;
+- (MGPSceneNodeComponent *)componentAtIndex: (NSUInteger)index;
+- (MGPSceneNodeComponent *)componentOfType: (Class)theClass;
+- (void)removeComponentAtIndex: (NSUInteger)index;
+- (void)removeAllComponents;
+- (void)removeComponentOfType: (Class)theClass;
 
 @end
 

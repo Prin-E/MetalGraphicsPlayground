@@ -34,12 +34,12 @@
 }
 
 - (void)setPlanesForCamera:(MGPCamera *)camera {
-    [self setPlanesForProjectionState:camera.projectionState
+    [self setPlanesWithProjectionState:camera.projectionState
                                matrix:camera.cameraToWorldMatrix];
 }
 
-- (void)setPlanesForProjectionState:(MGPProjectionState)proj
-                             matrix:(simd_float4x4)matrix {
+- (void)setPlanesWithProjectionState:(MGPProjectionState)proj
+                              matrix:(simd_float4x4)matrix {
     simd_float3 position = matrix.columns[3].xyz;
     
     // basis vectors and related constants
@@ -74,7 +74,7 @@
 - (void)setPlanesForLight:(MGPLight *)light {
     light_t shaderProps = light.shaderProperties;
     MGPProjectionState proj = light.projectionState;
-    [self setPlanesForProjectionState:proj
+    [self setPlanesWithProjectionState:proj
                                matrix:shaderProps.light_view];
 }
 
