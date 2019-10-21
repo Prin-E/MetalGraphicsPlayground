@@ -32,7 +32,6 @@
 #define LERP(x,y,t) ((x)*(1.0-(t))+(y)*(t))
 #endif
 
-const size_t kMaxBuffersInFlight = 3;
 const size_t kNumInstance = 1;
 const uint32_t kNumLight = MAX_NUM_LIGHTS;
 const float kLightIntensityBase = 1.0f;

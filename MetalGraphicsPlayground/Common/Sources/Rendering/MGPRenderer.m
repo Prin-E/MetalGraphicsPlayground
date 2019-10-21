@@ -37,7 +37,7 @@
     }
     _defaultLibrary = [_device newDefaultLibrary];
     _queue = [_device newCommandQueue];
-    _semaphore = dispatch_semaphore_create(3);
+    _semaphore = dispatch_semaphore_create(kMaxBuffersInFlight);
     
     NSLog(@"Selected GPU : %@", _device.name);
 }

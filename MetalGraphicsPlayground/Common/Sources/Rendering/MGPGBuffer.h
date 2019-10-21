@@ -27,9 +27,26 @@ typedef struct MGPGBufferShadingFunctionConstants {
     bool hasSSAOMap;
 } MGPGBufferShadingFunctionConstants;
 
+typedef NS_OPTIONS(NSUInteger, MGPGBufferAttachmentType) {
+    MGPGBufferAttachmentTypeOutput = 1 << 0,
+    MGPGBufferAttachmentTypeDepth = 1 << 1,
+    MGPGBufferAttachmentTypeAlbedo = 1 << 2,
+    MGPGBufferAttachmentTypeNormal = 1 << 3,
+    MGPGBufferAttachmentTypeShading = 1 << 4,
+    MGPGBufferAttachmentTypeTangent = 1 << 5,
+    MGPGBufferAttachmentTypeLighting = 1 << 6,
+    MGPGBufferAttachmentTypeAll = (MGPGBufferAttachmentTypeOutput   |
+                                   MGPGBufferAttachmentTypeDepth    |
+                                   MGPGBufferAttachmentTypeAlbedo   |
+                                   MGPGBufferAttachmentTypeNormal   |
+                                   MGPGBufferAttachmentTypeShading  |
+                                   MGPGBufferAttachmentTypeTangent  |
+                                   MGPGBufferAttachmentTypeLighting )
+};
+
 /*
  - G-Buffer -
- G-Buffer requires 3-render passes. (prepass->light-accumulation->shade)
+ G-Buffer requires at-least 3-render passes. (prepass->light(cull or accumulation)->shade)
  */
 @interface MGPGBuffer : NSObject
 
@@ -48,6 +65,9 @@ typedef struct MGPGBufferShadingFunctionConstants {
 // depth
 @property (readonly) id<MTLTexture> depth;
 
+// attachments
+@property (nonatomic) MGPGBufferAttachmentType attachments;
+
 // base vertex descriptor
 @property (readonly) MTLVertexDescriptor *baseVertexDescriptor;
 
@@ -63,6 +83,11 @@ typedef struct MGPGBufferShadingFunctionConstants {
 - (instancetype)initWithDevice:(id<MTLDevice>)device
                        library:(id<MTLLibrary>)library
                           size:(CGSize)newSize;
+
+- (instancetype)initWithDevice:(id<MTLDevice>)device
+                       library:(id<MTLLibrary>)library
+                          size:(CGSize)newSize
+                   attachments:(MGPGBufferAttachmentType)attachments;
 
 - (void)resize:(CGSize)newSize;
 

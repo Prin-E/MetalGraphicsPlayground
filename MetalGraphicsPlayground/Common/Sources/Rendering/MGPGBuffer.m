@@ -15,6 +15,7 @@
     id<MTLDevice> _device;
     id<MTLLibrary> _library;
     CGSize _size;
+    MGPGBufferAttachmentType _attachments;
     MTLVertexDescriptor *_baseVertexDescriptor;
     MTLRenderPassDescriptor *_renderPassDescriptor;
     MTLRenderPassDescriptor *_lightingPassBaseDescriptor;
@@ -40,14 +41,30 @@
     if(self) {
         [self _initWithDevice:device
                       library:library
-                         size:newSize];
+                         size:newSize
+                  attachments:MGPGBufferAttachmentTypeAll];
+    }
+    return self;
+}
+
+- (instancetype)initWithDevice:(id<MTLDevice>)device
+                       library:(id<MTLLibrary>)library
+                          size:(CGSize)newSize
+                   attachments:(MGPGBufferAttachmentType)attachments {
+    self = [super init];
+    if(self) {
+        [self _initWithDevice:device
+                      library:library
+                         size:newSize
+                  attachments:attachments];
     }
     return self;
 }
 
 - (void)_initWithDevice:(id<MTLDevice>)device
                 library:(id<MTLLibrary>)library
-                   size:(CGSize)newSize {
+                   size:(CGSize)newSize
+            attachments:(MGPGBufferAttachmentType)attachments {
     _device = device;
     _library = library;
     _size = newSize;
@@ -69,43 +86,81 @@
     NSUInteger height = MAX(64, _size.height);
     
     // albedo
-    MTLTextureDescriptor *desc = [MTLTextureDescriptor texture2DDescriptorWithPixelFormat: MTLPixelFormatBGRA8Unorm
-                                                                                    width: width
-                                                                                   height: height
-                                                                                mipmapped: NO];
+    MTLTextureDescriptor *desc = [MTLTextureDescriptor new];
+    desc.textureType = MTLTextureType2D;
+    desc.width = width;
+    desc.height = height;
     desc.usage = MTLTextureUsageShaderRead | MTLTextureUsageRenderTarget;
     desc.storageMode = MTLStorageModePrivate;
-    _albedo = [_device newTextureWithDescriptor: desc];
-    _albedo.label = @"Albedo G-buffer";
+    
+    if(_attachments | MGPGBufferAttachmentTypeAlbedo) {
+        desc.pixelFormat = MTLPixelFormatBGRA8Unorm;
+        _albedo = [_device newTextureWithDescriptor: desc];
+        _albedo.label = @"Albedo G-buffer";
+    }
+    else {
+        _albedo = nil;
+    }
     
     // normal
-    desc.pixelFormat = MTLPixelFormatRGB10A2Unorm;
-    _normal = [_device newTextureWithDescriptor: desc];
-    _normal.label = @"Normal G-buffer";
+    if(_attachments | MGPGBufferAttachmentTypeNormal) {
+        desc.pixelFormat = MTLPixelFormatRGB10A2Unorm;
+        _normal = [_device newTextureWithDescriptor: desc];
+        _normal.label = @"Normal G-buffer";
+    }
+    else {
+        _normal = nil;
+    }
     
     // depth
-    desc.pixelFormat = MTLPixelFormatDepth32Float_Stencil8;
-    _depth = [_device newTextureWithDescriptor: desc];
-    _depth.label = @"Depth G-buffer";
+    if(_attachments | MGPGBufferAttachmentTypeDepth) {
+        desc.pixelFormat = MTLPixelFormatDepth32Float_Stencil8;
+        _depth = [_device newTextureWithDescriptor: desc];
+        _depth.label = @"Depth G-buffer";
+    }
+    else {
+        _depth = nil;
+    }
     
     // shading
-    desc.pixelFormat = MTLPixelFormatBGRA8Unorm;
-    _shading = [_device newTextureWithDescriptor: desc];
-    _shading.label = @"Shading G-buffer";
+    if(_attachments | MGPGBufferAttachmentTypeShading) {
+        desc.pixelFormat = MTLPixelFormatBGRA8Unorm;
+        _shading = [_device newTextureWithDescriptor: desc];
+        _shading.label = @"Shading G-buffer";
+    }
+    else {
+        _shading = nil;
+    }
     
     // tangent
-    desc.pixelFormat = MTLPixelFormatRGB10A2Unorm;
-    _tangent = [_device newTextureWithDescriptor: desc];
-    _tangent.label = @"Tangent G-buffer";
+    if(_attachments | MGPGBufferAttachmentTypeTangent) {
+        desc.pixelFormat = MTLPixelFormatRGB10A2Unorm;
+        _tangent = [_device newTextureWithDescriptor: desc];
+        _tangent.label = @"Tangent G-buffer";
+    }
+    else {
+        _tangent = nil;
+    }
     
     // lighting
-    desc.pixelFormat = MTLPixelFormatRGBA16Float;
-    _lighting = [_device newTextureWithDescriptor: desc];
-    _lighting.label = @"Light Accumulation G-buffer";
+    if(_attachments | MGPGBufferAttachmentTypeLighting) {
+        desc.pixelFormat = MTLPixelFormatRGBA16Float;
+        _lighting = [_device newTextureWithDescriptor: desc];
+        _lighting.label = @"Light Accumulation G-buffer";
+    }
+    else {
+        _lighting = nil;
+    }
     
     // shade-output
-    _output = [_device newTextureWithDescriptor: desc];
-    _output.label = @"Output G-buffer";
+    if(_attachments | MGPGBufferAttachmentTypeOutput) {
+        desc.pixelFormat = MTLPixelFormatRGBA16Float;
+        _output = [_device newTextureWithDescriptor: desc];
+        _output.label = @"Output G-buffer";
+    }
+    else {
+        _output = nil;
+    }
 }
 
 - (void)_makeBaseVertexDescriptor {
@@ -255,6 +310,11 @@
 
 - (CGSize)size {
     return _size;
+}
+
+- (void)setAttachments:(MGPGBufferAttachmentType)attachments {
+    _attachments = attachments;
+    [self _makeGBufferTextures];
 }
 
 #pragma mark - Resize
