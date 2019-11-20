@@ -16,15 +16,16 @@ NS_ASSUME_NONNULL_BEGIN
 @interface MGPCameraComponent : MGPSceneNodeComponent
 
 // projection
-@property (readonly) matrix_float4x4 projectionMatrix;
-@property (readonly) matrix_float4x4 projectionInverseMatrix;
-@property MGPProjectionState projectionState;
+@property (nonatomic, readonly) matrix_float4x4 projectionMatrix;
+@property (nonatomic, readonly) matrix_float4x4 projectionInverseMatrix;
+@property (nonatomic) MGPProjectionState projectionState;
 
 // camera setup
-@property float fStop;
-@property float shutterSpeed;
-@property NSUInteger ISO;
+@property (nonatomic) float fStop;
+@property (nonatomic) float shutterSpeed;
+@property (nonatomic) NSUInteger ISO;
 
+@property (nonatomic) NSUInteger priority;  // the camera that has highest value will be rendered first.
 @property (nonatomic, readonly) MGPFrustum *frustum;
 @property (nonatomic, readonly) camera_props_t shaderProperties;
 

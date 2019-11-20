@@ -7,11 +7,43 @@
 //
 
 #import "MGPRenderer.h"
+#import "SharedStructures.h"
+@import Metal;
 
 NS_ASSUME_NONNULL_BEGIN
 
-// TODO: Collects draw calls from Scene.
+@class MGPScene;
+@class MGPFrustum;
+@class MGPMesh;
+@class MGPLight;
+
+@interface MGPDrawCall : NSObject
+
+@property (nonatomic, readonly) MGPMesh *mesh;
+@property (nonatomic, readonly) NSUInteger instanceCount;
+@property (nonatomic, readonly) id<MTLBuffer> instancePropsBuffer;
+@property (nonatomic, readonly) NSUInteger instancePropsBufferOffset;
+
+@end
+
+@interface MGPDrawCallList : NSObject
+
+@property (nonatomic, readonly) MGPFrustum *frustum;
+@property (nonatomic, readonly) NSArray<MGPDrawCall*> *drawCalls;
+
+@end
+
+// The scene renderer base class.
 @interface MGPSceneRenderer : MGPRenderer
+
+@property (nonatomic) MGPScene *scene;
+
+- (instancetype)initWithDevice: (id<MTLDevice>)device;
+
+- (void)beginRendering;
+- (void)finishRendering;
+
+- (MGPDrawCallList *)drawCallListWithFrustum: (MGPFrustum *)frustum;
 
 @end
 

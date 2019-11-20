@@ -39,6 +39,7 @@ const float kLightIntensityVariation = 1.0f;
 const size_t kShadowResolution = 512;
 const float kCameraSpeed = 1;
 const size_t kLightCullBufferSize = 8100*4*16;
+const NSUInteger kLightCountPerDrawCall = 4;
 
 #define DEG_TO_RAD(x) ((x)*0.0174532925)
 
@@ -699,18 +700,17 @@ const size_t kLightCullBufferSize = 8100*4*16;
     else {
         // G-buffer light-accumulation pass
         // render 4 lights per each draw call
-        const NSUInteger lightCountPerDrawCall = 4;
         id<MTLRenderCommandEncoder> lightingPassEncoder = [commandBuffer renderCommandEncoderWithDescriptor: _gBuffer.lightingPassBaseDescriptor];
         [self renderLighting:lightingPassEncoder
                    fromIndex:0
-                     toIndex:MIN(_numLights,lightCountPerDrawCall)-1
-            countPerDrawCall:lightCountPerDrawCall];
-        if(_numLights > lightCountPerDrawCall) {
+                     toIndex:MIN(_numLights,kLightCountPerDrawCall)-1
+            countPerDrawCall:kLightCountPerDrawCall];
+        if(_numLights > kLightCountPerDrawCall) {
             lightingPassEncoder = [commandBuffer renderCommandEncoderWithDescriptor: _gBuffer.lightingPassAddDescriptor];
             [self renderLighting:lightingPassEncoder
-                       fromIndex:lightCountPerDrawCall
+                       fromIndex:kLightCountPerDrawCall
                          toIndex:_numLights-1
-                countPerDrawCall:lightCountPerDrawCall];
+                countPerDrawCall:kLightCountPerDrawCall];
         }
     }
     

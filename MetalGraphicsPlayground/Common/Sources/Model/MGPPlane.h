@@ -19,8 +19,8 @@ NS_ASSUME_NONNULL_BEGIN
 + (instancetype)planeWithCenter: (simd_float3)center
                          normal: (simd_float3)normal;
 
-@property simd_float3 center;
-@property simd_float3 normal;
+@property (nonatomic) simd_float3 center;
+@property (nonatomic) simd_float3 normal;
 
 - (void)multiplyMatrix: (simd_float4x4)matrix;
 - (simd_float4)equation; // <A,B,C,D> a.k.a. Ax+By+Cz+D=0

@@ -19,7 +19,7 @@ NS_ASSUME_NONNULL_BEGIN
 @interface MGPFrustum : NSObject
 
 // world-space 6 planes (near, far, left, right, bottom, top), normal inside
-@property (readonly) NSArray<MGPPlane*> *planes;
+@property (nonatomic, readonly) NSArray<MGPPlane*> *planes;
 
 - (instancetype)initWithCamera: (MGPCamera *)camera;
 - (void)setPlanesForCamera: (MGPCamera *)camera;

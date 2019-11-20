@@ -59,9 +59,13 @@
                                            orthographicMatrix.columns[i] * lerp;
         }
         _projectionInverseMatrix = simd_inverse(_projectionMatrix);
-        [_frustum setPlanesWithProjectionState:_projectionState
-                                        matrix:self.node.localToWorldMatrix];
     }
+}
+
+- (MGPFrustum *)frustum {
+    [_frustum setPlanesWithProjectionState:_projectionState
+                                    matrix:self.node.localToWorldMatrix];
+    return _frustum;
 }
 
 - (camera_props_t)shaderProperties {
