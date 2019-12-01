@@ -10,7 +10,11 @@
 #import "MGPFrustum.h"
 #import "../Utility/MetalMath.h"
 
-@implementation MGPLightComponent
+static NSUInteger _MGPLightComponentIdentifierCounter = 0;
+
+@implementation MGPLightComponent {
+    NSUInteger _identifier;
+}
 
 - (instancetype)init {
     self = [super init];
@@ -24,8 +28,13 @@
         _shadowFar = 5000.0f;
         _radius = 10.0f;
         _frustum = [[MGPFrustum alloc] init];
+        _identifier = ++_MGPLightComponentIdentifierCounter;
     }
     return self;
+}
+
+- (NSUInteger)hash {
+    return _identifier;
 }
 
 - (light_t)shaderProperties {

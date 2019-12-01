@@ -8,6 +8,7 @@
 
 #import "MGPShadowBuffer.h"
 #import "MGPLight.h"
+#import "MGPLightComponent.h"
 
 @interface MGPShadowBuffer ()
 
@@ -44,6 +45,40 @@ NSString * const MGPShadowBufferErrorDoamin = @"MGPShadowBufferError";
         }
         
         _light = light;
+        _resolution = MAX(256, resolution);
+        _cascadeLevels = MAX(1, cascadeLevels);
+        
+        [self _makeShadowTextureWithDevice: device];
+        [self _makeShadowPass];
+    }
+    return self;
+}
+
+- (instancetype)initWithDevice:(id<MTLDevice>)device
+               lightComponennt:(MGPLightComponent *)lightComponent
+                    resolution:(NSUInteger)resolution
+                 cascadeLevels:(NSUInteger)cascadeLevels {
+    self = [super init];
+    if(self) {
+        if(device == nil)
+        {
+            @throw [NSException exceptionWithName: MGPShadowBufferErrorDoamin
+                                           reason: @"device is nil."
+                                         userInfo: @{
+                                                     NSLocalizedDescriptionKey : @"device is null."
+                                                     }];
+        }
+        
+        if(lightComponent == nil)
+        {
+            @throw [NSException exceptionWithName: MGPShadowBufferErrorDoamin
+                                           reason: @"light is nil."
+                                         userInfo: @{
+                                                     NSLocalizedDescriptionKey : @"light is null."
+                                                     }];
+        }
+        
+        _lightComponent = lightComponent;
         _resolution = MAX(256, resolution);
         _cascadeLevels = MAX(1, cascadeLevels);
         

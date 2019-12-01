@@ -20,6 +20,8 @@ NS_ASSUME_NONNULL_BEGIN
 @property (readonly) id<MTLLibrary> defaultLibrary;
 @property (readonly) id<MTLCommandQueue> queue;
 
+@property (readonly) NSUInteger currentBufferIndex;
+
 @property (weak) MGPView *view;
 
 - (void)update: (float)deltaTime;

@@ -10,11 +10,13 @@
 #import "MGPShadowBuffer.h"
 #import "MGPLight.h"
 #import "MGPCamera.h"
+#import "MGPLightComponent.h"
 
 NSString * const MGPShadowManagerErrorDoamin = @"MGPShadowManagerError";
 
 @implementation MGPShadowManager {
     NSMutableDictionary<MGPLight*, MGPShadowBuffer*> *_shadowBufferDict;
+    NSMutableDictionary<MGPLightComponent*, MGPShadowBuffer*> *_lightCompShadowBufferDict;
     MGPCamera *_camera;
     id<MTLRenderPipelineState> _shadowPipeline;
 }
@@ -64,6 +66,23 @@ NSString * const MGPShadowManagerErrorDoamin = @"MGPShadowManagerError";
                                                   resolution: resolution
                                                cascadeLevels: cascadeLevels];
             _shadowBufferDict[light] = buffer;
+        }
+    }
+    return buffer;
+}
+
+- (MGPShadowBuffer *)newShadowBufferForLightComponent:(MGPLightComponent *)lightComponent
+                                           resolution:(NSUInteger)resolution
+                                        cascadeLevels:(NSUInteger)cascadeLevels {
+    MGPShadowBuffer *buffer = nil;
+    if(lightComponent.castShadows) {
+        buffer = [_lightCompShadowBufferDict objectForKey: lightComponent];
+        if(buffer == nil) {
+            buffer = [[MGPShadowBuffer alloc] initWithDevice: _device
+                                                       light: light
+                                                  resolution: resolution
+                                               cascadeLevels: cascadeLevels];
+            _lightCompShadowBufferDict[lightComponent] = buffer;
         }
     }
     return buffer;

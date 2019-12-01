@@ -51,10 +51,6 @@
 @implementation MGPSceneRenderer {
     id<MTLDevice> _device;
     NSMutableArray<id<MTLHeap>> *_instanceBufferHeaps;
-    
-    NSMutableArray<MGPCameraComponent*> *_cameraComponents;
-    NSMutableArray<MGPLightComponent*> *_lightComponents;
-    NSMutableArray<MGPMeshComponent*> *_meshComponents;
     NSUInteger _instancePropsHeapIndex;
     NSUInteger _instancePropsHeapOffset;
 }
@@ -73,7 +69,9 @@
     return self;
 }
 
-- (void)beginRendering {
+- (void)beginFrame {
+    [super beginFrame];
+    
     // collects cameras, lights, meshes...
     NSMutableArray *nodes = [NSMutableArray new];
     [nodes addObject: _scene.rootNode];
@@ -98,7 +96,9 @@
     _instancePropsHeapOffset = 0;
 }
 
-- (void)finishRendering {
+- (void)endFrame {
+    [super endFrame];
+    
     [_cameraComponents removeAllObjects];
     [_lightComponents removeAllObjects];
     [_meshComponents removeAllObjects];

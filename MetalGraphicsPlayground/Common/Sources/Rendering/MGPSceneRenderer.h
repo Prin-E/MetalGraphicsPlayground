@@ -34,14 +34,20 @@ NS_ASSUME_NONNULL_BEGIN
 @end
 
 // The scene renderer base class.
-@interface MGPSceneRenderer : MGPRenderer
+@interface MGPSceneRenderer : MGPRenderer {
+    @protected
+    NSMutableArray<MGPCameraComponent*> *_cameraComponents;
+    NSMutableArray<MGPLightComponent*> *_lightComponents;
+    NSMutableArray<MGPMeshComponent*> *_meshComponents;
+    
+    // Profiling
+    float _CPUTime;
+    float _GPUTime;
+}
 
 @property (nonatomic) MGPScene *scene;
 
 - (instancetype)initWithDevice: (id<MTLDevice>)device;
-
-- (void)beginRendering;
-- (void)finishRendering;
 
 - (MGPDrawCallList *)drawCallListWithFrustum: (MGPFrustum *)frustum;
 

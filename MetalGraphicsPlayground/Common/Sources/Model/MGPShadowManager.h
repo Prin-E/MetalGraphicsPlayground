@@ -13,6 +13,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @class MGPShadowBuffer;
 @class MGPLight;
+@class MGPLightComponent;
 @interface MGPShadowManager : NSObject
 
 @property (nonatomic, readonly) id<MTLDevice> device;
@@ -27,6 +28,11 @@ NS_ASSUME_NONNULL_BEGIN
 - (MGPShadowBuffer *)newShadowBufferForLight: (MGPLight *)light
                                   resolution: (NSUInteger)resolution
                                cascadeLevels: (NSUInteger)cascadeLevels;
+
+- (MGPShadowBuffer *)newShadowBufferForLightComponent: (MGPLightComponent *)lightComponent
+                                           resolution: (NSUInteger)resolution
+                                        cascadeLevels: (NSUInteger)cascadeLevels;
+
 - (void)removeShadowBufferForLight: (MGPLight *)light;
 
 @end
