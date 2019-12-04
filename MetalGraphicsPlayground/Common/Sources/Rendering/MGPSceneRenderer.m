@@ -106,6 +106,27 @@
     memcpy(_lightGlobalBuffer.contents + _currentBufferIndex * sizeof(light_global_t), &lightGlobalProps, sizeof(light_global_t));
     [_lightGlobalBuffer didModifyRange: NSMakeRange(_currentBufferIndex * sizeof(light_global_t),
                                                     sizeof(light_global_t))];
+    
+    // update light buffer...
+    size_t lightPropsBufferOffset = _currentBufferIndex * sizeof(light_t) * MAX_NUM_LIGHTS;
+    for(NSUInteger i = 0; i < MIN(MAX_NUM_LIGHTS, _lightComponents.count); i++) {
+        light_t lightProps = _lightComponents[i].shaderProperties;
+        memcpy(_lightPropsBuffer.contents + lightPropsBufferOffset, &lightProps, sizeof(light_t));
+        lightPropsBufferOffset += sizeof(light_t);
+    }
+    [_lightPropsBuffer didModifyRange: NSMakeRange(_currentBufferIndex * sizeof(light_t) * MAX_NUM_LIGHTS,
+                                                    sizeof(light_t) * MIN(MAX_NUM_LIGHTS, _lightComponents.count))];
+    
+    // update camera buffer...
+    size_t cameraPropsBufferOffset = _currentBufferIndex * sizeof(camera_props_t) * 4;
+    for(NSUInteger i = 0; i < MIN(4, _cameraComponents.count); i++) {
+        camera_props_t cameraProps = _cameraComponents[i].shaderProperties;
+        memcpy(_cameraPropsBuffer.contents + cameraPropsBufferOffset, &cameraProps, sizeof(camera_props_t));
+        cameraPropsBufferOffset += sizeof(camera_props_t);
+    }
+    [_cameraPropsBuffer didModifyRange: NSMakeRange(_currentBufferIndex * sizeof(camera_props_t) * 4,
+                                                    sizeof(camera_props_t) * MIN(4, _cameraComponents.count))];
+           
 }
 
 - (void)endFrame {
