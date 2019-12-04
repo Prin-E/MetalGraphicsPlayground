@@ -16,6 +16,7 @@
 #import "../Model/MGPMesh.h"
 #import "../Model/MGPFrustum.h"
 #import "../Model/MGPBoundingVolume.h"
+#import "LightingCommon.h"
 
 @interface MGPDrawCall ()
 @property (nonatomic) MGPMesh *mesh;
@@ -49,17 +50,22 @@
 @end
 
 @implementation MGPSceneRenderer {
-    id<MTLDevice> _device;
     NSMutableArray<id<MTLHeap>> *_instanceBufferHeaps;
     NSUInteger _instancePropsHeapIndex;
     NSUInteger _instancePropsHeapOffset;
 }
 
-- (instancetype)initWithDevice:(id<MTLDevice>)device {
+- (instancetype)init {
     self = [super init];
     if(self) {
-        _device = device;
+        // GPU-buffer
         _instanceBufferHeaps = [NSMutableArray new];
+        _lightGlobalBuffer = [self.device newBufferWithLength:sizeof(light_global_t)*kMaxBuffersInFlight
+                                                      options:MTLResourceStorageModeManaged];
+        _lightPropsBuffer = [self.device newBufferWithLength:sizeof(light_t)*kMaxBuffersInFlight*MAX_NUM_LIGHTS
+                                                      options:MTLResourceStorageModeManaged];
+        _cameraPropsBuffer = [self.device newBufferWithLength:sizeof(camera_props_t)*kMaxBuffersInFlight*4
+                                                      options:MTLResourceStorageModeManaged];
         
         // make temporary buffers
         _cameraComponents = [NSMutableArray new];
@@ -94,6 +100,12 @@
     // initialize heap index and offset...
     _instancePropsHeapIndex = 0;
     _instancePropsHeapOffset = 0;
+    
+    // update light global buffer...
+    light_global_t lightGlobalProps = _scene.lightGlobalProps;
+    memcpy(_lightGlobalBuffer.contents + _currentBufferIndex * sizeof(light_global_t), &lightGlobalProps, sizeof(light_global_t));
+    [_lightGlobalBuffer didModifyRange: NSMakeRange(_currentBufferIndex * sizeof(light_global_t),
+                                                    sizeof(light_global_t))];
 }
 
 - (void)endFrame {
@@ -135,7 +147,7 @@
             MTLHeapDescriptor *heapDesc = [MTLHeapDescriptor new];
             heapDesc.size = MAX(1024*1024, instancePropsSize);  // minimum 1MB
             heapDesc.storageMode = MTLStorageModeManaged;
-            id<MTLHeap> heap = [_device newHeapWithDescriptor:heapDesc];
+            id<MTLHeap> heap = [self.device newHeapWithDescriptor:heapDesc];
             if(heap)
                 [_instanceBufferHeaps addObject:heap];
             else

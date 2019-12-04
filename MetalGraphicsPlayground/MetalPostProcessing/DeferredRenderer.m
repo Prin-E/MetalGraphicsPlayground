@@ -624,7 +624,7 @@ const NSUInteger kLightCountPerDrawCall = 4;
 }
 
 - (void)render {
-    [self beginFrame];
+    [self wait];
     
     static CFTimeInterval CPUStartTime = 0, CPUEndTime = 0;
     CPUStartTime = NSDate.timeIntervalSinceReferenceDate;
@@ -641,7 +641,7 @@ const NSUInteger kLightCountPerDrawCall = 4;
     [self performRenderingPassWithCompletionHandler:^{
         CPUEndTime = NSDate.timeIntervalSinceReferenceDate;
         self->_CPUTime = (CPUEndTime - CPUStartTime);
-        [self endFrame];
+        [self signal];
     }];
     
     _currentBufferIndex = (_currentBufferIndex + 1) % kMaxBuffersInFlight;

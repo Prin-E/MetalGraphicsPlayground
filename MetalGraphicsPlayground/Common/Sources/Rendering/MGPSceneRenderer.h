@@ -16,6 +16,9 @@ NS_ASSUME_NONNULL_BEGIN
 @class MGPFrustum;
 @class MGPMesh;
 @class MGPLight;
+@class MGPCameraComponent;
+@class MGPLightComponent;
+@class MGPMeshComponent;
 
 @interface MGPDrawCall : NSObject
 
@@ -40,14 +43,16 @@ NS_ASSUME_NONNULL_BEGIN
     NSMutableArray<MGPLightComponent*> *_lightComponents;
     NSMutableArray<MGPMeshComponent*> *_meshComponents;
     
+    id<MTLBuffer> _cameraPropsBuffer;
+    id<MTLBuffer> _lightPropsBuffer;
+    id<MTLBuffer> _lightGlobalBuffer;
+    
     // Profiling
     float _CPUTime;
     float _GPUTime;
 }
 
 @property (nonatomic) MGPScene *scene;
-
-- (instancetype)initWithDevice: (id<MTLDevice>)device;
 
 - (MGPDrawCallList *)drawCallListWithFrustum: (MGPFrustum *)frustum;
 

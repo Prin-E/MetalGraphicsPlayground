@@ -9,12 +9,7 @@
 #import "MGPSceneNodeComponent.h"
 #import "../../Shaders/SharedStructures.h"
 #import "MGPProjectionState.h"
-
-typedef NS_ENUM(NSUInteger, MGPLightType) {
-    MGPLightTypeDirectional,
-    MGPLightTypePoint
-    // TODO: spot-light
-};
+#import "MGPLightType.h"
 
 NS_ASSUME_NONNULL_BEGIN
 

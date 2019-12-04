@@ -10,6 +10,7 @@
 #import "MGPGBuffer.h"
 #import "MGPPostProcessing.h"
 #import "MGPFrustum.h"
+#import "MGPScene.h"
 #import "MGPCameraComponent.h"
 #import "MGPMeshComponent.h"
 #import "MGPLightComponent.h"
@@ -18,11 +19,11 @@
 #import "MGPShadowBuffer.h"
 #import "MGPShadowManager.h"
 #import "LightingCommon.h"
+#import "../Model/MGPImageBasedLighting.h"
 
-const uint32_t kNumLight = MAX_NUM_LIGHTS;
-const size_t kShadowResolution = 512;
-const size_t kLightCullBufferSize = 8100*4*16;
-const size_t _lightGridTileSize = 16;
+#define DEFAULT_SHADOW_RESOLUTION 512
+#define LIGHT_CULL_BUFFER_SIZE (8100*4*16)
+#define LIGHT_CULL_GRID_TILE_SIZE 16
 
 @interface MGPDeferredRenderer ()
 @end
@@ -31,13 +32,19 @@ const size_t _lightGridTileSize = 16;
     MGPGBuffer *_gBuffer;
     MGPPostProcessing *_postProcess;
     MGPShadowManager *_shadowManager;
+    
+    MTLRenderPassDescriptor *_renderPassPresent;
+    id<MTLRenderPipelineState> _renderPipelinePresent;
     id<MTLDepthStencilState> _depthStencil;
+    
+    // Light-cull
     id<MTLComputePipelineState> _computePipelineLightCulling;
+    id<MTLRenderPipelineState> _renderPipelineLightCullTile;
     id<MTLBuffer> _lightCullBuffer;
 }
 
-- (instancetype)initWithDevice:(id<MTLDevice>)device {
-    self = [super initWithDevice:device];
+- (instancetype)init {
+    self = [super init];
     if(self) {
         [self _initAssets];
     }
@@ -50,6 +57,23 @@ const size_t _lightGridTileSize = 16;
                                           library:self.defaultLibrary
                                              size:CGSizeMake(512,512)];
     
+    // render-pass
+    _renderPassPresent = [[MTLRenderPassDescriptor alloc] init];
+    _renderPassPresent.colorAttachments[0].loadAction = MTLLoadActionDontCare;
+    _renderPassPresent.colorAttachments[0].storeAction = MTLStoreActionStore;
+    
+    MTLRenderPipelineDescriptor *renderPipelineDescriptorPresent = [[MTLRenderPipelineDescriptor alloc] init];
+    renderPipelineDescriptorPresent.colorAttachments[0].pixelFormat = MTLPixelFormatBGRA8Unorm_sRGB;
+    renderPipelineDescriptorPresent.colorAttachments[0].blendingEnabled = YES;
+    renderPipelineDescriptorPresent.colorAttachments[0].sourceRGBBlendFactor = MTLBlendFactorSourceAlpha;
+    renderPipelineDescriptorPresent.colorAttachments[0].destinationRGBBlendFactor = MTLBlendFactorOneMinusSourceAlpha;
+    renderPipelineDescriptorPresent.colorAttachments[0].sourceAlphaBlendFactor = MTLBlendFactorOne;
+    renderPipelineDescriptorPresent.colorAttachments[0].sourceAlphaBlendFactor = MTLBlendFactorOne;
+    renderPipelineDescriptorPresent.vertexFunction = [self.defaultLibrary newFunctionWithName: @"screen_vert"];
+    renderPipelineDescriptorPresent.fragmentFunction = [self.defaultLibrary newFunctionWithName: @"screen_frag"];
+    _renderPipelinePresent = [self.device newRenderPipelineStateWithDescriptor: renderPipelineDescriptorPresent
+                                                                         error: nil];
+    
     // depth-stencil
     MTLDepthStencilDescriptor *depthStencilDesc = [[MTLDepthStencilDescriptor alloc] init];
     [depthStencilDesc setDepthWriteEnabled:YES];
@@ -57,10 +81,23 @@ const size_t _lightGridTileSize = 16;
     _depthStencil = [self.device newDepthStencilStateWithDescriptor:depthStencilDesc];
     
     // light-cull
-    _lightCullBuffer = [self.device newBufferWithLength: kLightCullBufferSize
+    _lightCullBuffer = [self.device newBufferWithLength: LIGHT_CULL_BUFFER_SIZE
                                                 options:MTLResourceStorageModePrivate];
     _computePipelineLightCulling = [self.device newComputePipelineStateWithFunction: [self.defaultLibrary newFunctionWithName: @"cull_lights"]
                                                                               error: nil];
+    
+    // light-cull render pipeline
+    MTLRenderPipelineDescriptor *renderPipelineDescriptorLightCullTile = [[MTLRenderPipelineDescriptor alloc] init];
+    renderPipelineDescriptorLightCullTile.colorAttachments[0].pixelFormat = MTLPixelFormatBGRA8Unorm_sRGB;
+    renderPipelineDescriptorLightCullTile.colorAttachments[0].blendingEnabled = YES;
+    renderPipelineDescriptorLightCullTile.colorAttachments[0].sourceRGBBlendFactor = MTLBlendFactorSourceAlpha;
+    renderPipelineDescriptorLightCullTile.colorAttachments[0].destinationRGBBlendFactor = MTLBlendFactorOneMinusSourceAlpha;
+    renderPipelineDescriptorLightCullTile.colorAttachments[0].sourceAlphaBlendFactor = MTLBlendFactorOne;
+    renderPipelineDescriptorLightCullTile.colorAttachments[0].sourceAlphaBlendFactor = MTLBlendFactorOne;
+    renderPipelineDescriptorLightCullTile.vertexFunction = [self.defaultLibrary newFunctionWithName: @"screen_vert"];
+    renderPipelineDescriptorLightCullTile.fragmentFunction = [self.defaultLibrary newFunctionWithName: @"lightcull_frag"];
+    _renderPipelineLightCullTile = [self.device newRenderPipelineStateWithDescriptor: renderPipelineDescriptorLightCullTile
+                                                                         error: nil];
 }
 
 - (void)beginFrame {
@@ -75,13 +112,13 @@ const size_t _lightGridTileSize = 16;
     // Post-process before prepass
     [_postProcess render: commandBuffer
        forRenderingOrder: MGPPostProcessingRenderingOrderBeforePrepass];
+     
+    // Shadowmap Passes
+    [self renderShadows: commandBuffer];
     
     // G-buffer prepass
     id<MTLRenderCommandEncoder> prepassEncoder = [commandBuffer renderCommandEncoderWithDescriptor: _gBuffer.renderPassDescriptor];
     [self renderGBuffer:prepassEncoder];
-     
-    // Shadowmap Passes
-    [self renderShadows: commandBuffer];
     
     // Post-process before light pass
     [_postProcess render: commandBuffer
@@ -111,8 +148,7 @@ const size_t _lightGridTileSize = 16;
     // present
     [commandBuffer presentDrawable: self.view.currentDrawable];
     [commandBuffer addCompletedHandler:^(id<MTLCommandBuffer> buffer) {
-        if(handler != nil)
-            handler();
+        [self signal];
     }];
     
     [commandBuffer commit];
@@ -124,6 +160,7 @@ const size_t _lightGridTileSize = 16;
 
 - (void)renderDrawCalls:(MGPDrawCallList *)drawCallList
            bindTextures:(BOOL)bindTextures
+    instanceBufferIndex:(NSUInteger)slotIndex
                 encoder:(id<MTLRenderCommandEncoder>)encoder {
     MGPFrustum *frustum = drawCallList.frustum;
     
@@ -196,10 +233,10 @@ const size_t _lightGridTileSize = 16;
             // instance props buffer
             [encoder setVertexBuffer: instancePropsBuffer
                               offset: instancePropsBufferOffset
-                             atIndex: 2];
+                             atIndex: slotIndex];
             [encoder setFragmentBuffer: instancePropsBuffer
                                 offset: instancePropsBufferOffset
-                               atIndex: 2];
+                               atIndex: slotIndex];
             
             // Draw call
             [encoder drawIndexedPrimitives: submesh.metalKitSubmesh.primitiveType
@@ -225,8 +262,10 @@ const size_t _lightGridTileSize = 16;
                         offset: _currentBufferIndex * sizeof(camera_props_t)
                        atIndex: 1];
     
+    // draw call
     [self renderDrawCalls:nil
              bindTextures:YES
+      instanceBufferIndex:2
                   encoder:encoder];
     
     [encoder endEncoding];
@@ -239,7 +278,7 @@ const size_t _lightGridTileSize = 16;
         MGPLightComponent *lightComponent = _lightComponents[i];
         if(lightComponent.castShadows) {
             MGPShadowBuffer *shadowBuffer = [_shadowManager newShadowBufferForLightComponent: lightComponent
-                                                                                  resolution: kShadowResolution
+                                                                                  resolution: DEFAULT_SHADOW_RESOLUTION
                                                                                cascadeLevels: 1];
             
             if(shadowBuffer != nil) {
@@ -250,19 +289,17 @@ const size_t _lightGridTileSize = 16;
                 [encoder setCullMode: MTLCullModeBack];
                 
                 [encoder setVertexBuffer: _lightPropsBuffer
-                                  offset: (_currentBufferIndex * kNumLight + i) * sizeof(light_t)
+                                  offset: (_currentBufferIndex * MAX_NUM_LIGHTS + i) * sizeof(light_t)
                                  atIndex: 1];
                 [encoder setVertexBuffer: _lightGlobalBuffer
                                   offset: _currentBufferIndex * sizeof(light_global_t)
                                  atIndex: 2];
-                [encoder setVertexBuffer: _instancePropsBuffer
-                                  offset: _currentBufferIndex * sizeof(instance_props_t) * kNumInstance
-                                 atIndex: 3];
                 
                 MGPDrawCallList *drawCallList = [self drawCallListWithFrustum:lightComponent.frustum];
                 
                 [self renderDrawCalls:drawCallList
                          bindTextures:NO
+                  instanceBufferIndex:3
                               encoder:encoder];
                 
                 [encoder endEncoding];
@@ -275,7 +312,7 @@ const size_t _lightGridTileSize = 16;
     encoder.label = @"Light Culling";
     
     [encoder setComputePipelineState: _computePipelineLightCulling];
-    NSUInteger tileSize = _lightGridTileSize;
+    NSUInteger tileSize = LIGHT_CULL_GRID_TILE_SIZE;
     NSUInteger width = _gBuffer.size.width + 0.5;
     NSUInteger height = _gBuffer.size.height + 0.5;
     width = (width + tileSize - 1) / tileSize;
@@ -285,7 +322,7 @@ const size_t _lightGridTileSize = 16;
                 offset: 0
                atIndex: 0];
     [encoder setBuffer: _lightPropsBuffer
-                offset: _currentBufferIndex * sizeof(light_t) * kNumLight
+                offset: _currentBufferIndex * sizeof(light_t) * MAX_NUM_LIGHTS
                atIndex: 1];
     [encoder setBuffer: _lightGlobalBuffer
                 offset: _currentBufferIndex * sizeof(light_global_t)
@@ -302,21 +339,20 @@ const size_t _lightGridTileSize = 16;
 
 - (void)renderShading:(id<MTLRenderCommandEncoder>)encoder {
     MGPGBufferShadingFunctionConstants shadingConstants = {};
-    shadingConstants.hasIBLIrradianceMap = _IBLOn;
-    shadingConstants.hasIBLSpecularMap = _IBLOn;
-    shadingConstants.hasSSAOMap = _ssaoOn;
+    MGPImageBasedLighting *IBL = self.scene.IBL;
+    light_global_t lightGlobalProps = self.scene.lightGlobalProps;
+    BOOL IBLOn = self.scene.IBL != nil;
+    BOOL ssaoOn = [_postProcess layerByClass:MGPPostProcessingLayerSSAO.class].enabled;
     
-    if(_lightCullOn) {
-        _renderPipelineShading = [_gBuffer shadingPipelineStateWithConstants: shadingConstants
-                                                                       error: nil];
-    }
-    else {
-        _renderPipelineShading = [_gBuffer nonLightCulledShadingPipelineStateWithConstants: shadingConstants
-                                                                       error: nil];
-    }
+    shadingConstants.hasIBLIrradianceMap = IBLOn;
+    shadingConstants.hasIBLSpecularMap = IBLOn;
+    shadingConstants.hasSSAOMap = ssaoOn;
+    
+    id<MTLRenderPipelineState> shadingPipeline = [_gBuffer shadingPipelineStateWithConstants: shadingConstants
+                                                                                       error: nil];
     
     encoder.label = @"Shading";
-    [encoder setRenderPipelineState: _renderPipelineShading];
+    [encoder setRenderPipelineState: shadingPipeline];
     [encoder setCullMode: MTLCullModeBack];
     [encoder setFragmentBuffer: _cameraPropsBuffer
                         offset: _currentBufferIndex * sizeof(camera_props_t)
@@ -325,7 +361,7 @@ const size_t _lightGridTileSize = 16;
                         offset: _currentBufferIndex * sizeof(light_global_t)
                        atIndex: 1];
     [encoder setFragmentBuffer: _lightPropsBuffer
-                        offset: _currentBufferIndex * sizeof(light_t) * kNumLight
+                        offset: _currentBufferIndex * sizeof(light_t) * MAX_NUM_LIGHTS
                        atIndex: 2];
     [encoder setFragmentBuffer: _lightCullBuffer
                         offset: 0
@@ -342,27 +378,24 @@ const size_t _lightGridTileSize = 16;
                         atIndex: attachment_tangent];
     [encoder setFragmentTexture: _gBuffer.depth
                         atIndex: attachment_depth];
-    if(!_lightCullOn) {
-        [encoder setFragmentTexture: _gBuffer.lighting
-                            atIndex: attachment_light];
-    }
-    if(_IBLOn) {
-        [encoder setFragmentTexture: _IBLs[_renderingIBLIndex].irradianceMap
+    
+    if(IBLOn) {
+        [encoder setFragmentTexture: IBL.irradianceMap
                             atIndex: attachment_irradiance];
-        [encoder setFragmentTexture: _IBLs[_renderingIBLIndex].prefilteredSpecularMap
+        [encoder setFragmentTexture: IBL.prefilteredSpecularMap
                             atIndex: attachment_prefiltered_specular];
-        [encoder setFragmentTexture: _IBLs[_renderingIBLIndex].BRDFLookupTexture
+        [encoder setFragmentTexture: IBL.BRDFLookupTexture
                             atIndex: attachment_brdf_lookup];
     }
     if(_postProcess.layers.count > 0) {
         [encoder setFragmentTexture: ((MGPPostProcessingLayerSSAO *)_postProcess[0]).ssaoTexture
                             atIndex: attachment_ssao];
     }
-    for(NSUInteger i = 0; i < light_globals[_currentBufferIndex].first_point_light_index; i++) {
-        if(_lights[i].castShadows) {
-            MGPShadowBuffer *shadowBuffer = [_shadowManager newShadowBufferForLight: _lights[i]
-                                                                         resolution: kShadowResolution
-                                                                      cascadeLevels: 1];
+    for(NSUInteger i = 0; i < lightGlobalProps.first_point_light_index; i++) {
+        if(_lightComponents[i].castShadows) {
+            MGPShadowBuffer *shadowBuffer = [_shadowManager newShadowBufferForLightComponent: _lightComponents[i]
+                                                                                  resolution: DEFAULT_SHADOW_RESOLUTION
+                                                                               cascadeLevels: 1];
             [encoder setFragmentTexture: shadowBuffer.texture
                                 atIndex: i+attachment_shadow_map];
         }
@@ -416,7 +449,10 @@ const size_t _lightGridTileSize = 16;
         case 4:
             return _gBuffer.shading;
         case 5:
-            return _ssao.ssaoTexture;
+        {
+            MGPPostProcessingLayerSSAO *ssaoLayer = (MGPPostProcessingLayerSSAO *)[_postProcess layerByClass:MGPPostProcessingLayerSSAO.class];
+            return ssaoLayer != nil ? ssaoLayer.ssaoTexture : _gBuffer.output;
+        }
         default:
             return _gBuffer.output;
     }

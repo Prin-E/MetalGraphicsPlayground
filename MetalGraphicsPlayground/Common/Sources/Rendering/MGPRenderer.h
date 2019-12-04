@@ -14,25 +14,29 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface MGPRenderer : NSObject
+@interface MGPRenderer : NSObject {
+    @protected
+    NSUInteger _currentBufferIndex;
+}
 
 @property (readonly) id<MTLDevice> device;
 @property (readonly) id<MTLLibrary> defaultLibrary;
 @property (readonly) id<MTLCommandQueue> queue;
 
-@property (readonly) NSUInteger currentBufferIndex;
-
 @property (weak) MGPView *view;
 
 - (void)update: (float)deltaTime;
-- (void)render;
 - (void)resize: (CGSize)newSize;
 
-// don't override this methods!
+// Rendering
 - (void)beginFrame;
 - (void)endFrame;
+- (void)render;
 
+// Synchronization
 - (void)waitGpu;
+- (void)wait;
+- (void)signal;
 
 @end
 

@@ -14,6 +14,8 @@ NS_ASSUME_NONNULL_BEGIN
 // Tile deferred renderer
 @interface MGPDeferredRenderer : MGPSceneRenderer
 
+@property (nonatomic) NSUInteger gBufferIndex;
+
 @end
 
 NS_ASSUME_NONNULL_END

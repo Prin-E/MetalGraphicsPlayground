@@ -46,6 +46,18 @@
     // do nothing
 }
 
+- (void)resize:(CGSize)newSize {
+    // do nothing
+}
+
+#pragma mark - Rendering
+- (void)beginFrame {
+}
+
+- (void)endFrame {
+    _currentBufferIndex = (_currentBufferIndex + 1) % kMaxBuffersInFlight;
+}
+
 - (void)render {
     [self beginFrame];
     
@@ -67,24 +79,19 @@
     [buffer commit];
 }
 
-- (void)resize:(CGSize)newSize {
-    // do nothing
-}
-
-#pragma mark - Internal frame rendering
-- (void)beginFrame {
-    dispatch_semaphore_wait(_semaphore, DISPATCH_TIME_FOREVER);
-}
-
-- (void)endFrame {
-    dispatch_semaphore_signal(_semaphore);
-}
-
 #pragma mark - Synchronization
 - (void)waitGpu {
     id<MTLCommandBuffer> emptyBuffer = [_queue commandBuffer];
     [emptyBuffer commit];
     [emptyBuffer waitUntilCompleted];
+}
+
+- (void)wait {
+    dispatch_semaphore_wait(_semaphore, DISPATCH_TIME_FOREVER);
+}
+
+- (void)signal {
+    dispatch_semaphore_signal(_semaphore);
 }
 
 @end

@@ -79,7 +79,7 @@ NSString * const MGPShadowManagerErrorDoamin = @"MGPShadowManagerError";
         buffer = [_lightCompShadowBufferDict objectForKey: lightComponent];
         if(buffer == nil) {
             buffer = [[MGPShadowBuffer alloc] initWithDevice: _device
-                                                       light: light
+                                              lightComponent: lightComponent
                                                   resolution: resolution
                                                cascadeLevels: cascadeLevels];
             _lightCompShadowBufferDict[lightComponent] = buffer;

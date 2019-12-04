@@ -30,10 +30,10 @@
 
 const size_t kMaxBuffersInFlight = 3;
 const size_t kNumInstance = 8;
-const uint32_t kNumLight = 128;
+const uint32_t MAX_NUM_LIGHTS = 128;
 const float kLightIntensityBase = 0.25;
 const float kLightIntensityVariation = 3.0;
-const size_t kShadowResolution = 512;
+const size_t DEFAULT_SHADOW_RESOLUTION = 512;
 const float kCameraSpeed = 100;
 
 #define DEG_TO_RAD(x) ((x)*0.0174532925)
@@ -41,7 +41,7 @@ const float kCameraSpeed = 100;
 @implementation DeferredRenderer {
     camera_props_t camera_props[kMaxBuffersInFlight];
     instance_props_t instance_props[kMaxBuffersInFlight * kNumInstance];
-    light_t light_props[kMaxBuffersInFlight * kNumLight];
+    light_t light_props[kMaxBuffersInFlight * MAX_NUM_LIGHTS];
     light_global_t light_globals[kMaxBuffersInFlight];
     
     size_t _currentBufferIndex;
@@ -413,8 +413,8 @@ const float kCameraSpeed = 100;
     _depthStencil = [self.device newDepthStencilStateWithDescriptor: depthStencilDescriptor];
     
     // lights
-    _lights = [[NSMutableArray alloc] initWithCapacity: kNumLight];
-    for(int i = 0; i < kNumLight; i++) {
+    _lights = [[NSMutableArray alloc] initWithCapacity: MAX_NUM_LIGHTS];
+    for(int i = 0; i < MAX_NUM_LIGHTS; i++) {
         [_lights addObject: [[MGPLight alloc] init]];
     }
     
@@ -524,13 +524,13 @@ const float kCameraSpeed = 100;
     }
     
     // Update lights
-    static simd_float3 light_colors[kNumLight];
-    static float light_intensities[kNumLight];
-    static simd_float4 light_dirs[kNumLight];
+    static simd_float3 light_colors[MAX_NUM_LIGHTS];
+    static float light_intensities[MAX_NUM_LIGHTS];
+    static simd_float4 light_dirs[MAX_NUM_LIGHTS];
     static BOOL init_light_value = NO;
     if(!init_light_value) {
         init_light_value = YES;
-        for(int i = 0; i < kNumLight; i++) {
+        for(int i = 0; i < MAX_NUM_LIGHTS; i++) {
             light_colors[i] = vector3(rand() / (float)RAND_MAX, rand() / (float)RAND_MAX, rand() / (float)RAND_MAX);
             light_intensities[i] = kLightIntensityBase + rand() / (float)RAND_MAX * kLightIntensityVariation;
             light_dirs[i] = simd_normalize(vector4(rand() / (float)RAND_MAX - 0.5f, rand() / (float)RAND_MAX - 0.5f,
@@ -538,7 +538,7 @@ const float kCameraSpeed = 100;
         }
     }
     
-    for(NSInteger i = 0; i < kNumLight; i++) {
+    for(NSInteger i = 0; i < MAX_NUM_LIGHTS; i++) {
         MGPLight *light = _lights[i];
         if(i < _numLights) {
             simd_float3 rot_dir = simd_cross(vector3(light_dirs[i].x, light_dirs[i].y, light_dirs[i].z), vector3(0.0f, 1.0f, 0.0f));
@@ -557,7 +557,7 @@ const float kCameraSpeed = 100;
         }
         
         // light properties -> buffer
-        light_t *light_props_ptr = &light_props[_currentBufferIndex * kNumLight + i];
+        light_t *light_props_ptr = &light_props[_currentBufferIndex * MAX_NUM_LIGHTS + i];
         *light_props_ptr = light.shaderProperties;
     }
     
@@ -574,9 +574,9 @@ const float kCameraSpeed = 100;
     [_instancePropsBuffer didModifyRange: NSMakeRange(_currentBufferIndex * sizeof(instance_props_t) * kNumInstance,
                                                       sizeof(instance_props_t) * kNumInstance)];
     
-    memcpy(_lightPropsBuffer.contents + _currentBufferIndex * sizeof(light_t) * kNumLight,
-           &light_props[_currentBufferIndex * kNumLight], sizeof(light_t) * _numLights);
-    [_lightPropsBuffer didModifyRange: NSMakeRange(_currentBufferIndex * sizeof(light_t) * kNumLight,
+    memcpy(_lightPropsBuffer.contents + _currentBufferIndex * sizeof(light_t) * MAX_NUM_LIGHTS,
+           &light_props[_currentBufferIndex * MAX_NUM_LIGHTS], sizeof(light_t) * _numLights);
+    [_lightPropsBuffer didModifyRange: NSMakeRange(_currentBufferIndex * sizeof(light_t) * MAX_NUM_LIGHTS,
                                                    sizeof(light_t) * _numLights)];
     
     memcpy(_lightGlobalBuffer.contents + _currentBufferIndex * sizeof(light_global_t), &light_globals[_currentBufferIndex], sizeof(light_global_t));
@@ -589,7 +589,7 @@ const float kCameraSpeed = 100;
 }
 
 - (void)render {
-    [self beginFrame];
+    [self wait];
     
     if(_IBLs.count > 0) {
         if(_IBLs[_currentIBLIndex].isAnyRenderingRequired) {
@@ -601,7 +601,7 @@ const float kCameraSpeed = 100;
     }
     
     [self performRenderingPassWithCompletionHandler:^{
-        [self endFrame];
+        [self signal];
     }];
     
     _currentBufferIndex = (_currentBufferIndex + 1) % kMaxBuffersInFlight;
@@ -778,13 +778,13 @@ const float kCameraSpeed = 100;
     
     for(NSUInteger i = lightFromIndex; i <= lightToIndex; i += lightCountPerDrawCall) {
         [encoder setFragmentBuffer: _lightPropsBuffer
-                            offset: (_currentBufferIndex * kNumLight + i) * sizeof(light_t)
+                            offset: (_currentBufferIndex * MAX_NUM_LIGHTS + i) * sizeof(light_t)
                            atIndex: 1];
         
         for(NSUInteger j = 0; j < lightCountPerDrawCall; j++) {
             if(_lights[i + j].castShadows) {
                 MGPShadowBuffer *shadowBuffer = [_shadowManager newShadowBufferForLight: _lights[i + j]
-                                                                             resolution: kShadowResolution
+                                                                             resolution: DEFAULT_SHADOW_RESOLUTION
                                                                           cascadeLevels: 1];
                 [encoder setFragmentTexture: shadowBuffer.texture
                                     atIndex: j+attachment_shadow_map];
@@ -813,7 +813,7 @@ const float kCameraSpeed = 100;
                         offset: _currentBufferIndex * sizeof(light_global_t)
                        atIndex: 1];
     [encoder setFragmentBuffer: _lightPropsBuffer
-                        offset: _currentBufferIndex * sizeof(light_t) * kNumLight
+                        offset: _currentBufferIndex * sizeof(light_t) * MAX_NUM_LIGHTS
                        atIndex: 2];
     [encoder setFragmentTexture: _gBuffer.albedo
                         atIndex: attachment_albedo];

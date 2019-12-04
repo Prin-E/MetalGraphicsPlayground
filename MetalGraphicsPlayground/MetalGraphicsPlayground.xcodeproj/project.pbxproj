@@ -291,6 +291,7 @@
 		952C964822C0A1D9004C8C34 /* MGPPostProcessing.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MGPPostProcessing.m; sourceTree = "<group>"; };
 		952C964A22C0A2E4004C8C34 /* MGPPostProcessingLayer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MGPPostProcessingLayer.h; sourceTree = "<group>"; };
 		952C964B22C0A2E4004C8C34 /* MGPPostProcessingLayer.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MGPPostProcessingLayer.m; sourceTree = "<group>"; };
+		952F95172397FDE50068EE40 /* MGPLightType.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MGPLightType.h; sourceTree = "<group>"; };
 		953040901BEF9673001DECA7 /* MetalGeometry.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MetalGeometry.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		953040921BEF9673001DECA7 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		953040931BEF9673001DECA7 /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
@@ -1091,6 +1092,7 @@
 				959B872E231AD9DC00CAF261 /* MGPSceneNode.m */,
 				9564B69D234AC2FC00DC394A /* MGPSceneNodeComponent.h */,
 				9564B69E234AC2FC00DC394A /* MGPSceneNodeComponent.m */,
+				952F95172397FDE50068EE40 /* MGPLightType.h */,
 				9564B6A5234B0B7400DC394A /* MGPLightComponent.h */,
 				9564B6A6234B0B7400DC394A /* MGPLightComponent.m */,
 				9564B6A9234B0D3400DC394A /* MGPMeshComponent.h */,

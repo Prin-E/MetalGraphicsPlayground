@@ -9,15 +9,10 @@
 #import <Foundation/Foundation.h>
 #import <simd/simd.h>
 #import "MGPProjectionState.h"
+#import "MGPLightType.h"
 #import "../../Shaders/SharedStructures.h"
 
 NS_ASSUME_NONNULL_BEGIN
-
-typedef NS_ENUM(NSUInteger, MGPLightType) {
-    MGPLightTypeDirectional,
-    MGPLightTypePoint
-    // TODO: spot-light
-};
 
 @class MGPFrustum;
 @interface MGPLight : NSObject <NSCopying>
