@@ -23,6 +23,7 @@
 @property (nonatomic, readwrite) NSUInteger instanceCount;
 @property (nonatomic, readwrite) id<MTLBuffer> instancePropsBuffer;
 @property (nonatomic, readwrite) NSUInteger instancePropsBufferOffset;
+@property (nonatomic, readwrite) instance_props_t instanceProps;
 @end
 
 @implementation MGPDrawCall
@@ -50,21 +51,23 @@
 @end
 
 @implementation MGPSceneRenderer {
-    NSMutableArray<id<MTLHeap>> *_instanceBufferHeaps;
-    NSUInteger _instancePropsHeapIndex;
-    NSUInteger _instancePropsHeapOffset;
+    NSMutableArray<id<MTLBuffer>> *_instancePropsBuffersList[kMaxBuffersInFlight];
+    NSUInteger _instancePropsBufferIndex;
+    NSUInteger _instancePropsBufferOffset;
 }
 
 - (instancetype)init {
     self = [super init];
     if(self) {
         // GPU-buffer
-        _instanceBufferHeaps = [NSMutableArray new];
+        for(NSUInteger i = 0; i < kMaxBuffersInFlight; i++) {
+            _instancePropsBuffersList[i] = [NSMutableArray new];
+        }
         _lightGlobalBuffer = [self.device newBufferWithLength:sizeof(light_global_t)*kMaxBuffersInFlight
                                                       options:MTLResourceStorageModeManaged];
         _lightPropsBuffer = [self.device newBufferWithLength:sizeof(light_t)*kMaxBuffersInFlight*MAX_NUM_LIGHTS
                                                       options:MTLResourceStorageModeManaged];
-        _cameraPropsBuffer = [self.device newBufferWithLength:sizeof(camera_props_t)*kMaxBuffersInFlight*4
+        _cameraPropsBuffer = [self.device newBufferWithLength:sizeof(camera_props_t)*kMaxBuffersInFlight * MAX_NUM_CAMS
                                                       options:MTLResourceStorageModeManaged];
         
         // make temporary buffers
@@ -73,6 +76,10 @@
         _meshComponents = [NSMutableArray new];
     }
     return self;
+}
+
+- (void)resize:(CGSize)newSize {
+    _size = newSize;
 }
 
 - (void)beginFrame {
@@ -98,8 +105,18 @@
     }
     
     // initialize heap index and offset...
-    _instancePropsHeapIndex = 0;
-    _instancePropsHeapOffset = 0;
+    _instancePropsBufferIndex = 0;
+    _instancePropsBufferOffset = 0;
+    
+    // sort instance props buffers by size
+    [_instancePropsBuffersList[_currentBufferIndex] sortUsingComparator:
+     ^NSComparisonResult(id<MTLBuffer> b1, id<MTLBuffer> b2) {
+        if(b1.length > b2.length)
+            return NSOrderedAscending;
+        else if(b1.length < b2.length)
+            return NSOrderedDescending;
+        return NSOrderedSame;
+    }];
     
     // update light global buffer...
     light_global_t lightGlobalProps = _scene.lightGlobalProps;
@@ -118,15 +135,15 @@
                                                     sizeof(light_t) * MIN(MAX_NUM_LIGHTS, _lightComponents.count))];
     
     // update camera buffer...
-    size_t cameraPropsBufferOffset = _currentBufferIndex * sizeof(camera_props_t) * 4;
+    size_t cameraPropsBufferOffset = _currentBufferIndex * sizeof(camera_props_t) * MAX_NUM_CAMS;
     for(NSUInteger i = 0; i < MIN(4, _cameraComponents.count); i++) {
+        _cameraComponents[i].aspectRatio = _size.width / MAX(0.01f, _size.height);
         camera_props_t cameraProps = _cameraComponents[i].shaderProperties;
         memcpy(_cameraPropsBuffer.contents + cameraPropsBufferOffset, &cameraProps, sizeof(camera_props_t));
         cameraPropsBufferOffset += sizeof(camera_props_t);
     }
-    [_cameraPropsBuffer didModifyRange: NSMakeRange(_currentBufferIndex * sizeof(camera_props_t) * 4,
+    [_cameraPropsBuffer didModifyRange: NSMakeRange(_currentBufferIndex * sizeof(camera_props_t) * MAX_NUM_CAMS,
                                                     sizeof(camera_props_t) * MIN(4, _cameraComponents.count))];
-           
 }
 
 - (void)endFrame {
@@ -141,38 +158,34 @@
     id<MTLBuffer> buffer = nil;
     NSUInteger instancePropsSize = sizeof(instance_props_t) * instanceCount;
     
-    while(!buffer) {
-        BOOL newHeap = NO;
-        if(_instanceBufferHeaps.count <= _instancePropsHeapIndex) {
-            newHeap = YES;
+    NSMutableArray<id<MTLBuffer>> *instancePropsBuffers = _instancePropsBuffersList[_currentBufferIndex];
+    BOOL newBuffer = NO;
+    if(instancePropsBuffers.count <= _instancePropsBufferIndex) {
+        newBuffer = YES;
+    }
+    else {
+        buffer = instancePropsBuffers[_instancePropsBufferIndex];
+        if(instancePropsSize + _instancePropsBufferOffset > buffer.length) {
+            _instancePropsBufferIndex += 1;
+            _instancePropsBufferOffset = 0;
+            buffer = nil;
+            newBuffer = YES;
         }
         else {
-            id<MTLHeap> heap = _instanceBufferHeaps[_instancePropsHeapIndex];
-            if(instancePropsSize + heap.usedSize > heap.size) {
-                _instancePropsHeapIndex += 1;
-                _instancePropsHeapOffset = 0;
-                newHeap = YES;
-            }
-            else {
-                buffer = [heap newBufferWithLength:instancePropsSize
-                                           options:MTLResourceStorageModeManaged];
-                if(buffer == nil)
-                    break;
-                else
-                    _instancePropsHeapOffset += instancePropsSize;
-            }
+            _instancePropsBufferOffset += instancePropsSize;
         }
-        
-        if(newHeap) {
-            // make new heap for instance props buffer
-            MTLHeapDescriptor *heapDesc = [MTLHeapDescriptor new];
-            heapDesc.size = MAX(1024*1024, instancePropsSize);  // minimum 1MB
-            heapDesc.storageMode = MTLStorageModeManaged;
-            id<MTLHeap> heap = [self.device newHeapWithDescriptor:heapDesc];
-            if(heap)
-                [_instanceBufferHeaps addObject:heap];
-            else
-                break;
+    }
+    
+    if(newBuffer) {
+        // make new heap for instance props buffer
+        buffer = [self.device newBufferWithLength:MAX(instancePropsSize, sizeof(instance_props_t) * 64)
+                                          options:MTLResourceStorageModeManaged];
+        if(buffer) {
+            [instancePropsBuffers addObject:buffer];
+            _instancePropsBufferOffset = instancePropsSize;
+        }
+        else {
+            NSLog(@"Failed to create new instance props buffer.");
         }
     }
     
@@ -199,6 +212,7 @@
         MGPDrawCall *drawCall = [MGPDrawCall new];
         drawCall.mesh = mesh;
         drawCall.instanceCount = 1;
+        drawCall.instanceProps = meshComponent.instanceProps;
         [drawCalls addObject: drawCall];
     }
     
@@ -212,10 +226,17 @@
     // Combine draw calls
     MGPMesh *prevMesh = nil;
     MGPDrawCall *prevDrawCall = nil;
+    NSMutableArray<MGPDrawCall*> *drawCallListToBatch = [NSMutableArray new];
     for(MGPDrawCall *drawCall in drawCalls) {
         if(prevMesh != drawCall.mesh) {
             if(prevDrawCall.instanceCount) {
                 prevDrawCall.instancePropsBuffer = [self makeInstancePropsBufferWithInstanceCount:prevDrawCall.instanceCount];
+                instance_props_t *contents = (instance_props_t *)(prevDrawCall.instancePropsBuffer.contents + prevDrawCall.instancePropsBufferOffset);
+                for(NSUInteger i = 0; i < drawCallListToBatch.count; i++) {
+                    contents[i] = drawCallListToBatch[i].instanceProps;
+                }
+                [prevDrawCall.instancePropsBuffer didModifyRange:NSMakeRange(prevDrawCall.instancePropsBufferOffset, sizeof(instance_props_t) * drawCallListToBatch.count)];
+                [drawCallListToBatch removeAllObjects];
             }
             
             prevMesh = drawCall.mesh;
@@ -227,13 +248,21 @@
         else {
             prevDrawCall.instanceCount += 1;
         }
+        [drawCallListToBatch addObject: drawCall];
     }
     if(prevDrawCall.instanceCount && prevDrawCall.instancePropsBuffer == nil) {
         prevDrawCall.instancePropsBuffer = [self makeInstancePropsBufferWithInstanceCount:prevDrawCall.instanceCount];
+        if(prevDrawCall.instancePropsBuffer) {
+            instance_props_t *contents = (instance_props_t *)(prevDrawCall.instancePropsBuffer.contents + prevDrawCall.instancePropsBufferOffset);
+            for(NSUInteger i = 0; i < drawCallListToBatch.count; i++) {
+                contents[i] = drawCallListToBatch[i].instanceProps;
+            }
+            [prevDrawCall.instancePropsBuffer didModifyRange:NSMakeRange(prevDrawCall.instancePropsBufferOffset, sizeof(instance_props_t) * drawCallListToBatch.count)];
+        }
     }
     
     MGPDrawCallList *drawCallList = [[MGPDrawCallList alloc] initWithFrustum: frustum
-                                                                   drawCalls: drawCalls];
+                                                                   drawCalls: combinedDrawCalls];
     return drawCallList;
 }
 

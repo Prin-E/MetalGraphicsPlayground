@@ -105,6 +105,48 @@
 		956AB4E82289C98D009B5362 /* ao.png in Resources */ = {isa = PBXBuildFile; fileRef = 956AB4E72289C98D009B5362 /* ao.png */; };
 		95765E3F227D7EEA0053D66D /* MGPMesh.m in Sources */ = {isa = PBXBuildFile; fileRef = 95F0D28A227D4DF600DEEC3B /* MGPMesh.m */; };
 		95765E40227D81060053D66D /* MetalMath.c in Sources */ = {isa = PBXBuildFile; fileRef = 958A9C361D16E08200021744 /* MetalMath.c */; };
+		95784A6223C228A100296A51 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 95784A6123C228A100296A51 /* AppDelegate.m */; };
+		95784A6423C228A500296A51 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 95784A6323C228A500296A51 /* Assets.xcassets */; };
+		95784A6723C228A500296A51 /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 95784A6523C228A500296A51 /* MainMenu.xib */; };
+		95784A6A23C228A500296A51 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 95784A6923C228A500296A51 /* main.m */; };
+		95784A6F23C229A500296A51 /* GBuffer.metal in Sources */ = {isa = PBXBuildFile; fileRef = 95F4CB2C22799BFF00F51454 /* GBuffer.metal */; };
+		95784A7023C229A500296A51 /* BRDF.metal in Sources */ = {isa = PBXBuildFile; fileRef = 959C8302227F424900C2C245 /* BRDF.metal */; };
+		95784A7123C229A500296A51 /* ImageBasedLighting.metal in Sources */ = {isa = PBXBuildFile; fileRef = 959C8300227F409E00C2C245 /* ImageBasedLighting.metal */; };
+		95784A7223C229A500296A51 /* Skybox.metal in Sources */ = {isa = PBXBuildFile; fileRef = 95A4D92F22840E5B004653B6 /* Skybox.metal */; };
+		95784A7323C229A500296A51 /* CommonStages.metal in Sources */ = {isa = PBXBuildFile; fileRef = 95A4D93422846F99004653B6 /* CommonStages.metal */; };
+		95784A7423C229A500296A51 /* CommonMath.metal in Sources */ = {isa = PBXBuildFile; fileRef = 95BED31B2286746B006E5C2F /* CommonMath.metal */; };
+		95784A7523C229A500296A51 /* SSAO.metal in Sources */ = {isa = PBXBuildFile; fileRef = 95F0F94422C1FEA6002AF368 /* SSAO.metal */; };
+		95784A7623C229A500296A51 /* Shadow.metal in Sources */ = {isa = PBXBuildFile; fileRef = 95F6725622D7867300B630A7 /* Shadow.metal */; };
+		95784A7723C229A500296A51 /* Gizmo.metal in Sources */ = {isa = PBXBuildFile; fileRef = 95644A4D230C39C700EA856C /* Gizmo.metal */; };
+		95784A7823C229A500296A51 /* ScreenSpaceReflection.metal in Sources */ = {isa = PBXBuildFile; fileRef = 950CF3822322A4A4008F581E /* ScreenSpaceReflection.metal */; };
+		95784A7923C229A500296A51 /* LightCulling.metal in Sources */ = {isa = PBXBuildFile; fileRef = 954A40F2232D9E0800D09CD4 /* LightCulling.metal */; };
+		95784A7A23C229A500296A51 /* Lighting.metal in Sources */ = {isa = PBXBuildFile; fileRef = 9551CC052344E21100861132 /* Lighting.metal */; };
+		95784A7B23C229CB00296A51 /* MGPRenderer.m in Sources */ = {isa = PBXBuildFile; fileRef = 958955CA227736F700414591 /* MGPRenderer.m */; };
+		95784A7C23C229CB00296A51 /* MGPSceneRenderer.m in Sources */ = {isa = PBXBuildFile; fileRef = 9564B6A2234AC6B900DC394A /* MGPSceneRenderer.m */; };
+		95784A7D23C229CB00296A51 /* MGPDeferredRenderer.m in Sources */ = {isa = PBXBuildFile; fileRef = 95BF56BB234DAB8D0001A7EC /* MGPDeferredRenderer.m */; };
+		95784A7E23C229CB00296A51 /* MGPGBuffer.m in Sources */ = {isa = PBXBuildFile; fileRef = 95F4CB292279937200F51454 /* MGPGBuffer.m */; };
+		95784A7F23C229CB00296A51 /* MGPPostProcessing.m in Sources */ = {isa = PBXBuildFile; fileRef = 952C964822C0A1D9004C8C34 /* MGPPostProcessing.m */; };
+		95784A8023C229CB00296A51 /* MGPPostProcessingLayer.m in Sources */ = {isa = PBXBuildFile; fileRef = 952C964B22C0A2E4004C8C34 /* MGPPostProcessingLayer.m */; };
+		95784A8123C229CB00296A51 /* MGPGizmos.m in Sources */ = {isa = PBXBuildFile; fileRef = 95644A50230C3B3400EA856C /* MGPGizmos.m */; };
+		95784A8223C229CB00296A51 /* MGPCamera.m in Sources */ = {isa = PBXBuildFile; fileRef = 95FBFD55229466DC002BA1E0 /* MGPCamera.m */; };
+		95784A8323C229CB00296A51 /* MGPMesh.m in Sources */ = {isa = PBXBuildFile; fileRef = 95F0D28A227D4DF600DEEC3B /* MGPMesh.m */; };
+		95784A8423C229CB00296A51 /* MGPImageBasedLighting.m in Sources */ = {isa = PBXBuildFile; fileRef = 95A4D9282283F1E0004653B6 /* MGPImageBasedLighting.m */; };
+		95784A8523C229CB00296A51 /* MGPLight.m in Sources */ = {isa = PBXBuildFile; fileRef = 959F3A4B22BFA6D300D1F4D4 /* MGPLight.m */; };
+		95784A8623C229CB00296A51 /* MGPShadowBuffer.m in Sources */ = {isa = PBXBuildFile; fileRef = 950C345722C5B05D004C32CA /* MGPShadowBuffer.m */; };
+		95784A8723C229CB00296A51 /* MGPShadowManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 95EFB7D122C7AD5A00813903 /* MGPShadowManager.m */; };
+		95784A8823C229CB00296A51 /* MGPScene.m in Sources */ = {isa = PBXBuildFile; fileRef = 95F002AA22CCEEFF000A951B /* MGPScene.m */; };
+		95784A8923C229CB00296A51 /* MGPSceneNode.m in Sources */ = {isa = PBXBuildFile; fileRef = 959B872E231AD9DC00CAF261 /* MGPSceneNode.m */; };
+		95784A8A23C229CB00296A51 /* MGPSceneNodeComponent.m in Sources */ = {isa = PBXBuildFile; fileRef = 9564B69E234AC2FC00DC394A /* MGPSceneNodeComponent.m */; };
+		95784A8B23C229CB00296A51 /* MGPLightComponent.m in Sources */ = {isa = PBXBuildFile; fileRef = 9564B6A6234B0B7400DC394A /* MGPLightComponent.m */; };
+		95784A8C23C229CB00296A51 /* MGPMeshComponent.m in Sources */ = {isa = PBXBuildFile; fileRef = 9564B6AA234B0D3400DC394A /* MGPMeshComponent.m */; };
+		95784A8D23C229CB00296A51 /* MGPCameraComponent.m in Sources */ = {isa = PBXBuildFile; fileRef = 9564B6AE234B0D6900DC394A /* MGPCameraComponent.m */; };
+		95784A8E23C229CB00296A51 /* MGPPlane.m in Sources */ = {isa = PBXBuildFile; fileRef = 958852D423029A16005218C8 /* MGPPlane.m */; };
+		95784A8F23C229CB00296A51 /* MGPFrustum.m in Sources */ = {isa = PBXBuildFile; fileRef = 958852D82302C3DC005218C8 /* MGPFrustum.m */; };
+		95784A9023C229CB00296A51 /* MGPBoundingVolume.m in Sources */ = {isa = PBXBuildFile; fileRef = 958852DC23032798005218C8 /* MGPBoundingVolume.m */; };
+		95784A9123C229CB00296A51 /* MGPView.m in Sources */ = {isa = PBXBuildFile; fileRef = 958955C72277369B00414591 /* MGPView.m */; };
+		95784A9223C229CB00296A51 /* MetalMath.c in Sources */ = {isa = PBXBuildFile; fileRef = 958A9C361D16E08200021744 /* MetalMath.c */; };
+		95784A9323C229CB00296A51 /* MGPTextureLoader.m in Sources */ = {isa = PBXBuildFile; fileRef = 95EFEC4C22AEAE3B0091C698 /* MGPTextureLoader.m */; };
+		95784A9423C229CB00296A51 /* DDSTextureLoader.mm in Sources */ = {isa = PBXBuildFile; fileRef = 95EFD8D922AF941800D4C0F5 /* DDSTextureLoader.mm */; };
 		957C604C1E48EFA700132359 /* bun_zipper_res3.obj in Resources */ = {isa = PBXBuildFile; fileRef = 957C604B1E48EFA700132359 /* bun_zipper_res3.obj */; };
 		957E3C031E4B658300C10FB2 /* BRDF.metal in Sources */ = {isa = PBXBuildFile; fileRef = 957E3C021E4B658300C10FB2 /* BRDF.metal */; };
 		957ED55B1EF9810100F15B76 /* CoreML.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 957ED55A1EF980F900F15B76 /* CoreML.framework */; };
@@ -385,6 +427,14 @@
 		956AB4E52289C92B009B5362 /* metallic.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = metallic.png; sourceTree = "<group>"; };
 		956AB4E72289C98D009B5362 /* ao.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = ao.png; sourceTree = "<group>"; };
 		956F9B0E232C098B00F29A77 /* Blur.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Blur.h; sourceTree = "<group>"; };
+		95784A5E23C228A100296A51 /* MGPSceneGraph.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MGPSceneGraph.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		95784A6023C228A100296A51 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
+		95784A6123C228A100296A51 /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
+		95784A6323C228A500296A51 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		95784A6623C228A500296A51 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/MainMenu.xib; sourceTree = "<group>"; };
+		95784A6823C228A500296A51 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		95784A6923C228A500296A51 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
+		95784A6B23C228A500296A51 /* MGPSceneGraph.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = MGPSceneGraph.entitlements; sourceTree = "<group>"; };
 		957C604B1E48EFA700132359 /* bun_zipper_res3.obj */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = bun_zipper_res3.obj; sourceTree = "<group>"; };
 		957E3C021E4B658300C10FB2 /* BRDF.metal */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.metal; path = BRDF.metal; sourceTree = "<group>"; };
 		957E3C041E4B671A00C10FB2 /* BRDF.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BRDF.h; sourceTree = "<group>"; };
@@ -624,6 +674,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		95784A5B23C228A100296A51 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		958A9C171D16D0F600021744 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -721,6 +778,7 @@
 				95FF569C21DA453D00A52B3C /* MetalCustomCALayer */,
 				95F5E0922276255600445BB0 /* MetalDeferred */,
 				95FBFD44229465EB002BA1E0 /* MetalPostProcessing */,
+				95784A5F23C228A100296A51 /* MGPSceneGraph */,
 				953EAB7C1B9B5AFC0024994F /* Products */,
 				957ED5591EF980F800F15B76 /* Frameworks */,
 			);
@@ -740,6 +798,7 @@
 				95FF569B21DA453D00A52B3C /* MetalCustomCALayer.app */,
 				95F5E0912276255600445BB0 /* MetalDeferred.app */,
 				95FBFD43229465EB002BA1E0 /* MetalPostProcessing.app */,
+				95784A5E23C228A100296A51 /* MGPSceneGraph.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -871,6 +930,20 @@
 				950B52C61F0E7D68005D6953 /* SharedStructures.h */,
 			);
 			path = MetalInstancing;
+			sourceTree = "<group>";
+		};
+		95784A5F23C228A100296A51 /* MGPSceneGraph */ = {
+			isa = PBXGroup;
+			children = (
+				95784A6023C228A100296A51 /* AppDelegate.h */,
+				95784A6123C228A100296A51 /* AppDelegate.m */,
+				95784A6323C228A500296A51 /* Assets.xcassets */,
+				95784A6523C228A500296A51 /* MainMenu.xib */,
+				95784A6823C228A500296A51 /* Info.plist */,
+				95784A6923C228A500296A51 /* main.m */,
+				95784A6B23C228A500296A51 /* MGPSceneGraph.entitlements */,
+			);
+			path = MGPSceneGraph;
 			sourceTree = "<group>";
 		};
 		957ED5591EF980F800F15B76 /* Frameworks */ = {
@@ -1347,6 +1420,23 @@
 			productReference = 955DA6AB1F0E74E100464E54 /* MetalInstancing.app */;
 			productType = "com.apple.product-type.application";
 		};
+		95784A5D23C228A100296A51 /* MGPSceneGraph */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 95784A6E23C228A500296A51 /* Build configuration list for PBXNativeTarget "MGPSceneGraph" */;
+			buildPhases = (
+				95784A5A23C228A100296A51 /* Sources */,
+				95784A5B23C228A100296A51 /* Frameworks */,
+				95784A5C23C228A100296A51 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = MGPSceneGraph;
+			productName = MGPSceneGraph;
+			productReference = 95784A5E23C228A100296A51 /* MGPSceneGraph.app */;
+			productType = "com.apple.product-type.application";
+		};
 		958A9C191D16D0F600021744 /* MetalIZBShadow */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 958A9C2A1D16D0F600021744 /* Build configuration list for PBXNativeTarget "MetalIZBShadow" */;
@@ -1453,6 +1543,11 @@
 						CreatedOnToolsVersion = 9.0;
 						DevelopmentTeam = EQPSU577A8;
 					};
+					95784A5D23C228A100296A51 = {
+						CreatedOnToolsVersion = 11.3;
+						DevelopmentTeam = EQPSU577A8;
+						ProvisioningStyle = Automatic;
+					};
 					958A9C191D16D0F600021744 = {
 						CreatedOnToolsVersion = 7.3.1;
 						DevelopmentTeam = EQPSU577A8;
@@ -1499,6 +1594,7 @@
 				95FF569A21DA453D00A52B3C /* MetalCustomCALayer */,
 				95F5E0902276255600445BB0 /* MetalDeferred */,
 				95FBFD42229465EB002BA1E0 /* MetalPostProcessing */,
+				95784A5D23C228A100296A51 /* MGPSceneGraph */,
 			);
 		};
 /* End PBXProject section */
@@ -1581,6 +1677,15 @@
 			files = (
 				955DA6B41F0E74E100464E54 /* Assets.xcassets in Resources */,
 				955DA6B71F0E74E100464E54 /* Main.storyboard in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		95784A5C23C228A100296A51 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				95784A6423C228A500296A51 /* Assets.xcassets in Resources */,
+				95784A6723C228A500296A51 /* MainMenu.xib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1784,6 +1889,53 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		95784A5A23C228A100296A51 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				95784A7B23C229CB00296A51 /* MGPRenderer.m in Sources */,
+				95784A7C23C229CB00296A51 /* MGPSceneRenderer.m in Sources */,
+				95784A7D23C229CB00296A51 /* MGPDeferredRenderer.m in Sources */,
+				95784A7E23C229CB00296A51 /* MGPGBuffer.m in Sources */,
+				95784A7F23C229CB00296A51 /* MGPPostProcessing.m in Sources */,
+				95784A8023C229CB00296A51 /* MGPPostProcessingLayer.m in Sources */,
+				95784A8123C229CB00296A51 /* MGPGizmos.m in Sources */,
+				95784A8223C229CB00296A51 /* MGPCamera.m in Sources */,
+				95784A8323C229CB00296A51 /* MGPMesh.m in Sources */,
+				95784A8423C229CB00296A51 /* MGPImageBasedLighting.m in Sources */,
+				95784A8523C229CB00296A51 /* MGPLight.m in Sources */,
+				95784A8623C229CB00296A51 /* MGPShadowBuffer.m in Sources */,
+				95784A8723C229CB00296A51 /* MGPShadowManager.m in Sources */,
+				95784A8823C229CB00296A51 /* MGPScene.m in Sources */,
+				95784A8923C229CB00296A51 /* MGPSceneNode.m in Sources */,
+				95784A8A23C229CB00296A51 /* MGPSceneNodeComponent.m in Sources */,
+				95784A8B23C229CB00296A51 /* MGPLightComponent.m in Sources */,
+				95784A8C23C229CB00296A51 /* MGPMeshComponent.m in Sources */,
+				95784A8D23C229CB00296A51 /* MGPCameraComponent.m in Sources */,
+				95784A8E23C229CB00296A51 /* MGPPlane.m in Sources */,
+				95784A8F23C229CB00296A51 /* MGPFrustum.m in Sources */,
+				95784A9023C229CB00296A51 /* MGPBoundingVolume.m in Sources */,
+				95784A9123C229CB00296A51 /* MGPView.m in Sources */,
+				95784A9223C229CB00296A51 /* MetalMath.c in Sources */,
+				95784A9323C229CB00296A51 /* MGPTextureLoader.m in Sources */,
+				95784A9423C229CB00296A51 /* DDSTextureLoader.mm in Sources */,
+				95784A6F23C229A500296A51 /* GBuffer.metal in Sources */,
+				95784A7023C229A500296A51 /* BRDF.metal in Sources */,
+				95784A7123C229A500296A51 /* ImageBasedLighting.metal in Sources */,
+				95784A7223C229A500296A51 /* Skybox.metal in Sources */,
+				95784A7323C229A500296A51 /* CommonStages.metal in Sources */,
+				95784A7423C229A500296A51 /* CommonMath.metal in Sources */,
+				95784A7523C229A500296A51 /* SSAO.metal in Sources */,
+				95784A7623C229A500296A51 /* Shadow.metal in Sources */,
+				95784A7723C229A500296A51 /* Gizmo.metal in Sources */,
+				95784A7823C229A500296A51 /* ScreenSpaceReflection.metal in Sources */,
+				95784A7923C229A500296A51 /* LightCulling.metal in Sources */,
+				95784A7A23C229A500296A51 /* Lighting.metal in Sources */,
+				95784A6A23C228A500296A51 /* main.m in Sources */,
+				95784A6223C228A100296A51 /* AppDelegate.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		958A9C161D16D0F600021744 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -1958,6 +2110,14 @@
 				955DA6B61F0E74E100464E54 /* Base */,
 			);
 			name = Main.storyboard;
+			sourceTree = "<group>";
+		};
+		95784A6523C228A500296A51 /* MainMenu.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				95784A6623C228A500296A51 /* Base */,
+			);
+			name = MainMenu.xib;
 			sourceTree = "<group>";
 		};
 		958A9C241D16D0F600021744 /* MainMenu.xib */ = {
@@ -2322,6 +2482,57 @@
 			};
 			name = Release;
 		};
+		95784A6C23C228A500296A51 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CODE_SIGN_ENTITLEMENTS = MGPSceneGraph/MGPSceneGraph.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				DEVELOPMENT_TEAM = EQPSU577A8;
+				ENABLE_HARDENED_RUNTIME = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				INFOPLIST_FILE = MGPSceneGraph/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
+				MACOSX_DEPLOYMENT_TARGET = 10.15;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.Prin-E.test.MGPSceneGraph";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		95784A6D23C228A500296A51 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CODE_SIGN_ENTITLEMENTS = MGPSceneGraph/MGPSceneGraph.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				DEVELOPMENT_TEAM = EQPSU577A8;
+				ENABLE_HARDENED_RUNTIME = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				INFOPLIST_FILE = MGPSceneGraph/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
+				MACOSX_DEPLOYMENT_TARGET = 10.15;
+				MTL_FAST_MATH = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.Prin-E.test.MGPSceneGraph";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
 		958A9C281D16D0F600021744 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -2590,6 +2801,15 @@
 			buildConfigurations = (
 				955DA6BC1F0E74E100464E54 /* Debug */,
 				955DA6BD1F0E74E100464E54 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		95784A6E23C228A500296A51 /* Build configuration list for PBXNativeTarget "MGPSceneGraph" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				95784A6C23C228A500296A51 /* Debug */,
+				95784A6D23C228A500296A51 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

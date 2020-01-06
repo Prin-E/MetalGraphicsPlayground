@@ -21,6 +21,7 @@
     self = [super init];
     if(self) {
         _children = [NSMutableArray new];
+        _components = [NSMutableArray new];
         _localToParentMatrix = matrix_identity_float4x4;
         _parentToLocalMatrix = matrix_identity_float4x4;
         _localToWorldMatrix = matrix_identity_float4x4;
@@ -50,6 +51,7 @@
 }
 
 - (void)setPosition:(simd_float3)position {
+    _position = position;
     _localToParentMatrix.columns[3].xyz = position;
     _parentToLocalMatrix.columns[3].xyz = simd_make_float3(0);
     _parentToLocalMatrix.columns[3].xyz = -simd_mul(_parentToLocalMatrix, simd_make_float4(position, 1.0)).xyz;
@@ -79,11 +81,16 @@
     if(node == self || node == nil || [_children indexOfObject: node] != NSNotFound)
         return;
     [_children addObject: node];
+    [node setParent:self];
+    [node _calculateLocalWorldMatrices];
 }
 
 - (void)removeChild:(MGPSceneNode *)node {
-    if(node != nil)
+    if(node != nil) {
         [_children removeObject: node];
+        [node setParent:nil];
+        [node _calculateLocalWorldMatrices];
+    }
 }
 
 #pragma mark - Components

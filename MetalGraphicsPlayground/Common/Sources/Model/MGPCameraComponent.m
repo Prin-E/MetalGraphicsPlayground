@@ -27,39 +27,46 @@
         _ISO = 100;
         
         _frustum = [[MGPFrustum alloc] init];
+        _projectionState.nearPlane = 0.1;
+        _projectionState.farPlane = 1000;
+        _projectionState.fieldOfView = M_PI / 3.0f;
+        _projectionState.orthographicRate = 0;
+        _projectionState.orthographicSize = 1;
+        _projectionState.aspectRatio = 1.0;
     }
     return self;
 }
 
 - (MGPProjectionState)projectionState {
-    @synchronized (self) {
-        return _projectionState;
-    }
+    return _projectionState;
 }
 
 - (void)setProjectionState:(MGPProjectionState)projectionState {
-    @synchronized (self) {
-        _projectionState = projectionState;
-        float lerp = simd_clamp(_projectionState.orthographicRate, 0.0f, 1.0f);
-        matrix_float4x4 orthographicMatrix = matrix_identity_float4x4;
-        matrix_float4x4 perspectiveMatrix = matrix_identity_float4x4;
-        if(lerp < 1.0f) {
-            perspectiveMatrix = matrix_from_perspective_fov_aspectLH(_projectionState.fieldOfView, _projectionState.aspectRatio, _projectionState.nearPlane, _projectionState.farPlane);
-        }
-        if(lerp > 0.0f) {
-            float heightHalf = _projectionState.orthographicSize;
-            float widthHalf = heightHalf * _projectionState.aspectRatio;
-            orthographicMatrix = matrix_ortho(-widthHalf, widthHalf,
-                                              -heightHalf, heightHalf,
-                                              _projectionState.nearPlane, _projectionState.farPlane);
-        }
-        
-        for(int i = 0; i < 4; i++) {
-            _projectionMatrix.columns[i] = perspectiveMatrix.columns[i] * (1.0f - lerp) +
-                                           orthographicMatrix.columns[i] * lerp;
-        }
-        _projectionInverseMatrix = simd_inverse(_projectionMatrix);
+    _projectionState = projectionState;
+    float lerp = simd_clamp(_projectionState.orthographicRate, 0.0f, 1.0f);
+    matrix_float4x4 orthographicMatrix = matrix_identity_float4x4;
+    matrix_float4x4 perspectiveMatrix = matrix_identity_float4x4;
+    if(lerp < 1.0f) {
+        perspectiveMatrix = matrix_from_perspective_fov_aspectLH(_projectionState.fieldOfView, _projectionState.aspectRatio, _projectionState.nearPlane, _projectionState.farPlane);
     }
+    if(lerp > 0.0f) {
+        float heightHalf = _projectionState.orthographicSize;
+        float widthHalf = heightHalf * _projectionState.aspectRatio;
+        orthographicMatrix = matrix_ortho(-widthHalf, widthHalf,
+                                          -heightHalf, heightHalf,
+                                          _projectionState.nearPlane, _projectionState.farPlane);
+    }
+    
+    for(int i = 0; i < 4; i++) {
+        _projectionMatrix.columns[i] = perspectiveMatrix.columns[i] * (1.0f - lerp) +
+                                       orthographicMatrix.columns[i] * lerp;
+    }
+    _projectionInverseMatrix = simd_inverse(_projectionMatrix);
+}
+
+- (void)setAspectRatio:(float)aspectRatio {
+    _projectionState.aspectRatio = aspectRatio;
+    [self setProjectionState:_projectionState];
 }
 
 - (MGPFrustum *)frustum {
@@ -72,20 +79,18 @@
     simd_float4x4 cameraToWorldMatrix = self.localToWorldMatrix;
     simd_float4x4 worldToCameraMatrix = self.worldToLocalMatrix;
     
-    @synchronized (self) {
-        camera_props_t props = {};
-        props.position = self.position;
-        props.rotation = self.worldToLocalRotationMatrix;
-        props.view = worldToCameraMatrix;
-        props.projection = _projectionMatrix;
-        props.viewProjection = simd_mul(_projectionMatrix, worldToCameraMatrix);
-        props.viewInverse = cameraToWorldMatrix;
-        props.projectionInverse = _projectionInverseMatrix;
-        props.viewProjectionInverse = simd_mul(cameraToWorldMatrix, _projectionInverseMatrix);
-        props.nearPlane = _projectionState.nearPlane;
-        props.farPlane = _projectionState.farPlane;
-        return props;
-    }
+    camera_props_t props = {};
+    props.position = self.position;
+    props.rotation = self.worldToLocalRotationMatrix;
+    props.view = worldToCameraMatrix;
+    props.projection = _projectionMatrix;
+    props.viewProjection = simd_mul(_projectionMatrix, worldToCameraMatrix);
+    props.viewInverse = cameraToWorldMatrix;
+    props.projectionInverse = _projectionInverseMatrix;
+    props.viewProjectionInverse = simd_mul(cameraToWorldMatrix, _projectionInverseMatrix);
+    props.nearPlane = _projectionState.nearPlane;
+    props.farPlane = _projectionState.farPlane;
+    return props;
 }
 
 - (float)exposureValue {

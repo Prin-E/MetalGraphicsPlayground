@@ -11,6 +11,14 @@
 
 @implementation MGPSceneNodeComponent
 
+- (instancetype)init {
+    self = [super init];
+    if(self) {
+        _enabled = YES;
+    }
+    return self;
+}
+
 - (simd_float4x4)localToWorldMatrix {
     return _node ? _node.localToWorldMatrix : matrix_identity_float4x4;
 }

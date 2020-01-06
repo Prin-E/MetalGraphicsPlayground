@@ -33,7 +33,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 // Relations
 @property (nonatomic, readonly) NSArray<MGPSceneNode*> *children;
-@property (nonatomic) MGPSceneNode *parent;
+@property (nonatomic) MGPSceneNode * _Nullable parent;
 
 - (void)addChild: (MGPSceneNode *)node;
 - (void)removeChild: (MGPSceneNode *)node;

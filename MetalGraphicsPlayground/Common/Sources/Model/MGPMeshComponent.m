@@ -22,4 +22,11 @@
     return self;
 }
 
+- (instance_props_t)instanceProps {
+    instance_props_t props;
+    props.model = self.localToWorldMatrix;
+    props.material = _material;
+    return props;
+}
+
 @end

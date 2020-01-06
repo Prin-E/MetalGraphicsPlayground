@@ -19,6 +19,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, readonly) matrix_float4x4 projectionMatrix;
 @property (nonatomic, readonly) matrix_float4x4 projectionInverseMatrix;
 @property (nonatomic) MGPProjectionState projectionState;
+@property (nonatomic, readwrite) float aspectRatio;
 
 // camera setup
 @property (nonatomic) float fStop;

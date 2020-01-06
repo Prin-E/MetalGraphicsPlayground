@@ -12,6 +12,10 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+#ifndef MAX_NUM_CAMS
+#define MAX_NUM_CAMS 4
+#endif
+
 @class MGPScene;
 @class MGPFrustum;
 @class MGPMesh;
@@ -46,6 +50,8 @@ NS_ASSUME_NONNULL_BEGIN
     id<MTLBuffer> _cameraPropsBuffer;
     id<MTLBuffer> _lightPropsBuffer;
     id<MTLBuffer> _lightGlobalBuffer;
+    
+    CGSize _size;
     
     // Profiling
     float _CPUTime;

@@ -16,6 +16,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property (nonatomic, readwrite) MGPMesh *mesh;
 @property (nonatomic, readwrite) material_t material;
+@property (nonatomic, readonly) instance_props_t instanceProps;
 
 @end
 

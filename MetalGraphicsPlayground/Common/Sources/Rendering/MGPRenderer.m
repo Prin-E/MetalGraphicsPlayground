@@ -22,7 +22,6 @@
 
 - (void)initMetal {
     // Selcct low power device (for debugging)
-    /*
     NSArray *devices = MTLCopyAllDevices();
     for(id<MTLDevice> device in devices) {
         if(device.isLowPower) {
@@ -30,7 +29,6 @@
             break;
         }
     }
-    */
     
     if(_device == nil) {
         _device = MTLCreateSystemDefaultDevice();
@@ -59,7 +57,7 @@
 }
 
 - (void)render {
-    [self beginFrame];
+    [self wait];
     
     id<MTLCommandBuffer> buffer = [_queue commandBuffer];
     
@@ -74,7 +72,7 @@
     [enc endEncoding];
     [buffer presentDrawable: _view.currentDrawable];
     [buffer addCompletedHandler:^(id<MTLCommandBuffer> buffer) {
-        [self endFrame];
+        [self signal];
     }];
     [buffer commit];
 }

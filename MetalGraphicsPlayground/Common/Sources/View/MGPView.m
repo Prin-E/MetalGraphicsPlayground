@@ -176,7 +176,9 @@ const inline __attribute__((__always_inline__)) float lerp(float a, float b, flo
         
         // Render
         [self.renderer update: self->_deltaTime];
+        [self.renderer beginFrame];
         [self.renderer render];
+        [self.renderer endFrame];
         
         // Next drawable
         id<CAMetalDrawable> nextDrawable = self->_metalLayer.nextDrawable;

@@ -29,7 +29,6 @@
 @end
 
 @implementation MGPDeferredRenderer {
-    MGPGBuffer *_gBuffer;
     MGPPostProcessing *_postProcess;
     MGPShadowManager *_shadowManager;
     
@@ -59,7 +58,7 @@
     
     // render-pass
     _renderPassPresent = [[MTLRenderPassDescriptor alloc] init];
-    _renderPassPresent.colorAttachments[0].loadAction = MTLLoadActionDontCare;
+    _renderPassPresent.colorAttachments[0].loadAction = MTLLoadActionClear;
     _renderPassPresent.colorAttachments[0].storeAction = MTLStoreActionStore;
     
     MTLRenderPipelineDescriptor *renderPipelineDescriptorPresent = [[MTLRenderPipelineDescriptor alloc] init];
@@ -107,14 +106,31 @@
 - (void)render {
     // begin
     id<MTLCommandBuffer> commandBuffer = [self.queue commandBuffer];
-    commandBuffer.label = @"Render";
+    commandBuffer.label = [NSString stringWithFormat: @"Render"];
     
+    // shadow
+    [self renderShadows: commandBuffer];
+    
+    for(NSUInteger i = 0; i < MIN(4, _cameraComponents.count); i++) {
+        MGPCameraComponent *cameraComp = _cameraComponents[i];
+        if(cameraComp.enabled)
+            [self renderCameraAtIndex:i commandBuffer:commandBuffer];
+    }
+    
+    // present
+    [commandBuffer presentDrawable: self.view.currentDrawable];
+    [commandBuffer addCompletedHandler:^(id<MTLCommandBuffer> buffer) {
+        [self signal];
+    }];
+    
+    [commandBuffer commit];
+}
+
+- (void)renderCameraAtIndex:(NSUInteger)index
+              commandBuffer:(id<MTLCommandBuffer>)commandBuffer {
     // Post-process before prepass
     [_postProcess render: commandBuffer
        forRenderingOrder: MGPPostProcessingRenderingOrderBeforePrepass];
-     
-    // Shadowmap Passes
-    [self renderShadows: commandBuffer];
     
     // G-buffer prepass
     id<MTLRenderCommandEncoder> prepassEncoder = [commandBuffer renderCommandEncoderWithDescriptor: _gBuffer.renderPassDescriptor];
@@ -144,14 +160,6 @@
     _renderPassPresent.colorAttachments[0].texture = self.view.currentDrawable.texture;
     id<MTLRenderCommandEncoder> presentCommandEncoder = [commandBuffer renderCommandEncoderWithDescriptor: _renderPassPresent];
     [self renderFramebuffer:presentCommandEncoder];
-    
-    // present
-    [commandBuffer presentDrawable: self.view.currentDrawable];
-    [commandBuffer addCompletedHandler:^(id<MTLCommandBuffer> buffer) {
-        [self signal];
-    }];
-    
-    [commandBuffer commit];
 }
 
 - (void)endFrame {
@@ -256,17 +264,20 @@
     
     // camera
     [encoder setVertexBuffer: _cameraPropsBuffer
-                      offset: _currentBufferIndex * sizeof(camera_props_t)
+                      offset: _currentBufferIndex * (sizeof(camera_props_t) * MAX_NUM_CAMS)
                      atIndex: 1];
     [encoder setFragmentBuffer: _cameraPropsBuffer
-                        offset: _currentBufferIndex * sizeof(camera_props_t)
+                        offset: _currentBufferIndex * (sizeof(camera_props_t) * MAX_NUM_CAMS)
                        atIndex: 1];
     
     // draw call
-    [self renderDrawCalls:nil
-             bindTextures:YES
-      instanceBufferIndex:2
-                  encoder:encoder];
+    if(_cameraComponents.count > 0) {
+        MGPDrawCallList *drawCalls = [self drawCallListWithFrustum: _cameraComponents[0].frustum];
+        [self renderDrawCalls:drawCalls
+                 bindTextures:YES
+          instanceBufferIndex:2
+                      encoder:encoder];
+    }
     
     [encoder endEncoding];
 }
@@ -328,7 +339,7 @@
                 offset: _currentBufferIndex * sizeof(light_global_t)
                atIndex: 2];
     [encoder setBuffer: _cameraPropsBuffer
-                offset: _currentBufferIndex * sizeof(camera_props_t)
+                offset: _currentBufferIndex * sizeof(camera_props_t) * MAX_NUM_CAMS
                atIndex: 3];
     [encoder setTexture: _gBuffer.depth
                 atIndex: 0];
@@ -355,7 +366,7 @@
     [encoder setRenderPipelineState: shadingPipeline];
     [encoder setCullMode: MTLCullModeBack];
     [encoder setFragmentBuffer: _cameraPropsBuffer
-                        offset: _currentBufferIndex * sizeof(camera_props_t)
+                        offset: _currentBufferIndex * sizeof(camera_props_t) * MAX_NUM_CAMS
                        atIndex: 0];
     [encoder setFragmentBuffer: _lightGlobalBuffer
                         offset: _currentBufferIndex * sizeof(light_global_t)
@@ -459,8 +470,8 @@
 }
 
 - (void)resize:(CGSize)newSize {
-    [_gBuffer resize:newSize];
     [super resize:newSize];
+    [_gBuffer resize:newSize];
 }
 
 @end
