@@ -152,8 +152,8 @@ void matrix_decompose_trs(simd_float4x4 matrix, simd_float3 *pos, simd_float3 *r
         float m22 = matrix.columns[2].z;
         
         // if scale is 0, euler angles can't be decomposed :-(
-        size_t isScaleXNotZero = fabsf(s.x) >= 1e10f;
-        size_t isScaleZNotZero = fabsf(s.z) >= 1e10f;
+        size_t isScaleXNotZero = fabsf(s.x) >= 1e-10f;
+        size_t isScaleZNotZero = fabsf(s.z) >= 1e-10f;
         rot->x = isScaleZNotZero ? atan2f(m12, m22) : 0.0f;
         rot->y = isScaleZNotZero ? atan2f(-m02, sqrtf(m12*m12 + m22*m22)) : 0.0f;
         rot->z = isScaleXNotZero ? atan2f(m01, m00) : 0.0f;

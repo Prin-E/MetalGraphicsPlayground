@@ -31,6 +31,9 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic) simd_float3 rotation;
 @property (nonatomic) simd_float3 scale;
 
+- (void)lookAt:(simd_float3)target;
+- (void)lookAt:(simd_float3)target up:(simd_float3)up;
+
 // Relations
 @property (nonatomic, readonly) NSArray<MGPSceneNode*> *children;
 @property (nonatomic) MGPSceneNode * _Nullable parent;

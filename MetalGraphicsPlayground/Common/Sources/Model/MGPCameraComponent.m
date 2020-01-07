@@ -29,7 +29,7 @@
         _frustum = [[MGPFrustum alloc] init];
         _projectionState.nearPlane = 0.1;
         _projectionState.farPlane = 1000;
-        _projectionState.fieldOfView = M_PI / 3.0f;
+        _projectionState.fieldOfView = DEG_TO_RAD(60.0);
         _projectionState.orthographicRate = 0;
         _projectionState.orthographicSize = 1;
         _projectionState.aspectRatio = 1.0;

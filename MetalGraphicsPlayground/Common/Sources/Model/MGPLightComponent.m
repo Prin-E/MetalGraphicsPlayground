@@ -8,6 +8,7 @@
 
 #import "MGPLightComponent.h"
 #import "MGPFrustum.h"
+#import "MGPSceneNode.h"
 #import "../Utility/MetalMath.h"
 
 @implementation MGPLightComponent
@@ -15,7 +16,6 @@
     self = [super init];
     if(self) {
         _type = MGPLightTypeDirectional;
-        _direction = vector3(0.0f, 0.0f, 1.0f);
         _color = vector3(1.0f, 1.0f, 1.0f);
         _intensity = 1.0f;
         _castShadows = NO;
@@ -30,7 +30,7 @@
 - (light_t)shaderProperties {
     light_t light;
     
-    vector_float3 forward = _direction;
+    vector_float3 forward = simd_normalize(self.node.localToWorldMatrix.columns[2].xyz);
     vector_float3 up = vector3(0.0f, 1.0f, 0.0f);
     if(ABS(simd_dot(forward, up)) < 0.01f)
         up = vector3(0.0f, 0.0f, -1.0f);

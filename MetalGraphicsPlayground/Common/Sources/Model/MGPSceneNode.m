@@ -24,6 +24,8 @@
         _components = [NSMutableArray new];
         _localToParentMatrix = matrix_identity_float4x4;
         _parentToLocalMatrix = matrix_identity_float4x4;
+        _localToParentRotationMatrix = matrix_identity_float4x4;
+        _parentToLocalRotationMatrix = matrix_identity_float4x4;
         _localToWorldMatrix = matrix_identity_float4x4;
         _worldToLocalMatrix = matrix_identity_float4x4;
         _localToWorldRotationMatrix = matrix_identity_float4x4;
@@ -53,8 +55,8 @@
 - (void)setPosition:(simd_float3)position {
     _position = position;
     _localToParentMatrix.columns[3].xyz = position;
-    _parentToLocalMatrix.columns[3].xyz = simd_make_float3(0);
-    _parentToLocalMatrix.columns[3].xyz = -simd_mul(_parentToLocalMatrix, simd_make_float4(position, 1.0)).xyz;
+    _parentToLocalMatrix.columns[3].xyz = -simd_mul(_parentToLocalRotationMatrix,
+                                                    simd_make_float4(position, 1.0)).xyz;
     [self _calculateLocalWorldMatrices];
 }
 
@@ -64,7 +66,7 @@
 
 - (void)setRotation:(simd_float3)rotation {
     _rotation = rotation;
-    [self _generateMatrices];
+    [self _calculateMatrices];
 }
 
 - (simd_float3)scale {
@@ -73,7 +75,34 @@
 
 - (void)setScale:(simd_float3)scale {
     _scale = scale;
-    [self _generateMatrices];
+    [self _calculateMatrices];
+}
+
+- (void)lookAt:(simd_float3)target {
+    [self lookAt:target up:simd_make_float3(0, 1, 0)];
+}
+
+- (void)lookAt:(simd_float3)target
+            up:(simd_float3)up {
+    simd_float3 worldPos = _localToWorldMatrix.columns[3].xyz;
+    simd_float3 forward = target - worldPos;
+    if(simd_length_squared(forward) > 1e-8f) {
+        forward = simd_normalize(forward);
+        up = simd_normalize(up);
+        simd_float3 right = simd_normalize(simd_cross(up, forward));
+        up = simd_normalize(simd_cross(forward, right));
+        
+        _localToParentRotationMatrix.columns[0] = simd_make_float4(right, 0);
+        _localToParentRotationMatrix.columns[1] = simd_make_float4(up, 0);
+        _localToParentRotationMatrix.columns[2] = simd_make_float4(forward, 0);
+        _localToParentRotationMatrix.columns[3] = simd_make_float4(0, 0, 0, 1);
+        _parentToLocalRotationMatrix = simd_transpose(_localToParentRotationMatrix);
+        
+        matrix_decompose_trs(_localToParentRotationMatrix, nil, &_rotation, nil);
+        
+        [self _applyTSWithRotationMatrix];
+        [self _calculateLocalWorldMatrices];
+    }
 }
 
 #pragma mark - Managing relations
@@ -135,32 +164,35 @@
 }
 
 #pragma mark - Matrix operations
-- (void)_generateMatrices {
+- (void)_calculateMatrices {
     // get rotation matrix
-    simd_float4x4 localToParentMatrix = matrix_from_euler(_rotation);
-    simd_float4x4 parentToLocalMatrix = simd_transpose(localToParentMatrix);
-    _localToParentRotationMatrix = localToParentMatrix;
-    _parentToLocalRotationMatrix = parentToLocalMatrix;
+    _localToParentRotationMatrix = matrix_from_euler(_rotation);
+    _parentToLocalRotationMatrix = simd_transpose(_localToParentRotationMatrix);
     
-    // apply scales
-    simd_float3 scaleDiv1 = 1.0 / _scale;
-    localToParentMatrix.columns[0].x *= _scale.x;
-    localToParentMatrix.columns[1].y *= _scale.y;
-    localToParentMatrix.columns[2].z *= _scale.z;
-    parentToLocalMatrix.columns[0].x *= scaleDiv1.x;
-    parentToLocalMatrix.columns[1].y *= scaleDiv1.y;
-    parentToLocalMatrix.columns[2].z *= scaleDiv1.z;
+    [self _applyTSWithRotationMatrix];
+    [self _calculateLocalWorldMatrices];
+}
+
+- (void)_applyTSWithRotationMatrix {
+    simd_float4x4 localToParentMatrix = _localToParentRotationMatrix;
+    simd_float4x4 parentToLocalMatrix = _parentToLocalRotationMatrix;
     
     // apply positions
     localToParentMatrix.columns[3].xyz = _position;
-    parentToLocalMatrix.columns[3].xyz = simd_make_float3(0);
-    parentToLocalMatrix.columns[3].xyz = -simd_mul(parentToLocalMatrix, simd_make_float4(_position, 1.0)).xyz;
+    parentToLocalMatrix.columns[3].xyz = -simd_mul(_parentToLocalRotationMatrix, simd_make_float4(_position, 1.0)).xyz;
+    
+    // apply scales
+    simd_float3 scaleDiv1 = 1.0 / _scale;
+    localToParentMatrix.columns[0].xyz *= _scale.x;
+    localToParentMatrix.columns[1].xyz *= _scale.y;
+    localToParentMatrix.columns[2].xyz *= _scale.z;
+    parentToLocalMatrix.columns[0].xyz *= scaleDiv1.x;
+    parentToLocalMatrix.columns[1].xyz *= scaleDiv1.y;
+    parentToLocalMatrix.columns[2].xyz *= scaleDiv1.z;
     
     // replace current matrices
     _localToParentMatrix = localToParentMatrix;
     _parentToLocalMatrix = parentToLocalMatrix;
-    
-    [self _calculateLocalWorldMatrices];
 }
 
 - (void)_calculateLocalWorldMatrices {

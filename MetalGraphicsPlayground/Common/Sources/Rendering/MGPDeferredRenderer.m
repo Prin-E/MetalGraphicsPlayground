@@ -226,8 +226,8 @@
                 prepassConstants.hasMetalicMap = submesh.textures[tex_metalic] != NSNull.null;
                 prepassConstants.hasOcclusionMap = submesh.textures[tex_occlusion] != NSNull.null;
                 prepassConstants.hasAnisotropicMap = submesh.textures[tex_anisotropic] != NSNull.null;
-                prepassConstants.flipVertically = YES;  // for sponza textures
-                prepassConstants.sRGBTexture = YES;     // for sponza textures
+                //prepassConstants.flipVertically = YES;  // for sponza textures
+                //prepassConstants.sRGBTexture = YES;     // for sponza textures
                 
                 id<MTLRenderPipelineState> prepassPipeline = [_gBuffer renderPipelineStateWithConstants: prepassConstants
                                                                                                   error: nil];

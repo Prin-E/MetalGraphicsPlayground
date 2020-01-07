@@ -120,6 +120,8 @@
     
     // update light global buffer...
     light_global_t lightGlobalProps = _scene.lightGlobalProps;
+    lightGlobalProps.num_light = (unsigned int)MIN(MAX_NUM_LIGHTS, _lightComponents.count);
+    lightGlobalProps.first_point_light_index = 1;
     memcpy(_lightGlobalBuffer.contents + _currentBufferIndex * sizeof(light_global_t), &lightGlobalProps, sizeof(light_global_t));
     [_lightGlobalBuffer didModifyRange: NSMakeRange(_currentBufferIndex * sizeof(light_global_t),
                                                     sizeof(light_global_t))];
