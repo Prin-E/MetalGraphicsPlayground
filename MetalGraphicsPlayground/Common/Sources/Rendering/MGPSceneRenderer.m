@@ -104,6 +104,28 @@
         [nodes addObjectsFromArray:node.children];
     }
     
+    // sort lights by light type
+    [_lightComponents sortUsingComparator:
+     ^NSComparisonResult(MGPLightComponent* _Nonnull obj1, MGPLightComponent*  _Nonnull obj2) {
+        if(obj1.type < obj2.type)
+            return NSOrderedAscending;
+        else if(obj1.type > obj2.type)
+            return NSOrderedDescending;
+        return NSOrderedSame;
+    }];
+    
+    // find first point light index
+    NSUInteger numLights = MIN(MAX_NUM_LIGHTS, _lightComponents.count);
+    NSUInteger firstPointLightIndex = 0;
+    for(NSUInteger i = 0; i < numLights; i++) {
+        if(_lightComponents[i].type == MGPLightTypeDirectional) {
+            firstPointLightIndex++;
+        }
+        else {
+            break;
+        }
+    }
+    
     // initialize heap index and offset...
     _instancePropsBufferIndex = 0;
     _instancePropsBufferOffset = 0;
@@ -120,21 +142,21 @@
     
     // update light global buffer...
     light_global_t lightGlobalProps = _scene.lightGlobalProps;
-    lightGlobalProps.num_light = (unsigned int)MIN(MAX_NUM_LIGHTS, _lightComponents.count);
-    lightGlobalProps.first_point_light_index = 1;
+    lightGlobalProps.num_light = (unsigned int)numLights;
+    lightGlobalProps.first_point_light_index = (unsigned int)firstPointLightIndex;
     memcpy(_lightGlobalBuffer.contents + _currentBufferIndex * sizeof(light_global_t), &lightGlobalProps, sizeof(light_global_t));
     [_lightGlobalBuffer didModifyRange: NSMakeRange(_currentBufferIndex * sizeof(light_global_t),
                                                     sizeof(light_global_t))];
     
     // update light buffer...
     size_t lightPropsBufferOffset = _currentBufferIndex * sizeof(light_t) * MAX_NUM_LIGHTS;
-    for(NSUInteger i = 0; i < MIN(MAX_NUM_LIGHTS, _lightComponents.count); i++) {
+    for(NSUInteger i = 0; i < numLights; i++) {
         light_t lightProps = _lightComponents[i].shaderProperties;
         memcpy(_lightPropsBuffer.contents + lightPropsBufferOffset, &lightProps, sizeof(light_t));
         lightPropsBufferOffset += sizeof(light_t);
     }
     [_lightPropsBuffer didModifyRange: NSMakeRange(_currentBufferIndex * sizeof(light_t) * MAX_NUM_LIGHTS,
-                                                    sizeof(light_t) * MIN(MAX_NUM_LIGHTS, _lightComponents.count))];
+                                                    sizeof(light_t) * numLights)];
     
     // update camera buffer...
     size_t cameraPropsBufferOffset = _currentBufferIndex * sizeof(camera_props_t) * MAX_NUM_CAMS;

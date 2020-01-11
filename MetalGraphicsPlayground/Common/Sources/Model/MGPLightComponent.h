@@ -17,7 +17,6 @@ NS_ASSUME_NONNULL_BEGIN
 @interface MGPLightComponent : MGPSceneNodeComponent
 
 @property (nonatomic) MGPLightType type;
-@property (nonatomic) simd_float3 direction;
 @property (nonatomic) simd_float3 color;
 @property (nonatomic) float intensity;
 @property (nonatomic) BOOL castShadows;

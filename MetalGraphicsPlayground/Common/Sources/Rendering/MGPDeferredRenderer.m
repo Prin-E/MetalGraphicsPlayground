@@ -261,6 +261,7 @@
 - (void)renderGBuffer:(id<MTLRenderCommandEncoder>)encoder {
     encoder.label = @"G-buffer";
     [encoder setCullMode: MTLCullModeBack];
+    [encoder setDepthStencilState: _depthStencil];
     
     // camera
     [encoder setVertexBuffer: _cameraPropsBuffer

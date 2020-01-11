@@ -137,7 +137,8 @@ float3 calculate_pointlight_lit_color(float3 v,
     float3 lit_color = float3(0);
     uint light_index = index_offset;
     while(bitmask) {
-        if(bitmask & 0x1) {
+        if(bitmask & 0x1)
+        {
             constant light_t &light = lights[light_index];
             float light_dist = 1.0;
             float3 light_pos = light.position;

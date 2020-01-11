@@ -80,7 +80,7 @@
     simd_float4x4 worldToCameraMatrix = self.worldToLocalMatrix;
     
     camera_props_t props = {};
-    props.position = self.position;
+    props.position = cameraToWorldMatrix.columns[3].xyz;
     props.rotation = self.worldToLocalRotationMatrix;
     props.view = worldToCameraMatrix;
     props.projection = _projectionMatrix;

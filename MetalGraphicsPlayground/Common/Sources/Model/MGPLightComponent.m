@@ -30,16 +30,18 @@
 - (light_t)shaderProperties {
     light_t light;
     
-    vector_float3 forward = simd_normalize(self.node.localToWorldMatrix.columns[2].xyz);
+    simd_float4x4 localToWorld = self.localToWorldMatrix;
+    
+    vector_float3 forward = simd_normalize(localToWorld.columns[2].xyz);
     vector_float3 up = vector3(0.0f, 1.0f, 0.0f);
-    if(ABS(simd_dot(forward, up)) < 0.01f)
+    if(ABS(simd_dot(forward, up)) > 0.999)
         up = vector3(0.0f, 0.0f, -1.0f);
     vector_float3 right = simd_cross(up, forward);
     up = simd_cross(forward, right);
     
-    simd_float3 pos = self.position;
-    light.light_view = matrix_lookat(pos, pos + _direction, up);
-    light.position = pos;
+    simd_float3 worldPos = localToWorld.columns[3].xyz;
+    light.light_view = matrix_lookat(worldPos, worldPos + forward, up);
+    light.position = worldPos;
     light.intensity = _intensity;
     light.color = _color;
     light.cast_shadow = _castShadows;
