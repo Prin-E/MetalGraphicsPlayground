@@ -51,8 +51,8 @@ float distribution_ggx_anisotropic(float a_t, float a_b, float n_h, float t_h, f
 float3 calculate_brdf(shading_t shading) {
     // NDF
     float a = sqr(shading.roughness);
-    float a_t = max(0.001, a * (1.0 + shading.anisotropy));
-    float a_b = max(0.001, a * (1.0 - shading.anisotropy));
+    float a_t = max(0.00, a * (1.0 + shading.anisotropy));
+    float a_b = max(0.00, a * (1.0 - shading.anisotropy));
     
     //float g_s = geometry_smith(shading.n_l, shading.n_v, sqr(a+1) * 0.125);
     //float d_s = distribution_ggx(shading.n_h, a);

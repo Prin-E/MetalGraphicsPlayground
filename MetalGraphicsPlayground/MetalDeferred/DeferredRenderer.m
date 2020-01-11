@@ -28,7 +28,6 @@
 
 #define TEST 1
 
-const size_t kMaxBuffersInFlight = 3;
 const size_t kNumInstance = 8;
 const uint32_t MAX_NUM_LIGHTS = 128;
 const float kLightIntensityBase = 0.25;
