@@ -47,45 +47,46 @@ You can check framework sources codes in **Common** directory!
 [<img src="https://img.youtube.com/vi/_raZEvfcWY4/0.jpg" alt="Light and Shadows" width="320" height="240">](https://www.youtube.com/watch?v=_raZEvfcWY4)
 [<img src="https://img.youtube.com/vi/K6zhDj0YyPQ/0.jpg" alt="Post Processing" width="320" height="240">](https://www.youtube.com/watch?v=K6zhDj0YyPQ)
 
+## Samples (Legacy)
 
-<details><summary>Samples (Legacy)</summary>
+<details><summary>Click to Expand!</summary>
 <p>
 
-## MetalTextureLOD
+### MetalTextureLOD
 
 <img src="./Screenshots/MetalTextureLOD.png" alt="MetalTextureLOD" width="592" height="494">
 
 * Texture data updating and textureLOD in shader.
 
-## MetalModels
+### MetalModels
 
 <img src="./Screenshots/MetalModels.png" alt="MetalModels" width="592" height="494">
 
 * ModelIO Test
 
-## MetalMSAA
+### MetalMSAA
 
 <img src="./Screenshots/MetalMSAA.png" alt="MetalMSAA" width="612" height="614">
 
 * MSAA resolve
 
-## MetalGeometry
+### MetalGeometry
 
 <img src="./Screenshots/MetalGeometry.png" alt="MetalGeometry" width="624" height="646">
 
-## MetalShadowMapping
+### MetalShadowMapping
 
 <img src="./Screenshots/MetalShadowMapping.png" alt="MetalShadowMapping" width="592" height="494">
 
 * Shadow mapping
 
-## MetalIZBShadow
+### MetalIZBShadow
 
 <img src="./Screenshots/MetalIZBShadow.png" alt="MetalIZBShadow" width="592" height="494">
 
 * Just another shadow mapping test. NOT Irregular z-buffer :=(
 
-## MetalEnvironmentMapping
+### MetalEnvironmentMapping
 
 <img src="./Screenshots/MetalEnvironmentMapping.png" alt="MetalEnvironmentMapping" width="592" height="512">
 
@@ -94,7 +95,7 @@ You can check framework sources codes in **Common** directory!
   * Prefilterd Irradiance Map
   * Metalic and roughness
   
-## MetalInstancing
+  ### MetalInstancing
 
 <img src="./Screenshots/MetalInstancing.png" alt="MetalInstancing" width="612" height="634">
 
@@ -131,7 +132,7 @@ You can check framework sources codes in **Common** directory!
 
   ## MetalSceneGraph
 
-  <img src="./Screenshots/MetalPostProcessing.png" alt="MetalPostProcessing.png" width="592" height="635">
+  <img src="./Screenshots/MetalSceneGraph.png" alt="MetalSceneGraph.png" width="633" height="534">
 
   * Scene Graph (Scene, Node, Component)
   * General-purpose renderer
