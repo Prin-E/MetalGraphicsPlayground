@@ -55,7 +55,7 @@ NSString * const MGPShadowBufferErrorDoamin = @"MGPShadowBufferError";
 }
 
 - (instancetype)initWithDevice:(id<MTLDevice>)device
-               lightComponennt:(MGPLightComponent *)lightComponent
+                lightComponent:(MGPLightComponent *)lightComponent
                     resolution:(NSUInteger)resolution
                  cascadeLevels:(NSUInteger)cascadeLevels {
     self = [super init];

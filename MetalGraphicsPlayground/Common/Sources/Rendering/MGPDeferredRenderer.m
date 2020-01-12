@@ -19,6 +19,7 @@
 #import "MGPShadowBuffer.h"
 #import "MGPShadowManager.h"
 #import "LightingCommon.h"
+#import "MGPCommonVertices.h"
 #import "../Model/MGPImageBasedLighting.h"
 
 #define DEFAULT_SHADOW_RESOLUTION 512
@@ -32,7 +33,12 @@
     MGPPostProcessing *_postProcess;
     MGPShadowManager *_shadowManager;
     
+    // common vertex buffer (quad + cube)
+    id<MTLBuffer> _commonVertexBuffer;
+    
+    MTLRenderPassDescriptor *_renderPassSkybox;
     MTLRenderPassDescriptor *_renderPassPresent;
+    id<MTLRenderPipelineState> _renderPipelineSkybox;
     id<MTLRenderPipelineState> _renderPipelinePresent;
     id<MTLDepthStencilState> _depthStencil;
     
@@ -52,14 +58,50 @@
 
 - (void)_initAssets {
     // G-buffer
+    MGPGBufferAttachmentType attachments =
+        MGPGBufferAttachmentTypeAlbedo |
+        MGPGBufferAttachmentTypeNormal |
+        MGPGBufferAttachmentTypeTangent |
+        MGPGBufferAttachmentTypeShading |
+        MGPGBufferAttachmentTypeDepth |
+        MGPGBufferAttachmentTypeOutput;
     _gBuffer = [[MGPGBuffer alloc] initWithDevice:self.device
                                           library:self.defaultLibrary
-                                             size:CGSizeMake(512,512)];
+                                             size:CGSizeMake(512,512)
+                                      attachments:attachments];
+    
+    // shadow manager
+    _shadowManager = [[MGPShadowManager alloc] initWithDevice:self.device
+                                                      library:self.defaultLibrary
+                                             vertexDescriptor:_gBuffer.baseVertexDescriptor];
+    
+    // vertex buffer (mesh)
+    _commonVertexBuffer = [self.device newBufferWithLength:1024
+                                                   options:MTLResourceStorageModeManaged];
+    memcpy(_commonVertexBuffer.contents, QuadVertices, sizeof(QuadVertices));
+    memcpy(_commonVertexBuffer.contents + 256, SkyboxVertices, sizeof(SkyboxVertices));
+    [_commonVertexBuffer didModifyRange: NSMakeRange(0, 1024)];
     
     // render-pass
+    _renderPassSkybox = [[MTLRenderPassDescriptor alloc] init];
+    _renderPassSkybox.colorAttachments[0].loadAction = MTLLoadActionClear;
+    _renderPassSkybox.colorAttachments[0].storeAction = MTLStoreActionStore;
+    _renderPassSkybox.colorAttachments[0].clearColor = MTLClearColorMake(0, 0, 0, 0);
+    _renderPassSkybox.depthAttachment.loadAction = MTLLoadActionClear;
+    _renderPassSkybox.depthAttachment.storeAction = MTLStoreActionStore;
+    
     _renderPassPresent = [[MTLRenderPassDescriptor alloc] init];
-    _renderPassPresent.colorAttachments[0].loadAction = MTLLoadActionClear;
+    _renderPassPresent.colorAttachments[0].loadAction = MTLLoadActionLoad;
     _renderPassPresent.colorAttachments[0].storeAction = MTLStoreActionStore;
+    
+    // pipelines
+    MTLRenderPipelineDescriptor *renderPipelineDescriptorSkybox = [[MTLRenderPipelineDescriptor alloc] init];
+    renderPipelineDescriptorSkybox.colorAttachments[0].pixelFormat = MTLPixelFormatBGRA8Unorm_sRGB;
+    renderPipelineDescriptorSkybox.vertexFunction = [self.defaultLibrary newFunctionWithName: @"skybox_vert"];
+    renderPipelineDescriptorSkybox.fragmentFunction = [self.defaultLibrary newFunctionWithName: @"skybox_frag"];
+    renderPipelineDescriptorSkybox.depthAttachmentPixelFormat = _gBuffer.depth.pixelFormat;
+    _renderPipelineSkybox = [self.device newRenderPipelineStateWithDescriptor: renderPipelineDescriptorSkybox
+                                                                        error: nil];
     
     MTLRenderPipelineDescriptor *renderPipelineDescriptorPresent = [[MTLRenderPipelineDescriptor alloc] init];
     renderPipelineDescriptorPresent.colorAttachments[0].pixelFormat = MTLPixelFormatBGRA8Unorm_sRGB;
@@ -67,7 +109,7 @@
     renderPipelineDescriptorPresent.colorAttachments[0].sourceRGBBlendFactor = MTLBlendFactorSourceAlpha;
     renderPipelineDescriptorPresent.colorAttachments[0].destinationRGBBlendFactor = MTLBlendFactorOneMinusSourceAlpha;
     renderPipelineDescriptorPresent.colorAttachments[0].sourceAlphaBlendFactor = MTLBlendFactorOne;
-    renderPipelineDescriptorPresent.colorAttachments[0].sourceAlphaBlendFactor = MTLBlendFactorOne;
+    renderPipelineDescriptorPresent.colorAttachments[0].destinationAlphaBlendFactor = MTLBlendFactorOne;
     renderPipelineDescriptorPresent.vertexFunction = [self.defaultLibrary newFunctionWithName: @"screen_vert"];
     renderPipelineDescriptorPresent.fragmentFunction = [self.defaultLibrary newFunctionWithName: @"screen_frag"];
     _renderPipelinePresent = [self.device newRenderPipelineStateWithDescriptor: renderPipelineDescriptorPresent
@@ -92,7 +134,7 @@
     renderPipelineDescriptorLightCullTile.colorAttachments[0].sourceRGBBlendFactor = MTLBlendFactorSourceAlpha;
     renderPipelineDescriptorLightCullTile.colorAttachments[0].destinationRGBBlendFactor = MTLBlendFactorOneMinusSourceAlpha;
     renderPipelineDescriptorLightCullTile.colorAttachments[0].sourceAlphaBlendFactor = MTLBlendFactorOne;
-    renderPipelineDescriptorLightCullTile.colorAttachments[0].sourceAlphaBlendFactor = MTLBlendFactorOne;
+    renderPipelineDescriptorLightCullTile.colorAttachments[0].destinationAlphaBlendFactor = MTLBlendFactorOne;
     renderPipelineDescriptorLightCullTile.vertexFunction = [self.defaultLibrary newFunctionWithName: @"screen_vert"];
     renderPipelineDescriptorLightCullTile.fragmentFunction = [self.defaultLibrary newFunctionWithName: @"lightcull_frag"];
     _renderPipelineLightCullTile = [self.device newRenderPipelineStateWithDescriptor: renderPipelineDescriptorLightCullTile
@@ -104,6 +146,10 @@
 }
 
 - (void)render {
+    if(self.scene.IBL.isAnyRenderingRequired) {
+        [self performPrefilterPass];
+    }
+    
     // begin
     id<MTLCommandBuffer> commandBuffer = [self.queue commandBuffer];
     commandBuffer.label = [NSString stringWithFormat: @"Render"];
@@ -126,8 +172,25 @@
     [commandBuffer commit];
 }
 
+- (void)performPrefilterPass {
+    id<MTLCommandBuffer> commandBuffer = [self.queue commandBuffer];
+    commandBuffer.label = @"Prefilter";
+    
+    [self.scene.IBL render: commandBuffer];
+    
+    [commandBuffer commit];
+}
+
 - (void)renderCameraAtIndex:(NSUInteger)index
               commandBuffer:(id<MTLCommandBuffer>)commandBuffer {
+    // skybox pass
+    if(self.scene.IBL) {
+        _renderPassSkybox.colorAttachments[0].texture = self.view.currentDrawable.texture;
+        _renderPassSkybox.depthAttachment.texture = _gBuffer.depth;
+        id<MTLRenderCommandEncoder> skyboxPassEncoder = [commandBuffer renderCommandEncoderWithDescriptor: _renderPassSkybox];
+        [self renderSkybox:skyboxPassEncoder];
+    }
+    
     // Post-process before prepass
     [_postProcess render: commandBuffer
        forRenderingOrder: MGPPostProcessingRenderingOrderBeforePrepass];
@@ -158,6 +221,10 @@
     
     // present to framebuffer
     _renderPassPresent.colorAttachments[0].texture = self.view.currentDrawable.texture;
+    if(self.scene.IBL)
+        _renderPassPresent.colorAttachments[0].loadAction = MTLLoadActionLoad;
+    else
+        _renderPassPresent.colorAttachments[0].loadAction = MTLLoadActionClear;
     id<MTLRenderCommandEncoder> presentCommandEncoder = [commandBuffer renderCommandEncoderWithDescriptor: _renderPassPresent];
     [self renderFramebuffer:presentCommandEncoder];
 }
@@ -257,6 +324,27 @@
     }
 }
 
+- (void)renderSkybox:(id<MTLRenderCommandEncoder>)encoder {
+    encoder.label = @"Skybox";
+    [encoder setRenderPipelineState: _renderPipelineSkybox];
+    [encoder setDepthStencilState: _depthStencil];
+    [encoder setCullMode: MTLCullModeBack];
+    
+    if(self.scene.IBL) {
+        [encoder setVertexBuffer: _commonVertexBuffer
+                          offset: 256
+                         atIndex: 0];
+        [encoder setVertexBuffer: _cameraPropsBuffer
+                          offset: _currentBufferIndex * (sizeof(camera_props_t) * MAX_NUM_CAMS)
+                         atIndex: 1];
+        [encoder setFragmentTexture: self.scene.IBL.environmentMap
+                            atIndex: 0];
+        [encoder drawPrimitives: MTLPrimitiveTypeTriangle
+                    vertexStart: 0
+                    vertexCount: 36];
+    }
+    [encoder endEncoding];
+}
 
 - (void)renderGBuffer:(id<MTLRenderCommandEncoder>)encoder {
     encoder.label = @"G-buffer";

@@ -11,6 +11,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+@class MGPScene;
 @class MGPSceneNodeComponent;
 @interface MGPSceneNode : NSObject
 
@@ -36,7 +37,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 // Relations
 @property (nonatomic, readonly) NSArray<MGPSceneNode*> *children;
-@property (nonatomic) MGPSceneNode * _Nullable parent;
+@property (nonatomic, readonly) MGPSceneNode * _Nullable parent;
+@property (nonatomic, readonly) MGPScene * _Nullable scene;
 
 - (void)addChild: (MGPSceneNode *)node;
 - (void)removeChild: (MGPSceneNode *)node;

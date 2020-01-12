@@ -18,6 +18,10 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, readwrite) material_t material;
 @property (nonatomic, readonly) instance_props_t instanceProps;
 
+- (instancetype)initWithMesh:(MGPMesh*)mesh;
+- (instancetype)initWithMesh:(MGPMesh*)mesh
+                    material:(material_t)material;
+
 @end
 
 NS_ASSUME_NONNULL_END

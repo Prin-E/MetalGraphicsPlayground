@@ -38,7 +38,8 @@ NSString * const MGPShadowManagerErrorDoamin = @"MGPShadowManagerError";
         _device = device;
         _library = library;
         _vertexDescriptor = vertexDescriptor;
-        _shadowBufferDict = [NSMutableDictionary dictionaryWithCapacity: 8];
+        _shadowBufferDict = [NSMutableDictionary dictionaryWithCapacity:8];
+        _lightCompShadowBufferDict = [NSMutableDictionary dictionaryWithCapacity:8];
         [self _makeRenderPipeline];
     }
     return self;

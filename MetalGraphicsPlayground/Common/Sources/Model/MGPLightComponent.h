@@ -33,6 +33,10 @@ NS_ASSUME_NONNULL_BEGIN
 - (light_t)shaderProperties;
 - (MGPProjectionState)projectionState;
 
+- (instancetype)initWithType:(MGPLightType)type
+                       color:(simd_float3)color
+                   intensity:(float)intensity;
+
 @end
 
 NS_ASSUME_NONNULL_END

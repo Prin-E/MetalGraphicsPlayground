@@ -144,6 +144,7 @@
     light_global_t lightGlobalProps = _scene.lightGlobalProps;
     lightGlobalProps.num_light = (unsigned int)numLights;
     lightGlobalProps.first_point_light_index = (unsigned int)firstPointLightIndex;
+    _scene.lightGlobalProps = lightGlobalProps;
     memcpy(_lightGlobalBuffer.contents + _currentBufferIndex * sizeof(light_global_t), &lightGlobalProps, sizeof(light_global_t));
     [_lightGlobalBuffer didModifyRange: NSMakeRange(_currentBufferIndex * sizeof(light_global_t),
                                                     sizeof(light_global_t))];
@@ -178,7 +179,8 @@
     [_meshComponents removeAllObjects];
 }
 
-- (id<MTLBuffer>)makeInstancePropsBufferWithInstanceCount: (NSUInteger)instanceCount {
+- (id<MTLBuffer>)makeInstancePropsBufferWithInstanceCount:(NSUInteger)instanceCount
+                                                   offset:(NSUInteger*)offset {
     id<MTLBuffer> buffer = nil;
     NSUInteger instancePropsSize = sizeof(instance_props_t) * instanceCount;
     
@@ -196,6 +198,8 @@
             newBuffer = YES;
         }
         else {
+            if(offset)
+                *offset = _instancePropsBufferOffset;
             _instancePropsBufferOffset += instancePropsSize;
         }
     }
@@ -206,6 +210,8 @@
                                           options:MTLResourceStorageModeManaged];
         if(buffer) {
             [instancePropsBuffers addObject:buffer];
+            if(offset)
+                *offset = 0;
             _instancePropsBufferOffset = instancePropsSize;
         }
         else {
@@ -241,10 +247,11 @@
     }
     
     // Sort draw calls by mesh
-    [drawCalls sortUsingComparator:^NSComparisonResult(id obj1, id obj2) {
-        size_t ptr1 = (size_t)obj1;
-        size_t ptr2 = (size_t)obj2;
-        return (ptr1 == ptr2) ? 0 : ((ptr1 < ptr2) ? -1 : 1);
+    [drawCalls sortUsingComparator:
+     ^NSComparisonResult(MGPDrawCall * _Nullable obj1, MGPDrawCall * _Nullable obj2) {
+        size_t ptr1 = (size_t)obj1.mesh;
+        size_t ptr2 = (size_t)obj2.mesh;
+        return (ptr1 == ptr2) ? NSOrderedSame : ((ptr1 < ptr2) ? NSOrderedAscending : NSOrderedDescending);
     }];
     
     // Combine draw calls
@@ -254,8 +261,11 @@
     for(MGPDrawCall *drawCall in drawCalls) {
         if(prevMesh != drawCall.mesh) {
             if(prevDrawCall.instanceCount) {
-                prevDrawCall.instancePropsBuffer = [self makeInstancePropsBufferWithInstanceCount:prevDrawCall.instanceCount];
-                instance_props_t *contents = (instance_props_t *)(prevDrawCall.instancePropsBuffer.contents + prevDrawCall.instancePropsBufferOffset);
+                NSUInteger instancePropsBufferOffset = 0;
+                prevDrawCall.instancePropsBuffer = [self makeInstancePropsBufferWithInstanceCount:prevDrawCall.instanceCount
+                                                                                           offset:&instancePropsBufferOffset];
+                prevDrawCall.instancePropsBufferOffset = instancePropsBufferOffset;
+                instance_props_t *contents = (instance_props_t *)(prevDrawCall.instancePropsBuffer.contents + instancePropsBufferOffset);
                 for(NSUInteger i = 0; i < drawCallListToBatch.count; i++) {
                     contents[i] = drawCallListToBatch[i].instanceProps;
                 }
@@ -275,7 +285,10 @@
         [drawCallListToBatch addObject: drawCall];
     }
     if(prevDrawCall.instanceCount && prevDrawCall.instancePropsBuffer == nil) {
-        prevDrawCall.instancePropsBuffer = [self makeInstancePropsBufferWithInstanceCount:prevDrawCall.instanceCount];
+        NSUInteger instancePropsBufferOffset = 0;
+        prevDrawCall.instancePropsBuffer = [self makeInstancePropsBufferWithInstanceCount:prevDrawCall.instanceCount
+                                                                                   offset:&instancePropsBufferOffset];
+        prevDrawCall.instancePropsBufferOffset = instancePropsBufferOffset;
         if(prevDrawCall.instancePropsBuffer) {
             instance_props_t *contents = (instance_props_t *)(prevDrawCall.instancePropsBuffer.contents + prevDrawCall.instancePropsBufferOffset);
             for(NSUInteger i = 0; i < drawCallListToBatch.count; i++) {

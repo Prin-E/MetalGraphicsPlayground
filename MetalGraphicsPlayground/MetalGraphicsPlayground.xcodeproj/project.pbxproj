@@ -38,6 +38,9 @@
 		953EAB851B9B5AFC0024994F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 953EAB841B9B5AFC0024994F /* Assets.xcassets */; };
 		953EAB881B9B5AFC0024994F /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 953EAB861B9B5AFC0024994F /* MainMenu.xib */; };
 		953EAB901B9B5E9B0024994F /* Shaders.metal in Sources */ = {isa = PBXBuildFile; fileRef = 953EAB8F1B9B5E9B0024994F /* Shaders.metal */; };
+		95448B0423CB48AA002D44E9 /* Milkyway_small.hdr in Resources */ = {isa = PBXBuildFile; fileRef = 95EFEC3822AE97BE0091C698 /* Milkyway_small.hdr */; };
+		95448B0523CB5361002D44E9 /* WinterForest_Ref.hdr in Resources */ = {isa = PBXBuildFile; fileRef = 95EFEC3B22AE97CA0091C698 /* WinterForest_Ref.hdr */; };
+		95448B0623CB57F1002D44E9 /* Tropical_Beach_3k.hdr in Resources */ = {isa = PBXBuildFile; fileRef = 95EFEC3922AE97C40091C698 /* Tropical_Beach_3k.hdr */; };
 		954A2C3A1C14400000EB58E3 /* lego.mtl in Resources */ = {isa = PBXBuildFile; fileRef = 954A2C381C14400000EB58E3 /* lego.mtl */; };
 		954A2C3B1C14400000EB58E3 /* lego.obj in Resources */ = {isa = PBXBuildFile; fileRef = 954A2C391C14400000EB58E3 /* lego.obj */; };
 		954A40F3232D9E0800D09CD4 /* LightCulling.metal in Sources */ = {isa = PBXBuildFile; fileRef = 954A40F2232D9E0800D09CD4 /* LightCulling.metal */; };
@@ -250,6 +253,9 @@
 		95BF56BC234DAB8D0001A7EC /* MGPDeferredRenderer.m in Sources */ = {isa = PBXBuildFile; fileRef = 95BF56BB234DAB8D0001A7EC /* MGPDeferredRenderer.m */; };
 		95BF56BD234DAB8D0001A7EC /* MGPDeferredRenderer.m in Sources */ = {isa = PBXBuildFile; fileRef = 95BF56BB234DAB8D0001A7EC /* MGPDeferredRenderer.m */; };
 		95C42C541D29501F00806E15 /* Shadow.metal in Sources */ = {isa = PBXBuildFile; fileRef = 95C42C531D29501F00806E15 /* Shadow.metal */; };
+		95C7C8C323CB302D006E8B5E /* MGPPrimitiveNode.m in Sources */ = {isa = PBXBuildFile; fileRef = 95C7C8C223CB302D006E8B5E /* MGPPrimitiveNode.m */; };
+		95C7C8C423CB302D006E8B5E /* MGPPrimitiveNode.m in Sources */ = {isa = PBXBuildFile; fileRef = 95C7C8C223CB302D006E8B5E /* MGPPrimitiveNode.m */; };
+		95C7C8C523CB302D006E8B5E /* MGPPrimitiveNode.m in Sources */ = {isa = PBXBuildFile; fileRef = 95C7C8C223CB302D006E8B5E /* MGPPrimitiveNode.m */; };
 		95D6C40E21DBA0470007BB90 /* SimpleMetalRenderer.m in Sources */ = {isa = PBXBuildFile; fileRef = 95D6C40D21DBA0470007BB90 /* SimpleMetalRenderer.m */; };
 		95EFB7D222C7AD5A00813903 /* MGPShadowManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 95EFB7D122C7AD5A00813903 /* MGPShadowManager.m */; };
 		95EFB7D322C7AD5A00813903 /* MGPShadowManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 95EFB7D122C7AD5A00813903 /* MGPShadowManager.m */; };
@@ -551,6 +557,8 @@
 		95BF56BA234DAB8D0001A7EC /* MGPDeferredRenderer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MGPDeferredRenderer.h; sourceTree = "<group>"; };
 		95BF56BB234DAB8D0001A7EC /* MGPDeferredRenderer.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MGPDeferredRenderer.m; sourceTree = "<group>"; };
 		95C42C531D29501F00806E15 /* Shadow.metal */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.metal; path = Shadow.metal; sourceTree = "<group>"; };
+		95C7C8C123CB302D006E8B5E /* MGPPrimitiveNode.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MGPPrimitiveNode.h; sourceTree = "<group>"; };
+		95C7C8C223CB302D006E8B5E /* MGPPrimitiveNode.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MGPPrimitiveNode.m; sourceTree = "<group>"; };
 		95D6C40C21DBA0470007BB90 /* SimpleMetalRenderer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SimpleMetalRenderer.h; sourceTree = "<group>"; };
 		95D6C40D21DBA0470007BB90 /* SimpleMetalRenderer.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SimpleMetalRenderer.m; sourceTree = "<group>"; };
 		95EFB7D022C7AD5A00813903 /* MGPShadowManager.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MGPShadowManager.h; sourceTree = "<group>"; };
@@ -1179,6 +1187,8 @@
 				958852DB23032798005218C8 /* MGPBoundingVolume.h */,
 				958852DC23032798005218C8 /* MGPBoundingVolume.m */,
 				954F6F5D230F0B2800B22015 /* MGPProjectionState.h */,
+				95C7C8C123CB302D006E8B5E /* MGPPrimitiveNode.h */,
+				95C7C8C223CB302D006E8B5E /* MGPPrimitiveNode.m */,
 			);
 			path = Model;
 			sourceTree = "<group>";
@@ -1684,6 +1694,9 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				95448B0623CB57F1002D44E9 /* Tropical_Beach_3k.hdr in Resources */,
+				95448B0423CB48AA002D44E9 /* Milkyway_small.hdr in Resources */,
+				95448B0523CB5361002D44E9 /* WinterForest_Ref.hdr in Resources */,
 				95784A6423C228A500296A51 /* Assets.xcassets in Resources */,
 				95784A6723C228A500296A51 /* MainMenu.xib in Resources */,
 			);
@@ -1903,6 +1916,7 @@
 				95784A8223C229CB00296A51 /* MGPCamera.m in Sources */,
 				95784A8323C229CB00296A51 /* MGPMesh.m in Sources */,
 				95784A8423C229CB00296A51 /* MGPImageBasedLighting.m in Sources */,
+				95C7C8C523CB302D006E8B5E /* MGPPrimitiveNode.m in Sources */,
 				95784A8523C229CB00296A51 /* MGPLight.m in Sources */,
 				95784A8623C229CB00296A51 /* MGPShadowBuffer.m in Sources */,
 				95784A8723C229CB00296A51 /* MGPShadowManager.m in Sources */,
@@ -1952,6 +1966,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				95C7C8C323CB302D006E8B5E /* MGPPrimitiveNode.m in Sources */,
 				950CF3842322A4B5008F581E /* ScreenSpaceReflection.metal in Sources */,
 				95EFB7D222C7AD5A00813903 /* MGPShadowManager.m in Sources */,
 				959C8303227F424900C2C245 /* BRDF.metal in Sources */,
@@ -2020,6 +2035,7 @@
 				95F40BC522AD76EA00F747D2 /* CommonStages.metal in Sources */,
 				95EFEC4D22AEAE3B0091C698 /* MGPTextureLoader.m in Sources */,
 				9551CC072344E21100861132 /* Lighting.metal in Sources */,
+				95C7C8C423CB302D006E8B5E /* MGPPrimitiveNode.m in Sources */,
 				9561BB7522AE2998005ACC48 /* DeferredRenderer.m in Sources */,
 				95F40BC622AD76EA00F747D2 /* CommonMath.metal in Sources */,
 				95EFB7D322C7AD5A00813903 /* MGPShadowManager.m in Sources */,

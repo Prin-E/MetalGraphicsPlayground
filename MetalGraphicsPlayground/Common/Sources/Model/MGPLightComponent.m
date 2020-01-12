@@ -27,6 +27,23 @@
     return self;
 }
 
+- (instancetype)initWithType:(MGPLightType)type
+                       color:(simd_float3)color
+                   intensity:(float)intensity {
+    self = [super init];
+    if(self) {
+        _type = type;
+        _color = color;
+        _intensity = intensity;
+        _castShadows = NO;
+        _shadowNear = 1.0f;
+        _shadowFar = 5000.0f;
+        _radius = 10.0f;
+        _frustum = [[MGPFrustum alloc] init];
+    }
+    return self;
+}
+
 - (light_t)shaderProperties {
     light_t light;
     

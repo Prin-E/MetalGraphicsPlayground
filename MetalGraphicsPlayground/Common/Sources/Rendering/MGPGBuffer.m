@@ -68,6 +68,7 @@
     _device = device;
     _library = library;
     _size = newSize;
+    _attachments = attachments;
     _renderPipelineDict = [NSMutableDictionary dictionaryWithCapacity: 24];
     _shadingPipelineDict = [NSMutableDictionary dictionaryWithCapacity: 4];
     
@@ -93,7 +94,7 @@
     desc.usage = MTLTextureUsageShaderRead | MTLTextureUsageRenderTarget;
     desc.storageMode = MTLStorageModePrivate;
     
-    if(_attachments | MGPGBufferAttachmentTypeAlbedo) {
+    if(_attachments & MGPGBufferAttachmentTypeAlbedo) {
         desc.pixelFormat = MTLPixelFormatBGRA8Unorm;
         _albedo = [_device newTextureWithDescriptor: desc];
         _albedo.label = @"Albedo G-buffer";
@@ -103,7 +104,7 @@
     }
     
     // normal
-    if(_attachments | MGPGBufferAttachmentTypeNormal) {
+    if(_attachments & MGPGBufferAttachmentTypeNormal) {
         desc.pixelFormat = MTLPixelFormatRGB10A2Unorm;
         _normal = [_device newTextureWithDescriptor: desc];
         _normal.label = @"Normal G-buffer";
@@ -113,7 +114,7 @@
     }
     
     // depth
-    if(_attachments | MGPGBufferAttachmentTypeDepth) {
+    if(_attachments & MGPGBufferAttachmentTypeDepth) {
         desc.pixelFormat = MTLPixelFormatDepth32Float_Stencil8;
         _depth = [_device newTextureWithDescriptor: desc];
         _depth.label = @"Depth G-buffer";
@@ -123,7 +124,7 @@
     }
     
     // shading
-    if(_attachments | MGPGBufferAttachmentTypeShading) {
+    if(_attachments & MGPGBufferAttachmentTypeShading) {
         desc.pixelFormat = MTLPixelFormatBGRA8Unorm;
         _shading = [_device newTextureWithDescriptor: desc];
         _shading.label = @"Shading G-buffer";
@@ -133,7 +134,7 @@
     }
     
     // tangent
-    if(_attachments | MGPGBufferAttachmentTypeTangent) {
+    if(_attachments & MGPGBufferAttachmentTypeTangent) {
         desc.pixelFormat = MTLPixelFormatRGB10A2Unorm;
         _tangent = [_device newTextureWithDescriptor: desc];
         _tangent.label = @"Tangent G-buffer";
@@ -143,7 +144,7 @@
     }
     
     // lighting
-    if(_attachments | MGPGBufferAttachmentTypeLighting) {
+    if(_attachments & MGPGBufferAttachmentTypeLighting) {
         desc.pixelFormat = MTLPixelFormatRGBA16Float;
         _lighting = [_device newTextureWithDescriptor: desc];
         _lighting.label = @"Light Accumulation G-buffer";
@@ -153,7 +154,7 @@
     }
     
     // shade-output
-    if(_attachments | MGPGBufferAttachmentTypeOutput) {
+    if(_attachments & MGPGBufferAttachmentTypeOutput) {
         desc.pixelFormat = MTLPixelFormatRGBA16Float;
         _output = [_device newTextureWithDescriptor: desc];
         _output.label = @"Output G-buffer";

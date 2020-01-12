@@ -12,18 +12,22 @@
 NS_ASSUME_NONNULL_BEGIN
 
 // TODO : GI, Meshes, Cameras, Lights...
+@class MGPRenderer;
 @class MGPSceneNode;
 @class MGPImageBasedLighting;
 @interface MGPScene : NSObject
 
 // Global Illumination
-@property (nonatomic) MGPImageBasedLighting *IBL;
+@property (nonatomic) MGPImageBasedLighting * _Nullable IBL;
 
 // Global light properties
 @property (nonatomic) light_global_t lightGlobalProps;
 
 // Root scene node
 @property (nonatomic, readonly) MGPSceneNode *rootNode;
+
+// Renderer
+@property (nonatomic, weak) MGPRenderer *renderer;
 
 @end
 

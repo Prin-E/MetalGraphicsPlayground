@@ -22,6 +22,24 @@
     return self;
 }
 
+- (instancetype)initWithMesh:(MGPMesh*)mesh {
+    self = [self init];
+    if(self) {
+        self.mesh = mesh;
+    }
+    return self;
+}
+
+- (instancetype)initWithMesh:(MGPMesh*)mesh
+                    material:(material_t)material {
+    self = [super init];
+    if(self) {
+        self.mesh = mesh;
+        self.material = material;
+    }
+    return self;
+}
+
 - (instance_props_t)instanceProps {
     instance_props_t props;
     props.model = self.localToWorldMatrix;

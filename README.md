@@ -1,13 +1,12 @@
 # MetalGraphicsPlayground
 
 This workspace contains subprojects for testing Metal features.
-Requires Xcode 10 or later.
+Requires Xcode 11 or later.
 
 ## Rendering Engine (work in progress)
 
-**MetalDeferred** and **MetalPostProcessing** use deferred rendering based PBR frameworks.
+**MetalDeferred**, **MetalPostProcessing** and **MetalSceneGraph** use deferred rendering based PBR frameworks.
 You can check framework sources codes in **Common** directory!
-
 
 **Features**
 * Deferred Rendering
@@ -34,6 +33,8 @@ You can check framework sources codes in **Common** directory!
   * Screen-Space Reflection
 * Frustum Culling
   * Sphere
+* Scene Graph
+  * Scene, Node, Component
 
 **Render Pass**
 
@@ -45,6 +46,10 @@ You can check framework sources codes in **Common** directory!
 [<img src="https://img.youtube.com/vi/aeZVjN5krqk/0.jpg" alt="Physically based Rendering" width="320" height="240">](https://www.youtube.com/watch?v=aeZVjN5krqk)
 [<img src="https://img.youtube.com/vi/_raZEvfcWY4/0.jpg" alt="Light and Shadows" width="320" height="240">](https://www.youtube.com/watch?v=_raZEvfcWY4)
 [<img src="https://img.youtube.com/vi/K6zhDj0YyPQ/0.jpg" alt="Post Processing" width="320" height="240">](https://www.youtube.com/watch?v=K6zhDj0YyPQ)
+
+
+<details><summary>Samples (Legacy)</summary>
+<p>
 
 ## MetalTextureLOD
 
@@ -95,6 +100,9 @@ You can check framework sources codes in **Common** directory!
 
 * Instancing
 
+</p>
+</details>
+
 ## MetalDeferred
 
 <img src="./Screenshots/MetalDeferred.png" alt="MetalDeferred" width="605" height="533">
@@ -120,3 +128,10 @@ You can check framework sources codes in **Common** directory!
   * Color grading (Tone mapping)
   * Depth of Field
   * Axis-Aligned Bounding Box
+
+  ## MetalSceneGraph
+
+  <img src="./Screenshots/MetalPostProcessing.png" alt="MetalPostProcessing.png" width="592" height="635">
+
+  * Scene Graph (Scene, Node, Component)
+  * General-purpose renderer

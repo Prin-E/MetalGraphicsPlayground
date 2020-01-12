@@ -165,13 +165,16 @@ const inline __attribute__((__always_inline__)) float lerp(float a, float b, flo
 }
 
 - (void)render {
+    static NSString *windowTitle = nil;
     dispatch_sync(dispatch_get_main_queue(), ^{
         // Display FPS, DeltaTime
         static float elapsed = 0.0f;
         elapsed += self->_deltaTime;
         if(elapsed >= 1.0f) {
             elapsed -= 1.0f;
-            self.window.title = [NSString stringWithFormat: @"Window (FPS : %.0f, Delta: %.1fms)", self->_currentFramesPerSecond, self->_deltaTime*1000];
+            if(!windowTitle)
+                windowTitle = self.window.title;
+            self.window.title = [NSString stringWithFormat: @"%@ (FPS : %.0f, Delta: %.1fms)", windowTitle, self->_currentFramesPerSecond, self->_deltaTime*1000];
         }
         
         // Render

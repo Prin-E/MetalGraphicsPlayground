@@ -17,6 +17,8 @@
     simd_float3 _position, _rotation, _scale;
 }
 
+@synthesize scene = _scene;
+
 - (instancetype)init {
     self = [super init];
     if(self) {
@@ -107,19 +109,38 @@
 
 #pragma mark - Managing relations
 - (void)addChild:(MGPSceneNode *)node {
-    if(node == self || node == nil || [_children indexOfObject: node] != NSNotFound)
+    if(node == nil || node == self || [_children indexOfObject: node] != NSNotFound || node.parent != nil) {
         return;
+    }
     [_children addObject: node];
     [node setParent:self];
     [node _calculateLocalWorldMatrices];
 }
 
 - (void)removeChild:(MGPSceneNode *)node {
-    if(node != nil) {
+    if(node != nil && node.parent == self) {
         [_children removeObject: node];
         [node setParent:nil];
         [node _calculateLocalWorldMatrices];
     }
+}
+
+- (void)setParent:(MGPSceneNode * _Nullable)node {
+    _parent = node;
+}
+
+- (MGPScene * _Nullable)scene {
+    MGPSceneNode *node = self;
+    MGPScene * _Nullable scene = _scene;
+    while(node && !scene) {
+        node = node.parent;
+        scene = node.scene;
+    }
+    return scene;
+}
+
+- (void)setScene:(MGPScene * _Nullable)scene {
+    _scene = scene;
 }
 
 #pragma mark - Components

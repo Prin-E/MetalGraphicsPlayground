@@ -11,6 +11,10 @@
 #import "../Utility/MetalMath.h"
 #import <simd/simd.h>
 
+@interface MGPSceneNode (Private)
+- (void)setScene:(MGPScene * _Nullable)scene;
+@end
+
 @implementation MGPScene
 
 - (instancetype)init {
@@ -26,6 +30,7 @@
     _lightGlobalProps.tile_size = 16;
     _lightGlobalProps.light_projection = matrix_from_perspective_fov_aspectLH(DEG_TO_RAD(60), 1.0, 0.25, 100);
     _rootNode = [[MGPSceneNode alloc] init];
+    [_rootNode setScene:self];
 }
 
 @end
