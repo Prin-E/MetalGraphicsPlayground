@@ -130,9 +130,9 @@ You can check framework sources codes in **Common** directory!
   * Depth of Field
   * Axis-Aligned Bounding Box
 
-  ## MetalSceneGraph
+## MetalSceneGraph
 
-  <img src="./Screenshots/MetalSceneGraph.png" alt="MetalSceneGraph.png" width="633" height="534">
+<img src="./Screenshots/MetalSceneGraph.png" alt="MetalSceneGraph.png" width="633" height="534">
 
-  * Scene Graph (Scene, Node, Component)
-  * General-purpose renderer
+* Scene Graph (Scene, Node, Component)
+* General-purpose renderer
