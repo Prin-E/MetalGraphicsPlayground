@@ -433,14 +433,14 @@
 		956AB4E52289C92B009B5362 /* metallic.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = metallic.png; sourceTree = "<group>"; };
 		956AB4E72289C98D009B5362 /* ao.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = ao.png; sourceTree = "<group>"; };
 		956F9B0E232C098B00F29A77 /* Blur.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Blur.h; sourceTree = "<group>"; };
-		95784A5E23C228A100296A51 /* MGPSceneGraph.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MGPSceneGraph.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		95784A5E23C228A100296A51 /* MetalSceneGraph.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MetalSceneGraph.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		95784A6023C228A100296A51 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		95784A6123C228A100296A51 /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
 		95784A6323C228A500296A51 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		95784A6623C228A500296A51 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/MainMenu.xib; sourceTree = "<group>"; };
 		95784A6823C228A500296A51 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		95784A6923C228A500296A51 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
-		95784A6B23C228A500296A51 /* MGPSceneGraph.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = MGPSceneGraph.entitlements; sourceTree = "<group>"; };
+		95784A6B23C228A500296A51 /* MetalSceneGraph.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = MetalSceneGraph.entitlements; sourceTree = "<group>"; };
 		957C604B1E48EFA700132359 /* bun_zipper_res3.obj */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = bun_zipper_res3.obj; sourceTree = "<group>"; };
 		957E3C021E4B658300C10FB2 /* BRDF.metal */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.metal; path = BRDF.metal; sourceTree = "<group>"; };
 		957E3C041E4B671A00C10FB2 /* BRDF.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BRDF.h; sourceTree = "<group>"; };
@@ -786,7 +786,7 @@
 				95FF569C21DA453D00A52B3C /* MetalCustomCALayer */,
 				95F5E0922276255600445BB0 /* MetalDeferred */,
 				95FBFD44229465EB002BA1E0 /* MetalPostProcessing */,
-				95784A5F23C228A100296A51 /* MGPSceneGraph */,
+				95784A5F23C228A100296A51 /* MetalSceneGraph */,
 				953EAB7C1B9B5AFC0024994F /* Products */,
 				957ED5591EF980F800F15B76 /* Frameworks */,
 			);
@@ -806,7 +806,7 @@
 				95FF569B21DA453D00A52B3C /* MetalCustomCALayer.app */,
 				95F5E0912276255600445BB0 /* MetalDeferred.app */,
 				95FBFD43229465EB002BA1E0 /* MetalPostProcessing.app */,
-				95784A5E23C228A100296A51 /* MGPSceneGraph.app */,
+				95784A5E23C228A100296A51 /* MetalSceneGraph.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -940,7 +940,7 @@
 			path = MetalInstancing;
 			sourceTree = "<group>";
 		};
-		95784A5F23C228A100296A51 /* MGPSceneGraph */ = {
+		95784A5F23C228A100296A51 /* MetalSceneGraph */ = {
 			isa = PBXGroup;
 			children = (
 				95784A6023C228A100296A51 /* AppDelegate.h */,
@@ -949,9 +949,9 @@
 				95784A6523C228A500296A51 /* MainMenu.xib */,
 				95784A6823C228A500296A51 /* Info.plist */,
 				95784A6923C228A500296A51 /* main.m */,
-				95784A6B23C228A500296A51 /* MGPSceneGraph.entitlements */,
+				95784A6B23C228A500296A51 /* MetalSceneGraph.entitlements */,
 			);
-			path = MGPSceneGraph;
+			path = MetalSceneGraph;
 			sourceTree = "<group>";
 		};
 		957ED5591EF980F800F15B76 /* Frameworks */ = {
@@ -1430,9 +1430,9 @@
 			productReference = 955DA6AB1F0E74E100464E54 /* MetalInstancing.app */;
 			productType = "com.apple.product-type.application";
 		};
-		95784A5D23C228A100296A51 /* MGPSceneGraph */ = {
+		95784A5D23C228A100296A51 /* MetalSceneGraph */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 95784A6E23C228A500296A51 /* Build configuration list for PBXNativeTarget "MGPSceneGraph" */;
+			buildConfigurationList = 95784A6E23C228A500296A51 /* Build configuration list for PBXNativeTarget "MetalSceneGraph" */;
 			buildPhases = (
 				95784A5A23C228A100296A51 /* Sources */,
 				95784A5B23C228A100296A51 /* Frameworks */,
@@ -1442,9 +1442,9 @@
 			);
 			dependencies = (
 			);
-			name = MGPSceneGraph;
+			name = MetalSceneGraph;
 			productName = MGPSceneGraph;
-			productReference = 95784A5E23C228A100296A51 /* MGPSceneGraph.app */;
+			productReference = 95784A5E23C228A100296A51 /* MetalSceneGraph.app */;
 			productType = "com.apple.product-type.application";
 		};
 		958A9C191D16D0F600021744 /* MetalIZBShadow */ = {
@@ -1522,7 +1522,7 @@
 			isa = PBXProject;
 			attributes = {
 				DefaultBuildSystemTypeForWorkspace = Latest;
-				LastUpgradeCheck = 1110;
+				LastUpgradeCheck = 1130;
 				ORGANIZATIONNAME = Prin_E;
 				TargetAttributes = {
 					95209FCD1BADA87F00F8B5AF = {
@@ -1604,7 +1604,7 @@
 				95FF569A21DA453D00A52B3C /* MetalCustomCALayer */,
 				95F5E0902276255600445BB0 /* MetalDeferred */,
 				95FBFD42229465EB002BA1E0 /* MetalPostProcessing */,
-				95784A5D23C228A100296A51 /* MGPSceneGraph */,
+				95784A5D23C228A100296A51 /* MetalSceneGraph */,
 			);
 		};
 /* End PBXProject section */
@@ -2508,18 +2508,19 @@
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
-				CODE_SIGN_ENTITLEMENTS = MGPSceneGraph/MGPSceneGraph.entitlements;
+				CODE_SIGN_ENTITLEMENTS = MetalSceneGraph/MetalSceneGraph.entitlements;
+				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				DEVELOPMENT_TEAM = EQPSU577A8;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
-				INFOPLIST_FILE = MGPSceneGraph/Info.plist;
+				INFOPLIST_FILE = MetalSceneGraph/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 10.15;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.Prin-E.test.MGPSceneGraph";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.Prin-E.test.MetalSceneGraph";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug;
@@ -2534,17 +2535,18 @@
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
-				CODE_SIGN_ENTITLEMENTS = MGPSceneGraph/MGPSceneGraph.entitlements;
+				CODE_SIGN_ENTITLEMENTS = MetalSceneGraph/MetalSceneGraph.entitlements;
+				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				DEVELOPMENT_TEAM = EQPSU577A8;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
-				INFOPLIST_FILE = MGPSceneGraph/Info.plist;
+				INFOPLIST_FILE = MetalSceneGraph/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 10.15;
 				MTL_FAST_MATH = YES;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.Prin-E.test.MGPSceneGraph";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.Prin-E.test.MetalSceneGraph";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;
@@ -2821,7 +2823,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		95784A6E23C228A500296A51 /* Build configuration list for PBXNativeTarget "MGPSceneGraph" */ = {
+		95784A6E23C228A500296A51 /* Build configuration list for PBXNativeTarget "MetalSceneGraph" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				95784A6C23C228A500296A51 /* Debug */,
