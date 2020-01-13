@@ -16,6 +16,10 @@ NS_ASSUME_NONNULL_BEGIN
 #define MAX_NUM_CAMS 4
 #endif
 
+#ifndef MAX_NUM_INSTANCE
+#define MAX_NUM_INSTANCE 256
+#endif
+
 @class MGPScene;
 @class MGPFrustum;
 @class MGPMesh;

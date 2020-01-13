@@ -16,8 +16,6 @@
 
 @implementation MGPPrimitiveNode {
     MDLVertexDescriptor *_vertexDescriptor;
-    MTKMeshBufferAllocator *_allocator;
-    MGPTextureLoader *_textureLoader;
     id<MTLDevice> _device;
 }
 
@@ -61,27 +59,41 @@
 }
 
 - (void)_initPrimitiveMeshWithType:(MGPPrimitiveNodeType)primitiveType {
+    static NSMutableDictionary<NSNumber*,MGPMesh*> *primitiveMeshMat = nil;
+    static MTKMeshBufferAllocator *meshBufferAllocator = nil;
+    static MGPTextureLoader *textureLoader = nil;
+    if(primitiveMeshMat == nil)
+        primitiveMeshMat = [NSMutableDictionary dictionary];
+    if(meshBufferAllocator == nil)
+        meshBufferAllocator = [[MTKMeshBufferAllocator alloc] initWithDevice:_device];
+    if(textureLoader == nil)
+        textureLoader = [[MGPTextureLoader alloc] initWithDevice:_device];
+    
     MDLMesh *primitiveMesh = nil;
-    _allocator = [[MTKMeshBufferAllocator alloc] initWithDevice:_device];
-    _textureLoader = [[MGPTextureLoader alloc] initWithDevice:_device];
     switch(primitiveType) {
         case MGPPrimitiveNodeTypeSphere:
-            primitiveMesh = [self _spherePrimitiveMesh];
+            primitiveMesh = [self _spherePrimitiveMeshWithAllocator:meshBufferAllocator];
             break;
         case MGPPrimitiveNodeTypeCube:
-            primitiveMesh = [self _cubePrimitiveMesh];
+            primitiveMesh = [self _cubePrimitiveMeshWithAllocator:meshBufferAllocator];
             break;
         case MGPPrimitiveNodeTypePlane:
-            primitiveMesh = [self _planePrimitiveMesh];
+            primitiveMesh = [self _planePrimitiveMeshWithAllocator:meshBufferAllocator];
             break;
     }
     NSError *error = nil;
-    MGPMesh *mesh = [[MGPMesh alloc] initWithModelIOMesh:primitiveMesh
-                                 modelIOVertexDescriptor:_vertexDescriptor
-                                           textureLoader:_textureLoader
-                                                  device:_device
-                                        calculateNormals:NO
-                                                   error:&error];
+    MGPMesh *mesh = nil;
+    if([primitiveMeshMat objectForKey:@(primitiveType)])
+        mesh = primitiveMeshMat[@(primitiveType)];
+    else {
+        mesh = [[MGPMesh alloc] initWithModelIOMesh:primitiveMesh
+                            modelIOVertexDescriptor:_vertexDescriptor
+                                      textureLoader:textureLoader
+                                             device:_device
+                                   calculateNormals:NO
+                                              error:&error];
+        primitiveMeshMat[@(primitiveType)] = mesh;
+    }
     if(error) {
         NSLog(@"%@", error);
     }
@@ -91,7 +103,7 @@
 }
 
 #pragma mark - Primitive meshes
-- (MDLMesh *)_spherePrimitiveMesh {
+- (MDLMesh *)_spherePrimitiveMeshWithAllocator:(MTKMeshBufferAllocator*)meshBufferAllocator {
     static MDLMesh *mesh = nil;
     if(!mesh) {
         mesh = [MDLMesh newEllipsoidWithRadii:simd_make_float3(0.5,0.5,0.5)
@@ -100,30 +112,30 @@
                                  geometryType:MDLGeometryTypeTriangles
                                 inwardNormals:NO
                                    hemisphere:NO
-                                    allocator:_allocator];
+                                    allocator:meshBufferAllocator];
         }
     return mesh;
 }
 
-- (MDLMesh *)_cubePrimitiveMesh {
+- (MDLMesh *)_cubePrimitiveMeshWithAllocator:(MTKMeshBufferAllocator*)meshBufferAllocator {
     static MDLMesh *mesh = nil;
     if(!mesh) {
         mesh = [MDLMesh newBoxWithDimensions:simd_make_float3(1.0,1.0,1.0)
                                     segments:simd_make_uint3(1,1,1)
                                 geometryType:MDLGeometryTypeTriangles
                                inwardNormals:NO
-                                   allocator:_allocator];
+                                   allocator:meshBufferAllocator];
     }
     return mesh;
 }
 
-- (MDLMesh *)_planePrimitiveMesh {
+- (MDLMesh *)_planePrimitiveMeshWithAllocator:(MTKMeshBufferAllocator*)meshBufferAllocator {
     static MDLMesh *mesh = nil;
     if(!mesh) {
         mesh = [MDLMesh newPlaneWithDimensions:simd_make_float2(1.0,1.0)
                                       segments:simd_make_uint2(1,1)
                                   geometryType:MDLGeometryTypeTriangles
-                                     allocator:_allocator];
+                                     allocator:meshBufferAllocator];
     }
     return mesh;
 }

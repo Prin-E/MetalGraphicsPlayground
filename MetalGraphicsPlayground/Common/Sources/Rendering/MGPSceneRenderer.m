@@ -259,7 +259,7 @@
     MGPDrawCall *prevDrawCall = nil;
     NSMutableArray<MGPDrawCall*> *drawCallListToBatch = [NSMutableArray new];
     for(MGPDrawCall *drawCall in drawCalls) {
-        if(prevMesh != drawCall.mesh) {
+        if(prevMesh != drawCall.mesh || prevDrawCall.instanceCount >= MAX_NUM_INSTANCE) {
             if(prevDrawCall.instanceCount) {
                 NSUInteger instancePropsBufferOffset = 0;
                 prevDrawCall.instancePropsBuffer = [self makeInstancePropsBufferWithInstanceCount:prevDrawCall.instanceCount
