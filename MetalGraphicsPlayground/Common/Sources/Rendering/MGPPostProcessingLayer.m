@@ -229,8 +229,8 @@ NSString * const MGPPostProcessingLayerErrorDomain = @"MGPPostProcessingLayerErr
         _ssrPrevOutputTextureLifetime = 3;  // becuase our implementation uses triple buffering
         
         MTLTextureDescriptor *textureDesc = [MTLTextureDescriptor texture2DDescriptorWithPixelFormat:self.postProcessing.gBuffer.output.pixelFormat
-                                                                                               width:newSize.width
-                                                                                              height:newSize.height
+                                                                                               width:width
+                                                                                              height:height
                                                                                            mipmapped:NO];
         textureDesc.storageMode = MTLStorageModePrivate;
         textureDesc.usage = MTLTextureUsageShaderWrite;

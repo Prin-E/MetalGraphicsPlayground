@@ -234,9 +234,12 @@ const inline __attribute__((__always_inline__)) float lerp(float a, float b, flo
 - (void)setFrame:(NSRect)frame {
     [super setFrame:frame];
     NSRect pixelFrame = [self convertRectToBacking:frame];
-    _metalLayer.drawableSize = pixelFrame.size;
+    CGSize pixelSize = pixelFrame.size;
+    pixelSize.width = MAX(1, pixelSize.width);
+    pixelSize.height = MAX(1, pixelSize.height);
+    _metalLayer.drawableSize = pixelSize;
     _currentDrawable = _metalLayer.nextDrawable;
-    [self.renderer resize:pixelFrame.size];
+    [self.renderer resize:pixelSize];
     //NSLog(@"New frame pixel size : %@", NSStringFromSize(pixelFrame.size));
 }
 

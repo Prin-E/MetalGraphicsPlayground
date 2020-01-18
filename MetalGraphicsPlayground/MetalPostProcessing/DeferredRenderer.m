@@ -623,10 +623,11 @@ const NSUInteger kLightCountPerDrawCall = 4;
         _animationTime += deltaTime;
 }
 
+static CFTimeInterval CPUStartTime = 0, CPUEndTime = 0;
+
 - (void)render {
     [self wait];
     
-    static CFTimeInterval CPUStartTime = 0, CPUEndTime = 0;
     CPUStartTime = NSDate.timeIntervalSinceReferenceDate;
     
     if(_IBLOn) {
@@ -639,8 +640,6 @@ const NSUInteger kLightCountPerDrawCall = 4;
     }
     
     [self performRenderingPassWithCompletionHandler:^{
-        CPUEndTime = NSDate.timeIntervalSinceReferenceDate;
-        self->_CPUTime = (CPUEndTime - CPUStartTime);
         [self signal];
     }];
     
@@ -758,6 +757,9 @@ const NSUInteger kLightCountPerDrawCall = 4;
     }
     
     [commandBuffer commit];
+
+    CPUEndTime = NSDate.timeIntervalSinceReferenceDate;
+    self->_CPUTime = (CPUEndTime - CPUStartTime);
 }
 
 - (void)renderSkybox:(id<MTLRenderCommandEncoder>)encoder {
