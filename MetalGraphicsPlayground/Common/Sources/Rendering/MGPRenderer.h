@@ -25,6 +25,15 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property (weak) MGPView *view;
 
+// Profiling
+@property (readonly) float CPUTime;
+@property (readonly) float GPUTime;
+
+// Calculating GPU Time (MGPRenderer.GPUTime will be calculated)
+- (void)beginGPUTime:(id<MTLCommandBuffer>)buffer;
+- (void)endGPUTime:(id<MTLCommandBuffer>)buffer;
+
+// Updating
 - (void)update: (float)deltaTime;
 - (void)resize: (CGSize)newSize;
 

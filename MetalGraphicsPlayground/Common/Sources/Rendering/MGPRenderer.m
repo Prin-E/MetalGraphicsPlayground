@@ -10,6 +10,8 @@
 
 @implementation MGPRenderer {
     dispatch_semaphore_t _semaphore;
+    NSTimeInterval _prevCPUTimeInterval;
+    NSTimeInterval _prevGPUTimeInterval;    // for 10.14 or earlier
 }
 
 - (instancetype)init {
@@ -22,6 +24,7 @@
 
 - (void)initMetal {
     // Selcct low power device (for debugging)
+    /*
     NSArray *devices = MTLCopyAllDevices();
     for(id<MTLDevice> device in devices) {
         if(device.isLowPower) {
@@ -29,7 +32,7 @@
             break;
         }
     }
-    
+    */
     if(_device == nil) {
         _device = MTLCreateSystemDefaultDevice();
     }
@@ -50,9 +53,15 @@
 
 #pragma mark - Rendering
 - (void)beginFrame {
+    _prevCPUTimeInterval = [NSDate timeIntervalSinceReferenceDate];
 }
 
 - (void)endFrame {
+    // calculate CPU time
+    NSTimeInterval CPUTimeInterval = [NSDate timeIntervalSinceReferenceDate];
+    _CPUTime = CPUTimeInterval - _prevCPUTimeInterval;
+    
+    // circulate buffer index
     _currentBufferIndex = (_currentBufferIndex + 1) % kMaxBuffersInFlight;
 }
 
@@ -60,6 +69,8 @@
     [self wait];
     
     id<MTLCommandBuffer> buffer = [_queue commandBuffer];
+    
+    [self beginGPUTime:buffer];
     
     // draws solid background
     MTLRenderPassDescriptor *renderPass = [MTLRenderPassDescriptor new];
@@ -72,8 +83,10 @@
     [enc endEncoding];
     [buffer presentDrawable: _view.currentDrawable];
     [buffer addCompletedHandler:^(id<MTLCommandBuffer> buffer) {
+        [self endGPUTime:buffer];
         [self signal];
     }];
+    
     [buffer commit];
 }
 
@@ -90,6 +103,31 @@
 
 - (void)signal {
     dispatch_semaphore_signal(_semaphore);
+}
+
+#pragma mark - GPU Time
+- (void)beginGPUTime:(id<MTLCommandBuffer>)buffer {
+    NSOperatingSystemVersion version = [[NSProcessInfo processInfo] operatingSystemVersion];
+    if(version.majorVersion <= 10 && version.minorVersion < 15) {
+        [buffer addScheduledHandler:^(id<MTLCommandBuffer> buffer) {
+            self->_prevGPUTimeInterval = [NSDate timeIntervalSinceReferenceDate];
+        }];
+    }
+}
+
+- (void)endGPUTime:(id<MTLCommandBuffer>)buffer {
+    // calculate GPU time and signal
+    NSOperatingSystemVersion version = [[NSProcessInfo processInfo] operatingSystemVersion];
+    if(version.majorVersion > 10 || version.minorVersion >= 15) {
+        if(@available(macOS 10.15, *)) {
+            self->_GPUTime = buffer.GPUEndTime - buffer.GPUStartTime;
+        }
+    }
+    else {
+        NSTimeInterval GPUTimeInterval = [NSDate timeIntervalSinceReferenceDate];
+        self->_GPUTime = GPUTimeInterval - self->_prevGPUTimeInterval;
+        self->_prevGPUTimeInterval = GPUTimeInterval;
+    }
 }
 
 @end

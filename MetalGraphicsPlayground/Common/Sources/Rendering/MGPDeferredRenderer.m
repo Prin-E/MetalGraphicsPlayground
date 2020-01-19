@@ -153,6 +153,7 @@
     // begin
     id<MTLCommandBuffer> commandBuffer = [self.queue commandBuffer];
     commandBuffer.label = [NSString stringWithFormat: @"Render"];
+    [self beginGPUTime:commandBuffer];
     
     // shadow
     [self renderShadows: commandBuffer];
@@ -166,6 +167,7 @@
     // present
     [commandBuffer presentDrawable: self.view.currentDrawable];
     [commandBuffer addCompletedHandler:^(id<MTLCommandBuffer> buffer) {
+        [self endGPUTime:buffer];
         [self signal];
     }];
     
