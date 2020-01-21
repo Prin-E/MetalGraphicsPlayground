@@ -186,22 +186,22 @@
     
     NSMutableArray<id<MTLBuffer>> *instancePropsBuffers = _instancePropsBuffersList[_currentBufferIndex];
     BOOL newBuffer = NO;
-    if(instancePropsBuffers.count <= _instancePropsBufferIndex) {
-        newBuffer = YES;
-    }
-    else {
+    for(; _instancePropsBufferIndex < instancePropsBuffers.count; _instancePropsBufferIndex++) {
         buffer = instancePropsBuffers[_instancePropsBufferIndex];
         if(instancePropsSize + _instancePropsBufferOffset > buffer.length) {
             _instancePropsBufferIndex += 1;
             _instancePropsBufferOffset = 0;
             buffer = nil;
-            newBuffer = YES;
         }
         else {
             if(offset)
                 *offset = _instancePropsBufferOffset;
             _instancePropsBufferOffset += instancePropsSize;
+            break;
         }
+    }
+    if(buffer == nil) {
+        newBuffer = YES;
     }
     
     if(newBuffer) {
@@ -223,78 +223,53 @@
 }
 
 - (MGPDrawCallList *)drawCallListWithFrustum:(MGPFrustum *)frustum {
-    NSMutableArray<MGPDrawCall*> *drawCalls = [NSMutableArray new];
     NSMutableArray<MGPDrawCall*> *combinedDrawCalls = [NSMutableArray new];
     
-    // Collect draw calls from mesh components...
+    NSMutableDictionary<NSNumber*,MGPMesh*> *meshDict = [NSMutableDictionary dictionary];
+    NSMutableDictionary<NSNumber*,NSMutableArray<MGPMeshComponent*>*> *compListDict = [NSMutableDictionary dictionary];
+    
+    // collect mesh component list by mesh
     for(MGPMeshComponent *meshComponent in _meshComponents) {
         MGPMesh *mesh = meshComponent.mesh;
         if(mesh == nil)
             continue;
         
-        // Check all submeshes' bounding volumes...
-        for(MGPSubmesh *submesh in mesh.submeshes) {
-            id<MGPBoundingVolume> volume = submesh.volume;
-            if([volume isCulledInFrustum: frustum])
-                continue;
-        }
+        // Check mesh bounding volumes...
+        id<MGPBoundingVolume> volume = mesh.volume;
+        if([volume isCulledInFrustum:frustum])
+            continue;
         
-        MGPDrawCall *drawCall = [MGPDrawCall new];
-        drawCall.mesh = mesh;
-        drawCall.instanceCount = 1;
-        drawCall.instanceProps = meshComponent.instanceProps;
-        [drawCalls addObject: drawCall];
+        NSNumber *key = @((size_t)mesh);
+        if(![meshDict objectForKey:key])
+            meshDict[key] = mesh;
+        NSMutableArray<MGPMeshComponent*> *list = [compListDict objectForKey:key];
+        if(!list) {
+            list = [NSMutableArray array];
+            compListDict[key] = list;
+        }
+        [list addObject:meshComponent];
     }
-    
-    // Sort draw calls by mesh
-    [drawCalls sortUsingComparator:
-     ^NSComparisonResult(MGPDrawCall * _Nullable obj1, MGPDrawCall * _Nullable obj2) {
-        size_t ptr1 = (size_t)obj1.mesh;
-        size_t ptr2 = (size_t)obj2.mesh;
-        return (ptr1 == ptr2) ? NSOrderedSame : ((ptr1 < ptr2) ? NSOrderedAscending : NSOrderedDescending);
-    }];
     
     // Combine draw calls
-    MGPMesh *prevMesh = nil;
-    MGPDrawCall *prevDrawCall = nil;
-    NSMutableArray<MGPDrawCall*> *drawCallListToBatch = [NSMutableArray new];
-    for(MGPDrawCall *drawCall in drawCalls) {
-        if(prevMesh != drawCall.mesh || prevDrawCall.instanceCount >= MAX_NUM_INSTANCE) {
-            if(prevDrawCall.instanceCount) {
-                NSUInteger instancePropsBufferOffset = 0;
-                prevDrawCall.instancePropsBuffer = [self makeInstancePropsBufferWithInstanceCount:prevDrawCall.instanceCount
-                                                                                           offset:&instancePropsBufferOffset];
-                prevDrawCall.instancePropsBufferOffset = instancePropsBufferOffset;
-                instance_props_t *contents = (instance_props_t *)(prevDrawCall.instancePropsBuffer.contents + instancePropsBufferOffset);
-                for(NSUInteger i = 0; i < drawCallListToBatch.count; i++) {
-                    contents[i] = drawCallListToBatch[i].instanceProps;
-                }
-                [prevDrawCall.instancePropsBuffer didModifyRange:NSMakeRange(prevDrawCall.instancePropsBufferOffset, sizeof(instance_props_t) * drawCallListToBatch.count)];
-                [drawCallListToBatch removeAllObjects];
-            }
-            
-            prevMesh = drawCall.mesh;
-            prevDrawCall = [MGPDrawCall new];
-            prevDrawCall.mesh = prevMesh;
-            prevDrawCall.instanceCount = 1;
-            [combinedDrawCalls addObject: prevDrawCall];
-        }
-        else {
-            prevDrawCall.instanceCount += 1;
-        }
-        [drawCallListToBatch addObject: drawCall];
-    }
-    if(prevDrawCall.instanceCount && prevDrawCall.instancePropsBuffer == nil) {
-        NSUInteger instancePropsBufferOffset = 0;
-        prevDrawCall.instancePropsBuffer = [self makeInstancePropsBufferWithInstanceCount:prevDrawCall.instanceCount
+    for(NSNumber *key in compListDict) {
+        MGPMesh *mesh = meshDict[key];
+        NSMutableArray<MGPMeshComponent*> *list = compListDict[key];
+        for(NSUInteger i = 0; i < list.count; i += MAX_NUM_INSTANCE) {
+            MGPDrawCall *drawCall = [MGPDrawCall new];
+            drawCall.mesh = mesh;
+            drawCall.instanceCount = MIN(MAX_NUM_INSTANCE, list.count - i);
+            NSUInteger instancePropsBufferOffset = 0;
+            drawCall.instancePropsBuffer = [self makeInstancePropsBufferWithInstanceCount:drawCall.instanceCount
                                                                                    offset:&instancePropsBufferOffset];
-        prevDrawCall.instancePropsBufferOffset = instancePropsBufferOffset;
-        if(prevDrawCall.instancePropsBuffer) {
-            instance_props_t *contents = (instance_props_t *)(prevDrawCall.instancePropsBuffer.contents + prevDrawCall.instancePropsBufferOffset);
-            for(NSUInteger i = 0; i < drawCallListToBatch.count; i++) {
-                contents[i] = drawCallListToBatch[i].instanceProps;
+            drawCall.instancePropsBufferOffset = instancePropsBufferOffset;
+
+            // fill instance props into buffer
+            instance_props_t *contents = (instance_props_t *)(drawCall.instancePropsBuffer.contents + instancePropsBufferOffset);
+            for(NSUInteger j = 0, k = i; j < drawCall.instanceCount; j++) {
+                contents[j] = list[k++].instanceProps;
             }
-            [prevDrawCall.instancePropsBuffer didModifyRange:NSMakeRange(prevDrawCall.instancePropsBufferOffset, sizeof(instance_props_t) * drawCallListToBatch.count)];
+            [drawCall.instancePropsBuffer didModifyRange:NSMakeRange(drawCall.instancePropsBufferOffset, sizeof(instance_props_t) * drawCall.instanceCount)];
+            [combinedDrawCalls addObject:drawCall];
         }
     }
     

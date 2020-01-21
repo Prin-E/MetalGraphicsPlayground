@@ -43,7 +43,7 @@
     
     // TODO: IBL
     NSMutableArray *IBLs = [NSMutableArray array];
-    NSArray<NSString*> *skyboxNames = @[@"Tropical_Beach_3k", @"Milkyway_small", @"WinterForest_Ref"];
+    NSArray<NSString*> *skyboxNames = @[/*@"Tropical_Beach_3k", @"Milkyway_small", @"WinterForest_Ref"*/];
     for(NSInteger i = 0; i < skyboxNames.count; i++) {
         NSString *skyboxImagePath = [[NSBundle mainBundle] pathForResource:skyboxNames[i]
                                                                     ofType:@"hdr"];
@@ -135,7 +135,7 @@
     
     srand((unsigned int)time(NULL));
     for(NSUInteger i = 0; i < 256*10; i++) {
-        MGPPrimitiveNode *meshNode = [[MGPPrimitiveNode alloc] initWithPrimitiveType:MGPPrimitiveNodeTypeCube
+        MGPPrimitiveNode *meshNode = [[MGPPrimitiveNode alloc] initWithPrimitiveType:MGPPrimitiveNodeTypeSphere
                                                                      vertexDescriptor:_renderer.gBuffer.baseVertexDescriptor
                                                                                device:_renderer.device];
         mat.roughness = 1.0;
@@ -145,7 +145,7 @@
         float r = rand()/(float)RAND_MAX;
         float r2 = rand()/(float)RAND_MAX;
         float r3 = rand()/(float)RAND_MAX;
-        meshNode.position = simd_make_float3(cos(r*6.24), sin(r*6.24), 0) * (3.0+r2*3.0);
+        meshNode.position = simd_make_float3(cos(r*M_PI*2), sin(r*M_PI*2), 0) * (3.0+r2*3.0);
         meshNode.scale = simd_make_float3(1,1,1)*(r3+0.5)*0.1;
         [centerNode addChild:meshNode];
     }
@@ -196,6 +196,9 @@
     
     [cameraNode lookAt:meshNode.position];
     [lightNode lookAt:meshNode.position];
+
+    if(IBLs.count > 0)
+        self.scene.IBL = IBLs[0];
     
     __block NSTimeInterval prevTime = NSDate.timeIntervalSinceReferenceDate;
     __block NSInteger IBLIndex = 0;
@@ -224,11 +227,10 @@
         IBLTime += deltaTime;
         if(IBLTime > 3.0f) {
             IBLTime -= 3.0f;
-            IBLIndex = (IBLIndex + 1) % (IBLs.count + 1);
-            if(IBLIndex == 0)
-                self.scene.IBL = nil;
-            else
-                self.scene.IBL = IBLs[IBLIndex-1];
+            if(IBLs.count > 0) {
+                IBLIndex = (IBLIndex + 1) % IBLs.count;
+                self.scene.IBL = IBLs[IBLIndex];
+            }
         }
         
         centerNode.rotation = simd_make_float3(0, 0, rot);
