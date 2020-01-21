@@ -150,6 +150,12 @@ NSString * const MGPPostProcessingLayerErrorDomain = @"MGPPostProcessingLayerErr
     id<MTLComputeCommandEncoder> encoder = [buffer computeCommandEncoder];
     [encoder setLabel: @"SSAO"];
     
+    // num threads, threadgroups
+    MTLSize threadsPerThreadgroup = MTLSizeMake(16, 16, 1);
+    MTLSize threadgroups = MTLSizeMake((width+threadsPerThreadgroup.width-1)/threadsPerThreadgroup.width,
+                                       (height+threadsPerThreadgroup.height-1)/threadsPerThreadgroup.height,
+                                       1);
+    
     // step 1 : ssao
     [encoder setComputePipelineState: _ssaoPipeline];
     [encoder setTexture: gBuffer.normal atIndex: 0];
@@ -165,22 +171,22 @@ NSString * const MGPPostProcessingLayerErrorDomain = @"MGPPostProcessingLayerErr
     [encoder setBuffer: cameraBuffer
                 offset: currentBufferIndex * sizeof(camera_props_t)
                atIndex: 2];
-    [encoder dispatchThreadgroups: MTLSizeMake((width+15)/16, (height+15)/16, 1)
-            threadsPerThreadgroup: MTLSizeMake(16, 16, 1)];
+    [encoder dispatchThreadgroups:threadgroups
+            threadsPerThreadgroup:threadsPerThreadgroup];
     
     // step 2 : blur horizontal
     [encoder setComputePipelineState: _blurHPipeline];
     [encoder setTexture: _ssaoTexture atIndex: 0];
     [encoder setTexture: _temporarySSAOTexture atIndex: 1];
-    [encoder dispatchThreadgroups: MTLSizeMake((width+15)/16, (height+15)/16, 1)
-            threadsPerThreadgroup: MTLSizeMake(16, 16, 1)];
+    [encoder dispatchThreadgroups:threadgroups
+            threadsPerThreadgroup:threadsPerThreadgroup];
     
     // step 3 : blur vertical
     [encoder setComputePipelineState: _blurVPipeline];
     [encoder setTexture: _temporarySSAOTexture atIndex: 0];
     [encoder setTexture: _ssaoTexture atIndex: 1];
-    [encoder dispatchThreadgroups: MTLSizeMake((width+15)/16, (height+15)/16, 1)
-            threadsPerThreadgroup: MTLSizeMake(16, 16, 1)];
+    [encoder dispatchThreadgroups:threadgroups
+            threadsPerThreadgroup:threadsPerThreadgroup];
     
     [encoder endEncoding];
 }

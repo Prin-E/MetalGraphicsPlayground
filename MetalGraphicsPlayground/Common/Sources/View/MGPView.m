@@ -105,7 +105,6 @@ const inline __attribute__((__always_inline__)) float lerp(float a, float b, flo
         _renderer.view = self;
         _metalLayer.device = _renderer.device;
         if(_metalLayer.device != nil) {
-            _currentDrawable = _metalLayer.nextDrawable;
             NSRect pixelFrame = [self convertRectToBacking: self.frame];
             _metalLayer.drawableSize = pixelFrame.size;
             _currentDrawable = _metalLayer.nextDrawable;
@@ -238,7 +237,8 @@ const inline __attribute__((__always_inline__)) float lerp(float a, float b, flo
     pixelSize.width = MAX(1, pixelSize.width);
     pixelSize.height = MAX(1, pixelSize.height);
     _metalLayer.drawableSize = pixelSize;
-    _currentDrawable = _metalLayer.nextDrawable;
+    if(_metalLayer.device)
+        _currentDrawable = _metalLayer.nextDrawable;
     [self.renderer resize:pixelSize];
     //NSLog(@"New frame pixel size : %@", NSStringFromSize(pixelFrame.size));
 }
