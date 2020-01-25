@@ -53,6 +53,8 @@
 
 #pragma mark - Rendering
 - (void)beginFrame {
+    [self wait];
+    
     _prevCPUTimeInterval = [NSDate timeIntervalSinceReferenceDate];
 }
 
@@ -61,13 +63,12 @@
     NSTimeInterval CPUTimeInterval = [NSDate timeIntervalSinceReferenceDate];
     _CPUTime = CPUTimeInterval - _prevCPUTimeInterval;
     
+    //NSLog(@"CPU : %.5fms", _CPUTime*1000);
     // circulate buffer index
     _currentBufferIndex = (_currentBufferIndex + 1) % kMaxBuffersInFlight;
 }
 
 - (void)render {
-    [self wait];
-    
     id<MTLCommandBuffer> buffer = [_queue commandBuffer];
     
     [self beginGPUTime:buffer];

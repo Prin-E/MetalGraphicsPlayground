@@ -623,13 +623,7 @@ const NSUInteger kLightCountPerDrawCall = 4;
         _animationTime += deltaTime;
 }
 
-static CFTimeInterval CPUStartTime = 0, CPUEndTime = 0;
-
 - (void)render {
-    [self wait];
-    
-    CPUStartTime = NSDate.timeIntervalSinceReferenceDate;
-    
     if(_IBLOn) {
         if(_IBLs[_currentIBLIndex].isAnyRenderingRequired) {
             [self performPrefilterPass];
@@ -672,11 +666,13 @@ static CFTimeInterval CPUStartTime = 0, CPUEndTime = 0;
                                  bufferIndex:_currentBufferIndex];
     
     // skybox pass
-    _renderPassSkybox.colorAttachments[0].texture = self.view.currentDrawable.texture;
-    _renderPassSkybox.depthAttachment.texture = _skyboxDepthTexture;
-    _renderPassSkybox.depthAttachment.storeAction = MTLStoreActionDontCare;
-    id<MTLRenderCommandEncoder> skyboxPassEncoder = [commandBuffer renderCommandEncoderWithDescriptor: _renderPassSkybox];
-    [self renderSkybox:skyboxPassEncoder];
+    if(_IBLOn) {
+        _renderPassSkybox.colorAttachments[0].texture = self.view.currentDrawable.texture;
+        _renderPassSkybox.depthAttachment.texture = _skyboxDepthTexture;
+        _renderPassSkybox.depthAttachment.storeAction = MTLStoreActionDontCare;
+        id<MTLRenderCommandEncoder> skyboxPassEncoder = [commandBuffer renderCommandEncoderWithDescriptor: _renderPassSkybox];
+        [self renderSkybox:skyboxPassEncoder];
+    }
     
     // Post-process before prepass
     [_postProcess render: commandBuffer
@@ -732,6 +728,10 @@ static CFTimeInterval CPUStartTime = 0, CPUEndTime = 0;
     
     // present to framebuffer
     _renderPassPresent.colorAttachments[0].texture = self.view.currentDrawable.texture;
+    if(_IBLOn)
+        _renderPassPresent.colorAttachments[0].loadAction = MTLLoadActionLoad;
+    else
+        _renderPassPresent.colorAttachments[0].loadAction = MTLLoadActionClear;
     id<MTLRenderCommandEncoder> presentCommandEncoder = [commandBuffer renderCommandEncoderWithDescriptor: _renderPassPresent];
     [self renderFramebuffer:presentCommandEncoder];
     
@@ -756,8 +756,6 @@ static CFTimeInterval CPUStartTime = 0, CPUEndTime = 0;
     }
     
     [commandBuffer commit];
-
-    CPUEndTime = NSDate.timeIntervalSinceReferenceDate;
 }
 
 - (void)renderSkybox:(id<MTLRenderCommandEncoder>)encoder {
@@ -765,20 +763,19 @@ static CFTimeInterval CPUStartTime = 0, CPUEndTime = 0;
     [encoder setRenderPipelineState: _renderPipelineSkybox];
     [encoder setDepthStencilState: _depthStencil];
     [encoder setCullMode: MTLCullModeBack];
+
+    [encoder setVertexBuffer: _commonVertexBuffer
+                      offset: 256
+                     atIndex: 0];
+    [encoder setVertexBuffer: _cameraPropsBuffer
+                      offset: _currentBufferIndex * sizeof(camera_props_t)
+                     atIndex: 1];
+    [encoder setFragmentTexture: _IBLs[_renderingIBLIndex].environmentMap
+                        atIndex: 0];
+    [encoder drawPrimitives: MTLPrimitiveTypeTriangle
+                vertexStart: 0
+                vertexCount: 36];
     
-    if(_IBLOn) {
-        [encoder setVertexBuffer: _commonVertexBuffer
-                          offset: 256
-                         atIndex: 0];
-        [encoder setVertexBuffer: _cameraPropsBuffer
-                          offset: _currentBufferIndex * sizeof(camera_props_t)
-                         atIndex: 1];
-        [encoder setFragmentTexture: _IBLs[_renderingIBLIndex].environmentMap
-                            atIndex: 0];
-        [encoder drawPrimitives: MTLPrimitiveTypeTriangle
-                    vertexStart: 0
-                    vertexCount: 36];
-    }
     [encoder endEncoding];
 }
 
@@ -1044,8 +1041,6 @@ static CFTimeInterval CPUStartTime = 0, CPUEndTime = 0;
                         atIndex: attachment_normal];
     [encoder setFragmentTexture: _gBuffer.shading
                         atIndex: attachment_shading];
-    [encoder setFragmentTexture: _gBuffer.depth
-                        atIndex: attachment_depth];
     [encoder setFragmentTexture: _gBuffer.tangent
                         atIndex: attachment_tangent];
     [encoder setFragmentTexture: _gBuffer.depth

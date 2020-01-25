@@ -13,7 +13,7 @@
 #include "LightingCommon.h"
 #include "BRDF.h"
 
-typedef array<texture2d<float>,MAX_NUM_DIRECTIONAL_LIGHTS> shadow_array;
+typedef array<depth2d<float>,MAX_NUM_DIRECTIONAL_LIGHTS> shadow_array;
 
 void fill_shading_params_for_light(thread shading_t &shading_params,
                                    constant light_t &light,

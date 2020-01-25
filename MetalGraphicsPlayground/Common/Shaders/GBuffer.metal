@@ -159,12 +159,12 @@ fragment half4 gbuffer_shade_frag(ScreenFragment in [[stage_in]],
                                   texture2d<half> normal [[texture(attachment_normal)]],
                                   texture2d<half> shading [[texture(attachment_shading)]],
                                   texture2d<half> tangent [[texture(attachment_tangent)]],
-                                  texture2d<float> depth [[texture(attachment_depth)]],
+                                  depth2d<float> depth [[texture(attachment_depth)]],
                                   texturecube<half> irradiance [[texture(attachment_irradiance), function_constant(uses_ibl_irradiance_map)]],
                                   texturecube<half> prefilteredSpecular [[texture(attachment_prefiltered_specular), function_constant(uses_ibl_specular_map)]],
                                   texture2d<half> brdfLookup [[texture(attachment_brdf_lookup), function_constant(uses_ibl_specular_map)]],
                                   texture2d<half> ssao [[texture(attachment_ssao), function_constant(uses_ssao_map)]],
-                                  array<texture2d<float>,MAX_NUM_DIRECTIONAL_LIGHTS> shadow_maps [[texture(attachment_shadow_map)]]) {
+                                  shadow_array shadow_maps [[texture(attachment_shadow_map)]]) {    
     float4 out_color = float4(0.0, 0.0, 0.0, 1.0);
     
     float4 n_c = float4(normal.sample(linear, in.uv));
@@ -173,7 +173,7 @@ fragment half4 gbuffer_shade_frag(ScreenFragment in [[stage_in]],
     float3 n = normalize((n_c.xyz - 0.5) * 2.0);
     float4 t_c = float4(tangent.sample(linear, in.uv));
     float3 t = normalize((t_c.xyz - 0.5) * 2.0);
-    float3 view_pos = view_pos_from_depth(camera_props.projectionInverse, in.uv, depth.sample(nearest_clamp_to_edge, in.uv).r);
+    float3 view_pos = view_pos_from_depth(camera_props.projectionInverse, in.uv, depth.sample(nearest_clamp_to_edge, in.uv));
     float3 v = normalize(-view_pos);
     float n_v = max(0.001, saturate(dot(n, v)));
     float3 albedo_color = float3(albedo.sample(linear, in.uv).xyz);
@@ -322,7 +322,7 @@ fragment half4 gbuffer_shade_old_frag(ScreenFragment in [[stage_in]],
                                   texture2d<half> albedo [[texture(attachment_albedo)]],
                                   texture2d<half> normal [[texture(attachment_normal)]],
                                   texture2d<half> shading [[texture(attachment_shading)]],
-                                  texture2d<float> depth [[texture(attachment_depth)]],
+                                  depth2d<float> depth [[texture(attachment_depth)]],
                                   texture2d<half> light [[texture(attachment_light)]],
                                   texturecube<half> irradiance [[texture(attachment_irradiance), function_constant(uses_ibl_irradiance_map)]],
                                   texturecube<half> prefilteredSpecular [[texture(attachment_prefiltered_specular), function_constant(uses_ibl_specular_map)]],
@@ -334,7 +334,7 @@ fragment half4 gbuffer_shade_old_frag(ScreenFragment in [[stage_in]],
     if(n_c.w == 0.0)
         return half4(0, 0, 0, 0);
     float3 n = normalize((n_c.xyz - 0.5) * 2.0);
-    float3 view_pos = view_pos_from_depth(cameraProps.projectionInverse, in.uv, depth.sample(nearest_clamp_to_edge, in.uv).r);
+    float3 view_pos = view_pos_from_depth(cameraProps.projectionInverse, in.uv, depth.sample(nearest_clamp_to_edge, in.uv));
     float3 v = normalize(-view_pos);
     float n_v = max(0.001, saturate(dot(n, v)));
     float3 albedo_color = float3(albedo.sample(linear, in.uv).xyz);

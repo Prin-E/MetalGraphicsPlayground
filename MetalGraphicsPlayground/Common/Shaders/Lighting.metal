@@ -65,7 +65,8 @@ float3 calculate_directional_shadow_lit_color(float3 v,
     while(bitmask) {
         if(bitmask & 0x1) {
             constant light_t &light = lights[light_index];
-            float lit = get_shadow_lit(shadow_maps[light_index], light, light_global, world_pos);
+            depth2d<float> shadow_map = shadow_maps[light_index];
+            float lit = get_shadow_lit(shadow_map, light, light_global, world_pos);
 
             if(lit > 0) {
                 // query light direction from view matrix

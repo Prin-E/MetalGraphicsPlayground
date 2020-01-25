@@ -106,6 +106,7 @@ NSString * const MGPShadowBufferErrorDoamin = @"MGPShadowBufferError";
     descriptor.storageMode = MTLStorageModePrivate;
     
     _texture = [device newTextureWithDescriptor: descriptor];
+    _texture.label = [NSString stringWithFormat:@"Shadow (0x%llX)", (uint64_t)_light];
 }
 
 - (void)_makeShadowPass {

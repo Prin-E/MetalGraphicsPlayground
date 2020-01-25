@@ -622,6 +622,7 @@ const float kCameraSpeed = 100;
     // begin
     id<MTLCommandBuffer> commandBuffer = [self.queue commandBuffer];
     commandBuffer.label = @"Render";
+    [self beginGPUTime:commandBuffer];
     
     // skybox pass
     _renderPassSkybox.colorAttachments[0].texture = self.view.currentDrawable.texture;
@@ -662,6 +663,7 @@ const float kCameraSpeed = 100;
     // present
     [commandBuffer presentDrawable: self.view.currentDrawable];
     [commandBuffer addCompletedHandler:^(id<MTLCommandBuffer> buffer) {
+        [self endGPUTime:buffer];
         if(handler != nil)
             handler();
     }];

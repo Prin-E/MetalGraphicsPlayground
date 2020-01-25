@@ -15,7 +15,7 @@ using namespace metal;
 
 kernel void ssao(texture2d<float> normal [[texture(0)]],
                  texture2d<float> tangent [[texture(1)]],
-                 texture2d<float> depth [[texture(2)]],
+                 depth2d<float> depth [[texture(2)]],
                  texture2d<float, access::write> output [[texture(3)]],
                  device float3 *random_samples [[buffer(0)]],
                  constant ssao_props_t &ssao_props [[buffer(1)]],
@@ -36,7 +36,7 @@ kernel void ssao(texture2d<float> normal [[texture(0)]],
     float3 n = normalize(normal.read(coords).xyz * 2.0 - 1.0);
     float3 t = normalize(tangent.read(coords).xyz * 2.0 - 1.0);
     float3 b = cross(t, n);
-    float depth_value = depth.read(coords).r;
+    float depth_value = depth.read(coords);
     
     float3 view_pos = view_pos_from_depth(camera_props.projectionInverse, coords, size, depth_value);
     float occlusion = 0;
@@ -53,7 +53,7 @@ kernel void ssao(texture2d<float> normal [[texture(0)]],
         uint2 screen_offset_pos = uint2(proj_offset_pos.x * size.x, proj_offset_pos.y * size.y);
         
         // screen space -> view space
-        float depth_sample_value = depth.read(screen_offset_pos).r;
+        float depth_sample_value = depth.read(screen_offset_pos);
         float3 view_sample_pos = view_pos_from_depth(camera_props.projectionInverse, screen_offset_pos, size, depth_sample_value);
         
         // check occlusion

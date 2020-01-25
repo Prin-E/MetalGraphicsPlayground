@@ -9,7 +9,7 @@
 #ifndef Shadow_h
 #define Shadow_h
 
-float get_shadow_lit(texture2d<float> shadow_map,
+float get_shadow_lit(depth2d<float> shadow_map,
                      constant light_t &light,
                      constant light_global_t &light_global,
                      float4 world_pos);

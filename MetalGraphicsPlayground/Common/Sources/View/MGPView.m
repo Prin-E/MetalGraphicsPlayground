@@ -173,7 +173,7 @@ const inline __attribute__((__always_inline__)) float lerp(float a, float b, flo
             elapsed -= 1.0f;
             if(!windowTitle)
                 windowTitle = self.window.title;
-            self.window.title = [NSString stringWithFormat: @"%@ (FPS : %.0f, Delta: %.1fms)", windowTitle, self->_currentFramesPerSecond, self->_deltaTime*1000];
+            self.window.title = [NSString stringWithFormat: @"%@ (FPS : %.0f, CPU: %.1fms, GPU: %.1fms)", windowTitle, self->_currentFramesPerSecond, self.renderer.CPUTime*1000, self.renderer.GPUTime*1000];
         }
         
         // Render

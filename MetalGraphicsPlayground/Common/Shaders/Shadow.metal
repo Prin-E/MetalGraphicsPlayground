@@ -57,18 +57,18 @@ fragment half4 shadow_frag(ShadowFragment in [[stage_in]],
 
 #pragma mark - Sampling
 // Basic hard-shadow sampling
-float shadow_sample(texture2d<float> shadow_map,
+float shadow_sample(depth2d<float> shadow_map,
                     float2 shadow_size,
                     float2 light_view_pos,
                     float2 light_screen_uv,
                     float light_depth_test) {
-    float depth_value = shadow_map.sample(nearest_clamp_to_edge, light_screen_uv).r;
+    float depth_value = shadow_map.sample(nearest_clamp_to_edge, light_screen_uv);
     float lit = step(light_depth_test, depth_value);
     return lit;
 }
 
 // Software bilinear sampling
-float shadow_sample_linear(texture2d<float> shadow_map,
+float shadow_sample_linear(depth2d<float> shadow_map,
                            float2 shadow_size,
                            float2 light_view_pos,
                            float2 light_screen_uv,
@@ -96,7 +96,7 @@ float shadow_sample_linear(texture2d<float> shadow_map,
 // Using 16-samples of percentage-closer sampling
 // The result looks like smooth antialiased shadows
 // https://developer.nvidia.com/gpugems/GPUGems/gpugems_ch11.html
-float shadow_sample_antialiased_4x4(texture2d<float> shadow_map,
+float shadow_sample_antialiased_4x4(depth2d<float> shadow_map,
                                     float2 shadow_size,
                                     float2 light_view_pos,
                                     float2 light_screen_uv,
@@ -110,7 +110,7 @@ float shadow_sample_antialiased_4x4(texture2d<float> shadow_map,
         for(x = -1.5; x <= 1.51; x += 1.0) {
             float2 offset = float2(x,y) * shadow_size_div1;
             
-            depth_value = shadow_map.sample(nearest_clamp_to_edge, light_screen_uv + offset).r;
+            depth_value = shadow_map.sample(nearest_clamp_to_edge, light_screen_uv + offset);
             lit += step(light_depth_test, depth_value);
             
             // linear sampling (very slow!)
@@ -126,7 +126,7 @@ float shadow_sample_antialiased_4x4(texture2d<float> shadow_map,
 // Using four-samples of percentage-closer sampling
 // The result looks like dithered antialiased shadows
 // https://developer.nvidia.com/gpugems/GPUGems/gpugems_ch11.html
-float shadow_sample_dithered(texture2d<float> shadow_map,
+float shadow_sample_dithered(depth2d<float> shadow_map,
                              float2 shadow_size,
                              float2 light_view_pos,
                              float2 light_screen_uv,
@@ -146,13 +146,13 @@ float shadow_sample_dithered(texture2d<float> shadow_map,
     offsets[3] = (offset + float2(0.5, -1.5)) * shadow_size_div1;
     
     float depth_value = 0;
-    depth_value = shadow_map.sample(nearest_clamp_to_edge, light_screen_uv + offsets[0]).r;
+    depth_value = shadow_map.sample(nearest_clamp_to_edge, light_screen_uv + offsets[0]);
     lit += step(light_depth_test, depth_value);
-    depth_value = shadow_map.sample(nearest_clamp_to_edge, light_screen_uv + offsets[1]).r;
+    depth_value = shadow_map.sample(nearest_clamp_to_edge, light_screen_uv + offsets[1]);
     lit += step(light_depth_test, depth_value);
-    depth_value = shadow_map.sample(nearest_clamp_to_edge, light_screen_uv + offsets[2]).r;
+    depth_value = shadow_map.sample(nearest_clamp_to_edge, light_screen_uv + offsets[2]);
     lit += step(light_depth_test, depth_value);
-    depth_value = shadow_map.sample(nearest_clamp_to_edge, light_screen_uv + offsets[3]).r;
+    depth_value = shadow_map.sample(nearest_clamp_to_edge, light_screen_uv + offsets[3]);
     lit += step(light_depth_test, depth_value);
     
     // linear sampling
@@ -172,7 +172,7 @@ float shadow_sample_dithered(texture2d<float> shadow_map,
 }
 
 #pragma mark - Shadow
-float get_shadow_lit(texture2d<float> shadow_map,
+float get_shadow_lit(depth2d<float> shadow_map,
                      constant light_t &light,
                      constant light_global_t &light_global,
                      float4 world_pos) {

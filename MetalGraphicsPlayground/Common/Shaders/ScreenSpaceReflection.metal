@@ -28,7 +28,7 @@ float vignette(float2 uv, uint2 size, float vignette) {
 }
 
 kernel void ssr(texture2d<float> normal [[texture(0)]],
-                texture2d<float> depth [[texture(1)]],
+                depth2d<float> depth [[texture(1)]],
                 texture2d<half> shading [[texture(2)]],
                 texture2d<float> color [[texture(3)]],
                 texture2d<float, access::write> output [[texture(4)]],
@@ -45,7 +45,7 @@ kernel void ssr(texture2d<float> normal [[texture(0)]],
         return;
     }
     float3 view_normal = normalize(normal.read(thread_pos).xyz * 2.0 - 1.0);
-    float depth_value = depth.read(thread_pos).r;
+    float depth_value = depth.read(thread_pos);
     half4 shading_value = shading.read(thread_pos);
     
     uint2 size = uint2(output.get_width(), output.get_height());
@@ -71,7 +71,7 @@ kernel void ssr(texture2d<float> normal [[texture(0)]],
         current_ray_ndc /= current_ray_ndc.w;
         uint2 current_ray_coords = uint2((current_ray_ndc.xy * 0.5 + 0.5) * float2(size));
         current_ray_coords.y = size.y - current_ray_coords.y;
-        float hit_depth_z = depth.read(current_ray_coords).r;
+        float hit_depth_z = depth.read(current_ray_coords);
         float3 hit_view_pos = view_pos_from_depth(camera_props.projectionInverse, current_ray_coords, size, hit_depth_z);
         if(view_pos.z > hit_view_pos.z) {
             // binary search
@@ -92,7 +92,7 @@ kernel void ssr(texture2d<float> normal [[texture(0)]],
                 current_ray_ndc /= current_ray_ndc.w;
                 current_ray_coords = uint2((current_ray_ndc.xy * 0.5 + 0.5) * float2(size));
                 current_ray_coords.y = size.y - current_ray_coords.y;
-                hit_depth_z = depth.read(current_ray_coords).r;
+                hit_depth_z = depth.read(current_ray_coords);
                 hit_view_pos = view_pos_from_depth(camera_props.projectionInverse, current_ray_coords, size, hit_depth_z);
             }
             
