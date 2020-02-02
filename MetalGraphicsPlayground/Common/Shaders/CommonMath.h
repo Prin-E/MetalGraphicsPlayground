@@ -27,4 +27,6 @@ float2 sample_spherical(float3 dir);
 float3 view_pos_from_depth(constant matrix_float4x4 &invProjection, uint2 coords, uint2 size, float depth);
 float3 view_pos_from_depth(constant matrix_float4x4 &invProjection, float2 uv, float depth);
 
+float3 get_reflected_vector(float3 n, float3 t, float3 v, float roughness, float anisotropy);
+
 #endif /* CommonMath_h */

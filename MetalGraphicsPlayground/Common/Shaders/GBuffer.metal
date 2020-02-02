@@ -181,6 +181,11 @@ fragment half4 gbuffer_shade_frag(ScreenFragment in [[stage_in]],
     half roughness = shading_props_color.x;
     half metalic = shading_props_color.y;
     half occlusion = shading_props_color.z;
+    half anisotropy = shading_props_color.w * 2.0 - 1.0;
+    
+    // reflection
+    float3 r = get_reflected_vector(n, t, v, roughness, anisotropy);
+    float3 w_r = (camera_props.viewInverse * float4(r, 0.0)).xyz;
     
     // SSAO
     half ao = 1.0;
@@ -194,7 +199,7 @@ fragment half4 gbuffer_shade_frag(ScreenFragment in [[stage_in]],
     // irradiance
     float3 k_s = float3(0);
     if(uses_ibl_irradiance_map) {
-        float3 irradiance_color = float3(irradiance.sample(linear, n).xyz);
+        float3 irradiance_color = float3(irradiance.sample(linear, w_r).xyz);
         k_s = fresnel(mix(0.04, albedo_color, metalic), n_v);
         float3 k_d = (float3(1.0) - k_s) * (1.0 - metalic);
         out_color.xyz += ao * k_d * irradiance_color * albedo_color * occlusion;
@@ -203,7 +208,7 @@ fragment half4 gbuffer_shade_frag(ScreenFragment in [[stage_in]],
     // prefiltered specular
     if(uses_ibl_specular_map) {
         float mip_index = roughness * prefilteredSpecular.get_num_mip_levels();
-        float3 prefiltered_color = float3(prefilteredSpecular.sample(linear, n, level(mip_index)).xyz);
+        float3 prefiltered_color = float3(prefilteredSpecular.sample(linear, w_r, level(mip_index)).xyz);
         float3 environment_brdf = float3(brdfLookup.sample(linear_clamp_to_edge, float2(roughness, n_v)).xyz);
         out_color.xyz += ao * k_s * prefiltered_color * (albedo_color * environment_brdf.x + environment_brdf.y);
     }
@@ -324,6 +329,7 @@ fragment half4 gbuffer_shade_old_frag(ScreenFragment in [[stage_in]],
                                   texture2d<half> shading [[texture(attachment_shading)]],
                                   depth2d<float> depth [[texture(attachment_depth)]],
                                   texture2d<half> light [[texture(attachment_light)]],
+                                  texture2d<half> tangent [[texture(attachment_tangent)]],
                                   texturecube<half> irradiance [[texture(attachment_irradiance), function_constant(uses_ibl_irradiance_map)]],
                                   texturecube<half> prefilteredSpecular [[texture(attachment_prefiltered_specular), function_constant(uses_ibl_specular_map)]],
                                   texture2d<half> brdfLookup [[texture(attachment_brdf_lookup), function_constant(uses_ibl_specular_map)]],
@@ -337,12 +343,19 @@ fragment half4 gbuffer_shade_old_frag(ScreenFragment in [[stage_in]],
     float3 view_pos = view_pos_from_depth(cameraProps.projectionInverse, in.uv, depth.sample(nearest_clamp_to_edge, in.uv));
     float3 v = normalize(-view_pos);
     float n_v = max(0.001, saturate(dot(n, v)));
+    float4 t_c = float4(tangent.sample(linear, in.uv));
+    float3 t = normalize((t_c.xyz - 0.5) * 2.0);
     float3 albedo_color = float3(albedo.sample(linear, in.uv).xyz);
     half4 shading_props_color = shading.sample(linear, in.uv);
     half roughness = shading_props_color.x;
     half metalic = shading_props_color.y;
     half occlusion = shading_props_color.z;
+    half anisotropy = shading_props_color.w * 2.0 - 1.0;
     half4 light_color = light.sample(linear, in.uv);
+    
+    // reflection
+    float3 r = get_reflected_vector(n, t, v, roughness, anisotropy);
+    float3 w_r = (cameraProps.viewInverse * float4(r, 0.0)).xyz;
     
     // SSAO
     half ao = 1.0;
@@ -356,7 +369,7 @@ fragment half4 gbuffer_shade_old_frag(ScreenFragment in [[stage_in]],
     // irradiance
     float3 k_s = float3(0);
     if(uses_ibl_irradiance_map) {
-        float3 irradiance_color = float3(irradiance.sample(linear, n).xyz);
+        float3 irradiance_color = float3(irradiance.sample(linear, w_r).xyz);
         k_s = fresnel(mix(0.04, albedo_color, metalic), n_v);
         float3 k_d = (float3(1.0) - k_s) * (1.0 - metalic);
         out_color.xyz += ao * k_d * irradiance_color * albedo_color * occlusion;
@@ -365,7 +378,7 @@ fragment half4 gbuffer_shade_old_frag(ScreenFragment in [[stage_in]],
     // prefiltered specular
     if(uses_ibl_specular_map) {
         float mip_index = roughness * prefilteredSpecular.get_num_mip_levels();
-        float3 prefiltered_color = float3(prefilteredSpecular.sample(linear, n, level(mip_index)).xyz);
+        float3 prefiltered_color = float3(prefilteredSpecular.sample(linear, w_r, level(mip_index)).xyz);
         float3 environment_brdf = float3(brdfLookup.sample(linear_clamp_to_edge, float2(roughness, n_v)).xyz);
         out_color.xyz += ao * k_s * prefiltered_color * (albedo_color * environment_brdf.x + environment_brdf.y);
     }

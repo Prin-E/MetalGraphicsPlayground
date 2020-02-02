@@ -47,3 +47,16 @@ float3 view_pos_from_depth(constant matrix_float4x4 &invProjection, float2 uv, f
     vp.xyz /= vp.w;
     return vp.xyz;
 }
+
+float3 get_reflected_vector(float3 n, float3 t, float3 v, float roughness, float anisotropy) {
+    // referenced Google/Filament (https://github.com/google/filament)
+    float3 b = cross(t, n);
+    float3 a_b = anisotropy >= 0.0 ? b : t;
+    float3 a_t = cross(a_b, v);
+    float3 a_n = cross(a_t, a_b);
+    float bend_factor = abs(anisotropy) * clamp(roughness * 5.0, 0.0, 1.0);
+    float3 bent_normal = normalize(mix(n, a_n, bend_factor));
+    float3 r = reflect(-v, bent_normal);
+    r = mix(r, n, sqr(roughness));
+    return r;
+}
