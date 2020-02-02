@@ -588,8 +588,6 @@ const float kCameraSpeed = 100;
 }
 
 - (void)render {
-    [self wait];
-    
     if(_IBLs.count > 0) {
         if(_IBLs[_currentIBLIndex].isAnyRenderingRequired) {
             [self performPrefilterPass];
