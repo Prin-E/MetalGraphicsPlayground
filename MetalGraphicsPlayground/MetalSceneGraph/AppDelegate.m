@@ -22,12 +22,29 @@
 #define STB_IMAGE_IMPLEMENTATION
 #import "../Common/STB/stb_image.h"
 
+typedef void(^SGRUpdateHandler)(float deltaTime);
+
+@interface SceneGraphRenderer : MGPDeferredRenderer
+
+@property (nonatomic) SGRUpdateHandler handler;
+
+@end
+
+@implementation SceneGraphRenderer
+
+- (void)update:(float)deltaTime {
+    [super update:deltaTime];
+    _handler(deltaTime);
+}
+
+@end
+
+
 @interface AppDelegate ()
 
 @property (weak) IBOutlet NSWindow *window;
 @property (weak) IBOutlet MGPView *view;
-@property (strong) MGPDeferredRenderer *renderer;
-@property (strong) NSTimer *timer;
+@property (strong) SceneGraphRenderer *renderer;
 @property (strong) MGPScene *scene;
 
 @end
@@ -35,7 +52,7 @@
 @implementation AppDelegate
 
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification {
-    _renderer = [[MGPDeferredRenderer alloc] init];
+    _renderer = [[SceneGraphRenderer alloc] init];
     _view.renderer = _renderer;
     
     // scene
@@ -134,8 +151,8 @@
     [mesh2Node addChild:mesh3Node];
     
     srand((unsigned int)time(NULL));
-    for(NSUInteger i = 0; i < 256*10; i++) {
-        MGPPrimitiveNode *meshNode = [[MGPPrimitiveNode alloc] initWithPrimitiveType:MGPPrimitiveNodeTypeSphere
+    for(NSUInteger i = 0; i < 256*40; i++) {
+        MGPPrimitiveNode *meshNode = [[MGPPrimitiveNode alloc] initWithPrimitiveType:MGPPrimitiveNodeTypeCube
                                                                      vertexDescriptor:_renderer.gBuffer.baseVertexDescriptor
                                                                                device:_renderer.device];
         mat.roughness = 1.0;
@@ -174,7 +191,7 @@
     lightComp.intensity = 4;
     lightComp.type = MGPLightTypeDirectional;
     lightComp.castShadows = YES;
-    lightComp.shadowBias = 0.0005;
+    lightComp.shadowBias = 0.0001;
     lightComp.shadowNear = 0.5;
     lightComp.shadowFar = 30;
     [lightNode addComponent:lightComp];
@@ -200,16 +217,10 @@
     if(IBLs.count > 0)
         self.scene.IBL = IBLs[0];
     
-    __block NSTimeInterval prevTime = NSDate.timeIntervalSinceReferenceDate;
     __block NSInteger IBLIndex = 0;
     __block float IBLTime = 0;
-    _timer = [NSTimer scheduledTimerWithTimeInterval:0.01666
-                                             repeats:YES
-                                               block:^(NSTimer * _Nonnull timer) {
-        NSTimeInterval curTime = NSDate.timeIntervalSinceReferenceDate;
-        float deltaTime = (curTime - prevTime);
-        prevTime = curTime;
-        
+    
+    SGRUpdateHandler handler = ^(float deltaTime) {
         static float rot = 0;
         rot += deltaTime*M_PI;
         static float y = 0;
@@ -235,7 +246,9 @@
         
         centerNode.rotation = simd_make_float3(0, 0, rot);
         mesh2Node.rotation = simd_make_float3(0, rot, 0);
-    }];
+    };
+    
+    _renderer.handler = handler;
 }
 
 @end

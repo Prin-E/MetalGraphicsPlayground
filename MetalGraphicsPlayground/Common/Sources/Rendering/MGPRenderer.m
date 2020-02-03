@@ -24,7 +24,6 @@
 
 - (void)initMetal {
     // Selcct low power device (for debugging)
-    /*
     NSArray *devices = MTLCopyAllDevices();
     for(id<MTLDevice> device in devices) {
         if(device.isLowPower) {
@@ -32,7 +31,7 @@
             break;
         }
     }
-    */
+    
     if(_device == nil) {
         _device = MTLCreateSystemDefaultDevice();
     }
