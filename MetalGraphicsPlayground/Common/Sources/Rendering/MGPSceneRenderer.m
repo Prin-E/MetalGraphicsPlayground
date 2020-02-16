@@ -78,10 +78,6 @@
     return self;
 }
 
-- (void)resize:(CGSize)newSize {
-    _size = newSize;
-}
-
 - (void)beginFrame {
     [super beginFrame];
     
@@ -162,7 +158,7 @@
     // update camera buffer...
     size_t cameraPropsBufferOffset = _currentBufferIndex * sizeof(camera_props_t) * MAX_NUM_CAMS;
     for(NSUInteger i = 0; i < MIN(4, _cameraComponents.count); i++) {
-        _cameraComponents[i].aspectRatio = _size.width / MAX(0.01f, _size.height);
+        _cameraComponents[i].aspectRatio = self.scaledSize.width / MAX(0.01f, self.scaledSize.height);
         camera_props_t cameraProps = _cameraComponents[i].shaderProperties;
         memcpy(_cameraPropsBuffer.contents + cameraPropsBufferOffset, &cameraProps, sizeof(camera_props_t));
         cameraPropsBufferOffset += sizeof(camera_props_t);

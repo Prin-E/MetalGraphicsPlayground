@@ -16,8 +16,12 @@ NS_ASSUME_NONNULL_BEGIN
 // Tile deferred renderer
 @interface MGPDeferredRenderer : MGPSceneRenderer
 
+// G-buffer
 @property (readonly) MGPGBuffer *gBuffer;
 @property (nonatomic) NSUInteger gBufferIndex;
+
+// Render options
+@property (readwrite) BOOL usesAnisotropy;
 
 @end
 

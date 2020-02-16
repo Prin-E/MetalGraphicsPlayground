@@ -10,6 +10,8 @@
 #define BRDF_h
 
 #include <metal_stdlib>
+#include "CommonVariables.h"
+
 using namespace metal;
 
 typedef struct {
@@ -17,17 +19,17 @@ typedef struct {
     float3 light;
     float roughness;
     float metalic;
-    float anisotropy;
+    float anisotropy    [[function_constant(uses_anisotropy)]];
     float n_l;
     float n_v;
     float n_h;
     float h_v;
-    float t_h;
-    float t_v;
-    float t_l;
-    float b_h;
-    float b_v;
-    float b_l;
+    float t_h           [[function_constant(uses_anisotropy)]];
+    float t_v           [[function_constant(uses_anisotropy)]];
+    float t_l           [[function_constant(uses_anisotropy)]];
+    float b_h           [[function_constant(uses_anisotropy)]];
+    float b_v           [[function_constant(uses_anisotropy)]];
+    float b_l           [[function_constant(uses_anisotropy)]];
 } shading_t;
 
 float fresnel(float f0, float h_v);

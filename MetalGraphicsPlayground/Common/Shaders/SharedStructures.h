@@ -37,6 +37,7 @@ typedef struct __attribute__((__aligned__(256))) {
 
 typedef struct __attribute__((__aligned__(256))) {
     matrix_float4x4 light_view;
+    matrix_float4x4 light_view_projection;
     vector_float3 position;
     float intensity;
     vector_float3 color;
@@ -109,7 +110,8 @@ typedef enum {
     fcv_uses_ibl_irradiance_map,
     fcv_uses_ibl_specular_map,
     fcv_uses_ssao_map,
-    fcv_light_cull_tile_size
+    fcv_light_cull_tile_size,
+    fcv_uses_anisotropy
 } function_constant_values;
 
 // vertex attribute

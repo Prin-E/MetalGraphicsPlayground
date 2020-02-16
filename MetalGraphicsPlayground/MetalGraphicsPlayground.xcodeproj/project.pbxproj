@@ -2270,7 +2270,9 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
-				MTL_ENABLE_DEBUG_INFO = YES;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_ENABLE_MODULES = YES;
+				MTL_LANGUAGE_REVISION = UseDeploymentTarget;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = macosx;
 			};
@@ -2318,6 +2320,8 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_ENABLE_MODULES = YES;
+				MTL_LANGUAGE_REVISION = UseDeploymentTarget;
 				SDKROOT = macosx;
 			};
 			name = Release;
@@ -2518,7 +2522,6 @@
 				INFOPLIST_FILE = MetalSceneGraph/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 10.15;
-				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.Prin-E.test.MetalSceneGraph";
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -2609,7 +2612,6 @@
 				INFOPLIST_FILE = MetalDeferred/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 10.14;
-				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.Prin-E.test.MetalDeferred";
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -2662,7 +2664,6 @@
 				INFOPLIST_FILE = MetalPostProcessing/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 10.14;
-				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.Prin-E.test.MetalPostProcessing";
 				PRODUCT_NAME = "$(TARGET_NAME)";

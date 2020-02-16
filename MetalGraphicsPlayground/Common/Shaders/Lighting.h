@@ -12,6 +12,7 @@
 #include "SharedStructures.h"
 #include "LightingCommon.h"
 #include "BRDF.h"
+#include "CommonStages.h"
 
 typedef array<depth2d<float>,MAX_NUM_DIRECTIONAL_LIGHTS> shadow_array;
 

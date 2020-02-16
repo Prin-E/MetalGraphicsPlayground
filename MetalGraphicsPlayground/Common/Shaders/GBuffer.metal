@@ -33,6 +33,9 @@ constant bool uses_ibl_irradiance_map [[function_constant(fcv_uses_ibl_irradianc
 constant bool uses_ibl_specular_map [[function_constant(fcv_uses_ibl_specular_map)]];
 constant bool uses_ssao_map [[function_constant(fcv_uses_ssao_map)]];
 
+// shared
+constant bool uses_anisotropic_map = uses_anisotropy && has_anisotropic_map;
+
 // g-buffer vertex input data
 typedef struct {
     float3 pos     [[attribute(attrib_pos)]];
@@ -43,7 +46,7 @@ typedef struct {
 
 // g-buffer fragment input data
 typedef struct {
-    float4 clip_pos      [[position]];
+    float4 clip_pos     [[position]];
     float2 uv;
     float3 normal;
     float3 tangent;
@@ -56,7 +59,7 @@ typedef struct {
     half4 albedo    [[color(attachment_albedo)]];
     half4 normal    [[color(attachment_normal)]];
     half4 shading   [[color(attachment_shading)]];
-    half4 tangent   [[color(attachment_tangent)]];
+    half4 tangent   [[color(attachment_tangent), function_constant(uses_anisotropy)]];
 } GBufferOutput;
 
 #pragma mark - Prepass
@@ -84,7 +87,7 @@ fragment GBufferOutput gbuffer_prepass_frag(GBufferFragment in [[stage_in]],
                                   texture2d<float> roughnessMap [[texture(tex_roughness), function_constant(has_roughness_map)]],
                                   texture2d<half> metalicMap [[texture(tex_metalic), function_constant(has_metalic_map)]],
                                   texture2d<half> occlusionMap [[texture(tex_occlusion), function_constant(has_occlusion_map)]],
-                                  texture2d<half> anisotropicMap [[texture(tex_anisotropic), function_constant(has_anisotropic_map)]]
+                                  texture2d<half> anisotropicMap [[texture(tex_anisotropic), function_constant(uses_anisotropic_map)]]
                                   ) {
     GBufferOutput out;
     material_t material = instanceProps[in.iid].material;
@@ -121,7 +124,7 @@ fragment GBufferOutput gbuffer_prepass_frag(GBufferFragment in [[stage_in]],
     }
     out.normal = half4(half3((n + 1.0) * 0.5), 1.0);
     
-    if(has_anisotropic_map) {
+    if(uses_anisotropic_map) {
         half4 tc = anisotropicMap.sample(linear, in.uv);
         tc = tc * 2.0 - 1.0;
         t = normalize(float3(tc.xyz));
@@ -134,7 +137,9 @@ fragment GBufferOutput gbuffer_prepass_frag(GBufferFragment in [[stage_in]],
             t = normalize(t);
         }
     }
-    out.tangent = half4(half3((t + 1.0) * 0.5), 1.0);
+    
+    if(uses_anisotropy)
+        out.tangent = half4(half3((t + 1.0) * 0.5), 1.0);
     
     out.shading = half4(material.roughness, material.metalic, 1, material.anisotropy * 0.5 + 0.5);
     if(has_roughness_map) {
@@ -149,42 +154,43 @@ fragment GBufferOutput gbuffer_prepass_frag(GBufferFragment in [[stage_in]],
     return out;
 }
 
-#pragma mark - Shading
-fragment half4 gbuffer_shade_frag(ScreenFragment in [[stage_in]],
-                                  constant camera_props_t &camera_props [[buffer(0)]],
-                                  constant light_global_t &light_global [[buffer(1)]],
-                                  constant light_t *lights [[buffer(2)]],
-                                  device uint4 *light_cull_buffer [[buffer(3)]],
-                                  texture2d<half> albedo [[texture(attachment_albedo)]],
-                                  texture2d<half> normal [[texture(attachment_normal)]],
-                                  texture2d<half> shading [[texture(attachment_shading)]],
-                                  texture2d<half> tangent [[texture(attachment_tangent)]],
-                                  depth2d<float> depth [[texture(attachment_depth)]],
-                                  texturecube<half> irradiance [[texture(attachment_irradiance), function_constant(uses_ibl_irradiance_map)]],
-                                  texturecube<half> prefilteredSpecular [[texture(attachment_prefiltered_specular), function_constant(uses_ibl_specular_map)]],
-                                  texture2d<half> brdfLookup [[texture(attachment_brdf_lookup), function_constant(uses_ibl_specular_map)]],
-                                  texture2d<half> ssao [[texture(attachment_ssao), function_constant(uses_ssao_map)]],
-                                  shadow_array shadow_maps [[texture(attachment_shadow_map)]]) {    
-    float4 out_color = float4(0.0, 0.0, 0.0, 1.0);
+#pragma mark - Indirect Lighting
+fragment half4 gbuffer_indirect_light_frag(ScreenFragment in [[stage_in]],
+                                           constant camera_props_t &camera_props [[buffer(0)]],
+                                           constant light_global_t &light_global [[buffer(1)]],
+                                           texture2d<half> albedo [[texture(attachment_albedo)]],
+                                           texture2d<half> normal [[texture(attachment_normal)]],
+                                           texture2d<half> shading [[texture(attachment_shading)]],
+                                           texture2d<half> tangent [[texture(attachment_tangent), function_constant(uses_anisotropy)]],
+                                           depth2d<float> depth [[texture(attachment_depth)]],
+                                           texturecube<half> irradiance [[texture(attachment_irradiance), function_constant(uses_ibl_irradiance_map)]],
+                                           texturecube<half> prefilteredSpecular [[texture(attachment_prefiltered_specular), function_constant(uses_ibl_specular_map)]],
+                                           texture2d<half> brdfLookup [[texture(attachment_brdf_lookup), function_constant(uses_ibl_specular_map)]],
+                                           texture2d<half> ssao [[texture(attachment_ssao), function_constant(uses_ssao_map)]]) {
+    float4 out_color = float4(0.0, 0.0, 0.0, 0.0);
     
     float4 n_c = float4(normal.sample(linear, in.uv));
     if(n_c.w == 0.0)
         return half4(0, 0, 0, 0);
     float3 n = normalize((n_c.xyz - 0.5) * 2.0);
-    float4 t_c = float4(tangent.sample(linear, in.uv));
-    float3 t = normalize((t_c.xyz - 0.5) * 2.0);
     float3 view_pos = view_pos_from_depth(camera_props.projectionInverse, in.uv, depth.sample(nearest_clamp_to_edge, in.uv));
     float3 v = normalize(-view_pos);
     float n_v = max(0.001, saturate(dot(n, v)));
+    
     float3 albedo_color = float3(albedo.sample(linear, in.uv).xyz);
     half4 shading_props_color = shading.sample(linear, in.uv);
     half roughness = shading_props_color.x;
     half metalic = shading_props_color.y;
     half occlusion = shading_props_color.z;
-    half anisotropy = shading_props_color.w * 2.0 - 1.0;
     
-    // reflection
-    float3 r = get_reflected_vector(n, t, v, roughness, anisotropy);
+    // reflection (world-space)
+    float3 r = n;
+    if(uses_anisotropy && (uses_ibl_irradiance_map || uses_ibl_specular_map)) {
+        half anisotropy = shading_props_color.w * 2.0 - 1.0;
+        float4 t_c = float4(tangent.sample(linear, in.uv));
+        float3 t = normalize((t_c.xyz - 0.5) * 2.0);
+        r = get_reflected_vector(n, t, v, roughness, anisotropy);
+    }
     float3 w_r = (camera_props.viewInverse * float4(r, 0.0)).xyz;
     
     // SSAO
@@ -212,6 +218,38 @@ fragment half4 gbuffer_shade_frag(ScreenFragment in [[stage_in]],
         float3 environment_brdf = float3(brdfLookup.sample(linear_clamp_to_edge, float2(roughness, n_v)).xyz);
         out_color.xyz += ao * k_s * prefiltered_color * (albedo_color * environment_brdf.x + environment_brdf.y);
     }
+    
+    return half4(out_color);
+}
+
+#pragma mark - Shading
+fragment half4 gbuffer_shade_frag(ScreenFragment in [[stage_in]],
+                                  constant camera_props_t &camera_props [[buffer(0)]],
+                                  constant light_global_t &light_global [[buffer(1)]],
+                                  constant light_t *lights [[buffer(2)]],
+                                  device uint4 *light_cull_buffer [[buffer(3)]],
+                                  texture2d<half> albedo [[texture(attachment_albedo)]],
+                                  texture2d<half> normal [[texture(attachment_normal)]],
+                                  texture2d<half> shading [[texture(attachment_shading)]],
+                                  texture2d<half> tangent [[texture(attachment_tangent), function_constant(uses_anisotropy)]],
+                                  depth2d<float> depth [[texture(attachment_depth)]],
+                                  shadow_array shadow_maps [[texture(attachment_shadow_map)]]) {
+    float4 out_color = float4(0.0, 0.0, 0.0, 1.0);
+    
+    float4 n_c = float4(normal.sample(linear, in.uv));
+    if(n_c.w == 0.0)
+        return half4(0, 0, 0, 0);
+    float3 n = normalize((n_c.xyz - 0.5) * 2.0);
+    float3 t = float3(1.0, 0.0, 0.0);
+    
+    if(uses_anisotropy) {
+        float4 t_c = float4(tangent.sample(linear, in.uv));
+        t = normalize((t_c.xyz - 0.5) * 2.0);
+    }
+    
+    float3 view_pos = view_pos_from_depth(camera_props.projectionInverse, in.uv, depth.sample(nearest_clamp_to_edge, in.uv));
+    float3 albedo_color = float3(albedo.sample(linear, in.uv).xyz);
+    half4 shading_props_color = shading.sample(linear, in.uv);
     
     // lit
     const uint tile_size = light_global.tile_size;
@@ -241,7 +279,7 @@ fragment half4 gbuffer_light_frag(ScreenFragment in [[stage_in]],
                                   constant light_global_t &light_global [[buffer(2)]],
                                   texture2d<half> normal [[texture(attachment_normal)]],
                                   texture2d<half> shading [[texture(attachment_shading)]],
-                                  texture2d<half> tangent [[texture(attachment_tangent)]],
+                                  texture2d<half> tangent [[texture(attachment_tangent), function_constant(uses_anisotropy)]],
                                   texture2d<float> depth [[texture(attachment_depth)]],
                                   shadow_array shadow_maps [[texture(attachment_shadow_map)]]) {
     float4 out_color = float4(0.0, 0.0, 0.0, 0.0);
@@ -343,18 +381,22 @@ fragment half4 gbuffer_shade_old_frag(ScreenFragment in [[stage_in]],
     float3 view_pos = view_pos_from_depth(cameraProps.projectionInverse, in.uv, depth.sample(nearest_clamp_to_edge, in.uv));
     float3 v = normalize(-view_pos);
     float n_v = max(0.001, saturate(dot(n, v)));
-    float4 t_c = float4(tangent.sample(linear, in.uv));
-    float3 t = normalize((t_c.xyz - 0.5) * 2.0);
+    
     float3 albedo_color = float3(albedo.sample(linear, in.uv).xyz);
     half4 shading_props_color = shading.sample(linear, in.uv);
     half roughness = shading_props_color.x;
     half metalic = shading_props_color.y;
     half occlusion = shading_props_color.z;
-    half anisotropy = shading_props_color.w * 2.0 - 1.0;
     half4 light_color = light.sample(linear, in.uv);
     
-    // reflection
-    float3 r = get_reflected_vector(n, t, v, roughness, anisotropy);
+    // reflection (world-space)
+    float3 r = n;
+    if(uses_anisotropy && (uses_ibl_irradiance_map || uses_ibl_specular_map)) {
+        half anisotropy = shading_props_color.w * 2.0 - 1.0;
+        float4 t_c = float4(tangent.sample(linear, in.uv));
+        float3 t = normalize((t_c.xyz - 0.5) * 2.0);
+        r = get_reflected_vector(n, t, v, roughness, anisotropy);
+    }
     float3 w_r = (cameraProps.viewInverse * float4(r, 0.0)).xyz;
     
     // SSAO

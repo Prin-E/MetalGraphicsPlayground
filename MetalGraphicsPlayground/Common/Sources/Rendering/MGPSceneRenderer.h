@@ -55,8 +55,6 @@ NS_ASSUME_NONNULL_BEGIN
     id<MTLBuffer> _lightPropsBuffer;
     id<MTLBuffer> _lightGlobalBuffer;
     
-    CGSize _size;
-    
     // Profiling
     float _CPUTime;
     float _GPUTime;

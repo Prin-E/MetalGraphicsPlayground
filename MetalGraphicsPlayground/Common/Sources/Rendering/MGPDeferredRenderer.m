@@ -217,6 +217,10 @@
     id<MTLRenderCommandEncoder> shadingPassEncoder = [commandBuffer renderCommandEncoderWithDescriptor: _gBuffer.shadingPassDescriptor];
     [self renderShading:shadingPassEncoder];
     
+    // Indirect lighting pass
+    id<MTLRenderCommandEncoder> indirectLightingPassEncoder = [commandBuffer renderCommandEncoderWithDescriptor:_gBuffer.indirectLightingPassDescriptor];
+    [self renderIndirectLighting:indirectLightingPassEncoder];
+    
     // Post-process before prepass
     [_postProcess render: commandBuffer
        forRenderingOrder: MGPPostProcessingRenderingOrderAfterShadePass];
@@ -297,6 +301,7 @@
                 prepassConstants.hasAnisotropicMap = submesh.textures[tex_anisotropic] != NSNull.null;
                 //prepassConstants.flipVertically = YES;  // for sponza textures
                 //prepassConstants.sRGBTexture = YES;     // for sponza textures
+                prepassConstants.usesAnisotropy = _usesAnisotropy;
                 
                 id<MTLRenderPipelineState> prepassPipeline = [_gBuffer renderPipelineStateWithConstants: prepassConstants
                                                                                                   error: nil];
@@ -441,14 +446,8 @@
 
 - (void)renderShading:(id<MTLRenderCommandEncoder>)encoder {
     MGPGBufferShadingFunctionConstants shadingConstants = {};
-    MGPImageBasedLighting *IBL = self.scene.IBL;
+    shadingConstants.usesAnisotropy = _usesAnisotropy;
     light_global_t lightGlobalProps = self.scene.lightGlobalProps;
-    BOOL IBLOn = self.scene.IBL != nil;
-    BOOL ssaoOn = [_postProcess layerByClass:MGPPostProcessingLayerSSAO.class].enabled;
-    
-    shadingConstants.hasIBLIrradianceMap = IBLOn;
-    shadingConstants.hasIBLSpecularMap = IBLOn;
-    shadingConstants.hasSSAOMap = ssaoOn;
     
     id<MTLRenderPipelineState> shadingPipeline = [_gBuffer shadingPipelineStateWithConstants: shadingConstants
                                                                                        error: nil];
@@ -476,23 +475,13 @@
                         atIndex: attachment_shading];
     [encoder setFragmentTexture: _gBuffer.depth
                         atIndex: attachment_depth];
-    [encoder setFragmentTexture: _gBuffer.tangent
-                        atIndex: attachment_tangent];
+    if(_usesAnisotropy) {
+        [encoder setFragmentTexture: _gBuffer.tangent
+                            atIndex: attachment_tangent];
+    }
     [encoder setFragmentTexture: _gBuffer.depth
                         atIndex: attachment_depth];
     
-    if(IBLOn) {
-        [encoder setFragmentTexture: IBL.irradianceMap
-                            atIndex: attachment_irradiance];
-        [encoder setFragmentTexture: IBL.prefilteredSpecularMap
-                            atIndex: attachment_prefiltered_specular];
-        [encoder setFragmentTexture: IBL.BRDFLookupTexture
-                            atIndex: attachment_brdf_lookup];
-    }
-    if(_postProcess.layers.count > 0) {
-        [encoder setFragmentTexture: ((MGPPostProcessingLayerSSAO *)_postProcess[0]).ssaoTexture
-                            atIndex: attachment_ssao];
-    }
     for(NSUInteger i = 0; i < lightGlobalProps.first_point_light_index; i++) {
         if(_lightComponents[i].castShadows) {
             MGPShadowBuffer *shadowBuffer = [_shadowManager newShadowBufferForLightComponent: _lightComponents[i]
@@ -512,6 +501,58 @@
     
     [encoder endEncoding];
 }
+
+- (void)renderIndirectLighting:(id<MTLRenderCommandEncoder>)encoder {
+    MGPGBufferShadingFunctionConstants shadingConstants = {};
+    shadingConstants.hasIBLIrradianceMap = self.scene.IBL.irradianceMap != nil;
+    shadingConstants.hasIBLSpecularMap = self.scene.IBL.prefilteredSpecularMap != nil;
+    shadingConstants.hasSSAOMap = [_postProcess layerByClass:MGPPostProcessingLayerSSAO.class].enabled;
+    shadingConstants.usesAnisotropy = _usesAnisotropy;
+    
+    id<MTLRenderPipelineState> renderPipeline = [_gBuffer indirectLightingPipelineStateWithConstants:shadingConstants
+                                                                                               error:nil];
+    
+    encoder.label = @"Indirect Lighting";
+    [encoder setRenderPipelineState: renderPipeline];
+    [encoder setCullMode: MTLCullModeBack];
+    [encoder setFragmentBuffer: _cameraPropsBuffer
+                        offset: _currentBufferIndex * sizeof(camera_props_t)
+                       atIndex: 0];
+    [encoder setFragmentBuffer: _lightGlobalBuffer
+                        offset: _currentBufferIndex * sizeof(light_global_t)
+                       atIndex: 1];
+    [encoder setFragmentTexture: _gBuffer.albedo
+                        atIndex: attachment_albedo];
+    [encoder setFragmentTexture: _gBuffer.normal
+                        atIndex: attachment_normal];
+    [encoder setFragmentTexture: _gBuffer.shading
+                        atIndex: attachment_shading];
+    if(_usesAnisotropy) {
+        [encoder setFragmentTexture: _gBuffer.tangent
+                            atIndex: attachment_tangent];
+    }
+    [encoder setFragmentTexture: _gBuffer.depth
+                        atIndex: attachment_depth];
+    if(shadingConstants.hasIBLIrradianceMap)
+        [encoder setFragmentTexture: self.scene.IBL.irradianceMap
+                            atIndex: attachment_irradiance];
+    if(shadingConstants.hasIBLSpecularMap) {
+        [encoder setFragmentTexture: self.scene.IBL.prefilteredSpecularMap
+                            atIndex: attachment_prefiltered_specular];
+        [encoder setFragmentTexture: self.scene.IBL.BRDFLookupTexture
+                            atIndex: attachment_brdf_lookup];
+    }
+    if(shadingConstants.hasSSAOMap) {
+        [encoder setFragmentTexture: ((MGPPostProcessingLayerSSAO *)_postProcess[0]).ssaoTexture
+                            atIndex: attachment_ssao];
+    }
+    [encoder drawPrimitives: MTLPrimitiveTypeTriangle
+                vertexStart: 0
+                vertexCount: 6];
+    
+    [encoder endEncoding];
+}
+
 
 - (void)renderFramebuffer:(id<MTLRenderCommandEncoder>)encoder {
     encoder.label = @"Present";
@@ -562,7 +603,7 @@
 
 - (void)resize:(CGSize)newSize {
     [super resize:newSize];
-    [_gBuffer resize:newSize];
+    [_gBuffer resize:self.scaledSize];
 }
 
 @end

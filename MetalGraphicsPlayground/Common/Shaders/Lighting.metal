@@ -25,26 +25,30 @@ void fill_shading_params_for_light(thread shading_t &shading_params,
     float3 h = normalize(l + v);
     float h_v = max(0.001, saturate(dot(h, v)));
     float n_h = dot(n, h);
-    float t_h = dot(t, h);
-    float b_h = dot(b, h);
     float n_l = max(0.001, saturate(dot(n, l)));
-    float t_l = max(0.001, saturate(dot(t, l)));
-    float b_l = max(0.001, saturate(dot(b, l)));
     float n_v = max(0.001, saturate(dot(n, v)));
-    float t_v = max(0.001, saturate(dot(t, v)));
-    float b_v = max(0.001, saturate(dot(b, v)));
     
     shading_params.light = light_color * light_intensity;
     shading_params.n_l = n_l;
     shading_params.n_h = n_h;
     shading_params.h_v = h_v;
-    shading_params.t_h = t_h;
-    shading_params.b_h = b_h;
-    shading_params.t_l = t_l;
-    shading_params.b_l = b_l;
     shading_params.n_v = n_v;
-    shading_params.t_v = t_v;
-    shading_params.b_v = b_v;
+    
+    if(uses_anisotropy) {
+        float t_h = dot(t, h);
+        float b_h = dot(b, h);
+        float t_l = max(0.001, saturate(dot(t, l)));
+        float b_l = max(0.001, saturate(dot(b, l)));
+        float t_v = max(0.001, saturate(dot(t, v)));
+        float b_v = max(0.001, saturate(dot(b, v)));
+        
+        shading_params.t_h = t_h;
+        shading_params.b_h = b_h;
+        shading_params.t_l = t_l;
+        shading_params.b_l = b_l;
+        shading_params.t_v = t_v;
+        shading_params.b_v = b_v;
+    }
 }
 
 float3 calculate_directional_shadow_lit_color(float3 v,
@@ -178,15 +182,19 @@ float3 calculate_lit_color(float3 view_pos,
     // prepare
     float4 world_pos = camera_props.viewInverse * float4(view_pos, 1.0);
     float3 v = normalize(-view_pos);
-    float3 view_bitangent = cross(view_tangent, view_normal);
+    float3 view_bitangent = float3(0.0, 1.0, 0.0);
+    if(uses_anisotropy)
+        view_bitangent = cross(view_tangent, view_normal);
+    
     thread shading_t shading_params;
     shading_params.albedo = float3(1);
     shading_params.roughness = shading_values.x;
     shading_params.metalic = shading_values.y;
-    shading_params.anisotropy = shading_values.w * 2.0 - 1.0;
+    if(uses_anisotropy)
+        shading_params.anisotropy = shading_values.w * 2.0 - 1.0;
     
     // directional light (with shadow)
-    lit_color += calculate_directional_shadow_lit_color(v, world_pos, view_normal, view_tangent, view_bitangent, shading_values, camera_props, light_global, lights, shadow_maps, shading_params, light_cull_cell.x >> 16, 0);
+    //lit_color += calculate_directional_shadow_lit_color(v, world_pos, view_normal, view_tangent, view_bitangent, shading_values, camera_props, light_global, lights, shadow_maps, shading_params, light_cull_cell.x >> 16, 0);
     
     // directional light
     lit_color += calculate_directional_lit_color(v, world_pos, view_normal, view_tangent, view_bitangent, shading_values, camera_props, lights, shading_params, light_cull_cell.x & 0xFF, 0);

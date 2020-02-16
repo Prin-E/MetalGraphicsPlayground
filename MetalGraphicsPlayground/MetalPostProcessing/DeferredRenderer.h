@@ -33,6 +33,7 @@ NS_ASSUME_NONNULL_BEGIN
 // Lights
 @property (readwrite) unsigned int numLights;
 @property (readwrite) BOOL IBLOn;
+@property (readwrite) BOOL anisotropyOn;
 
 // Light culling
 @property (readwrite) BOOL lightCullOn;

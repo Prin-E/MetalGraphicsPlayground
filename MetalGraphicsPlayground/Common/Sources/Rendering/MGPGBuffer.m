@@ -20,16 +20,20 @@
     MTLRenderPassDescriptor *_renderPassDescriptor;
     MTLRenderPassDescriptor *_lightingPassBaseDescriptor;
     MTLRenderPassDescriptor *_lightingPassAddDescriptor;
+    MTLRenderPassDescriptor *_indirectLightingPassDescriptor;
     MTLRenderPassDescriptor *_shadingPassDescriptor;
     MTLRenderPipelineDescriptor *_renderPipelineDescriptor;
     MTLRenderPipelineDescriptor *_lightingPipelineDescriptor;
+    MTLRenderPipelineDescriptor *_indirectLightingPipelineDescriptor;
     MTLRenderPipelineDescriptor *_shadingPipelineDescriptor;
     
     // key : bit-flag of function constant values
     // value : render-pipeline state
     NSMutableDictionary<NSNumber *, id<MTLRenderPipelineState>> *_renderPipelineDict;
     id<MTLRenderPipelineState> _lightingPipelineState;
+    NSMutableDictionary<NSNumber *, id<MTLRenderPipelineState>> *_lightingPipelineDict;
     NSMutableDictionary<NSNumber *, id<MTLRenderPipelineState>> *_shadingPipelineDict;
+    NSMutableDictionary<NSNumber *, id<MTLRenderPipelineState>> *_indirectLightingPipelineDict;
     NSMutableDictionary<NSNumber *, id<MTLRenderPipelineState>> *_nonLightCulledShadingPipelineDict;
 }
 
@@ -76,9 +80,11 @@
     [self _makeBaseVertexDescriptor];
     [self _makeRenderPipelineDescriptor];
     [self _makeLightingPipelineDescriptor];
+    [self _makeIndirectLightingPipelineDescriptor];
     [self _makeShadingPipelineDescriptor];
     [self _makeRenderPassDescriptor];
     [self _makeLightingPassDescriptor];
+    [self _makeIndirectLightingPassDescriptor];
     [self _makeShadingPassDescriptor];
 }
 
@@ -217,6 +223,21 @@
     _lightingPipelineDescriptor = desc;
 }
 
+
+- (void)_makeIndirectLightingPipelineDescriptor {
+    MTLRenderPipelineDescriptor *desc = [[MTLRenderPipelineDescriptor alloc] init];
+    desc.label = @"Indirect Lighting";
+    desc.colorAttachments[0].pixelFormat = _output.pixelFormat;
+    desc.colorAttachments[0].blendingEnabled = YES;
+    desc.colorAttachments[0].rgbBlendOperation = MTLBlendOperationAdd;
+    desc.colorAttachments[0].alphaBlendOperation = MTLBlendOperationAdd;
+    desc.colorAttachments[0].sourceRGBBlendFactor = MTLBlendFactorOne;
+    desc.colorAttachments[0].destinationRGBBlendFactor = MTLBlendFactorOne;
+    desc.colorAttachments[0].sourceAlphaBlendFactor = MTLBlendFactorZero;
+    desc.colorAttachments[0].destinationAlphaBlendFactor = MTLBlendFactorOne;
+    _indirectLightingPipelineDescriptor = desc;
+}
+
 - (void)_makeShadingPipelineDescriptor {
     MTLRenderPipelineDescriptor *desc = [[MTLRenderPipelineDescriptor alloc] init];
     desc.label = @"Shading";
@@ -275,6 +296,18 @@
     _lightingPassAddDescriptor.colorAttachments[0].texture = _lighting;
 }
 
+- (void)_makeIndirectLightingPassDescriptor {
+    if(_indirectLightingPassDescriptor == nil) {
+        _indirectLightingPassDescriptor = [[MTLRenderPassDescriptor alloc] init];
+        
+        // color attachments
+        _indirectLightingPassDescriptor.colorAttachments[0].loadAction = MTLLoadActionLoad;
+        _indirectLightingPassDescriptor.colorAttachments[0].storeAction = MTLStoreActionStore;
+    }
+    
+    _indirectLightingPassDescriptor.colorAttachments[0].texture = _output;
+}
+
 - (void)_makeShadingPassDescriptor {
     if(_shadingPassDescriptor == nil) {
         _shadingPassDescriptor = [[MTLRenderPassDescriptor alloc] init];
@@ -305,6 +338,10 @@
     return _lightingPassAddDescriptor;
 }
 
+- (MTLRenderPassDescriptor *)indirectLightingPassDescriptor {
+    return _indirectLightingPassDescriptor;
+}
+
 - (MTLRenderPassDescriptor *)shadingPassDescriptor {
     return _shadingPassDescriptor;
 }
@@ -327,6 +364,7 @@
         [self _makeGBufferTextures];
         [self _makeRenderPassDescriptor];
         [self _makeLightingPassDescriptor];
+        [self _makeIndirectLightingPassDescriptor];
         [self _makeShadingPassDescriptor];
     }
 }
@@ -347,6 +385,7 @@
     bitflag |= constants.hasAnisotropicMap ? (1L << fcv_anisotropic) : 0;
     bitflag |= constants.flipVertically ? (1L << fcv_flip_vertically) : 0;
     bitflag |= constants.sRGBTexture ? (1L << fcv_srgb_texture) : 0;
+    bitflag |= constants.usesAnisotropy ? (1L << fcv_uses_anisotropy) : 0;
     
     NSNumber *key = @(bitflag);
     id<MTLRenderPipelineState> renderPipelineState = [_renderPipelineDict objectForKey: key];
@@ -377,6 +416,9 @@
         [constantValues setConstantValue: &constants.sRGBTexture
                                     type: MTLDataTypeBool
                                  atIndex: fcv_srgb_texture];
+        [constantValues setConstantValue: &constants.usesAnisotropy
+                                    type: MTLDataTypeBool
+                                 atIndex: fcv_uses_anisotropy];
         
         _renderPipelineDescriptor.vertexFunction = [_library newFunctionWithName: @"gbuffer_prepass_vert"
                                                                   constantValues: constantValues
@@ -402,6 +444,80 @@
     return _lightingPipelineState;
 }
 
+- (id<MTLRenderPipelineState>)lightingPipelineStateWithConstants:(MGPGBufferShadingFunctionConstants)constants
+                                                           error: (NSError **)error {
+    if(error != nil) {
+        *error = nil;
+    }
+    
+    NSUInteger bitflag = 0;
+    bitflag |= constants.usesAnisotropy ? (1L << fcv_uses_anisotropy) : 0;
+    
+    NSNumber *key = @(bitflag);
+    id<MTLRenderPipelineState> renderPipelineState = [_lightingPipelineDict objectForKey: key];
+    if(renderPipelineState == nil) {
+        // make function constant values object
+        MTLFunctionConstantValues *constantValues = [MTLFunctionConstantValues new];
+        [constantValues setConstantValue: &constants.usesAnisotropy
+                                    type: MTLDataTypeBool
+                                 atIndex: fcv_uses_anisotropy];
+        
+        _lightingPipelineDescriptor.vertexFunction = [_library newFunctionWithName: @"screen_vert"
+                                                                  constantValues: constantValues
+                                                                           error: error];
+        _lightingPipelineDescriptor.fragmentFunction = [_library newFunctionWithName: @"gbuffer_light_frag"
+                                                                    constantValues: constantValues
+                                                                             error: error];
+        renderPipelineState = [_device newRenderPipelineStateWithDescriptor: _lightingPipelineDescriptor
+                                                                      error: error];
+        _lightingPipelineDict[key] = renderPipelineState;
+    }
+    return renderPipelineState;
+}
+
+- (id<MTLRenderPipelineState>)indirectLightingPipelineStateWithConstants:(MGPGBufferShadingFunctionConstants)constants
+                                                                   error:(NSError **)error; {
+    if(error != nil) {
+        *error = nil;
+    }
+    
+    NSUInteger bitflag = 0;
+    bitflag |= constants.hasIBLIrradianceMap ? (1L << fcv_uses_ibl_irradiance_map) : 0;
+    bitflag |= constants.hasIBLSpecularMap ? (1L << fcv_uses_ibl_specular_map) : 0;
+    bitflag |= constants.hasSSAOMap ? (1L << fcv_uses_ssao_map) : 0;
+    bitflag |= constants.usesAnisotropy ? (1L << fcv_uses_anisotropy) : 0;
+    
+    NSNumber *key = @(bitflag);
+    id<MTLRenderPipelineState> renderPipelineState = [_indirectLightingPipelineDict objectForKey: key];
+    if(renderPipelineState == nil) {
+        // make function constant values object
+        MTLFunctionConstantValues *constantValues = [MTLFunctionConstantValues new];
+        [constantValues setConstantValue: &constants.hasIBLIrradianceMap
+                                    type: MTLDataTypeBool
+                                 atIndex: fcv_uses_ibl_irradiance_map];
+        [constantValues setConstantValue: &constants.hasIBLSpecularMap
+                                    type: MTLDataTypeBool
+                                 atIndex: fcv_uses_ibl_specular_map];
+        [constantValues setConstantValue: &constants.hasSSAOMap
+                                    type: MTLDataTypeBool
+                                 atIndex: fcv_uses_ssao_map];
+        [constantValues setConstantValue: &constants.usesAnisotropy
+                                    type: MTLDataTypeBool
+                                 atIndex: fcv_uses_anisotropy];
+        
+        _indirectLightingPipelineDescriptor.vertexFunction = [_library newFunctionWithName: @"screen_vert"
+                                                                            constantValues: constantValues
+                                                                                     error: error];
+        _indirectLightingPipelineDescriptor.fragmentFunction = [_library newFunctionWithName: @"gbuffer_indirect_light_frag"
+                                                                              constantValues: constantValues
+                                                                                       error: error];
+        renderPipelineState = [_device newRenderPipelineStateWithDescriptor: _indirectLightingPipelineDescriptor
+                                                                      error: error];
+        _indirectLightingPipelineDict[key] = renderPipelineState;
+    }
+    return renderPipelineState;
+}
+
 - (id<MTLRenderPipelineState>)shadingPipelineStateWithConstants: (MGPGBufferShadingFunctionConstants)constants
                                                           error: (NSError **)error; {
     if(error != nil) {
@@ -412,6 +528,7 @@
     bitflag |= constants.hasIBLIrradianceMap ? (1L << fcv_uses_ibl_irradiance_map) : 0;
     bitflag |= constants.hasIBLSpecularMap ? (1L << fcv_uses_ibl_specular_map) : 0;
     bitflag |= constants.hasSSAOMap ? (1L << fcv_uses_ssao_map) : 0;
+    bitflag |= constants.usesAnisotropy ? (1L << fcv_uses_anisotropy) : 0;
     
     NSNumber *key = @(bitflag);
     id<MTLRenderPipelineState> renderPipelineState = [_shadingPipelineDict objectForKey: key];
@@ -427,6 +544,9 @@
         [constantValues setConstantValue: &constants.hasSSAOMap
                                     type: MTLDataTypeBool
                                  atIndex: fcv_uses_ssao_map];
+        [constantValues setConstantValue: &constants.usesAnisotropy
+                                    type: MTLDataTypeBool
+                                 atIndex: fcv_uses_anisotropy];
         
         _shadingPipelineDescriptor.vertexFunction = [_library newFunctionWithName: @"screen_vert"
                                                                   constantValues: constantValues
@@ -451,6 +571,7 @@
     bitflag |= constants.hasIBLIrradianceMap ? (1L << fcv_uses_ibl_irradiance_map) : 0;
     bitflag |= constants.hasIBLSpecularMap ? (1L << fcv_uses_ibl_specular_map) : 0;
     bitflag |= constants.hasSSAOMap ? (1L << fcv_uses_ssao_map) : 0;
+    bitflag |= constants.usesAnisotropy ? (1L << fcv_uses_anisotropy) : 0;
     
     NSNumber *key = @(bitflag);
     id<MTLRenderPipelineState> renderPipelineState = [_nonLightCulledShadingPipelineDict objectForKey: key];
@@ -466,6 +587,9 @@
         [constantValues setConstantValue: &constants.hasSSAOMap
                                     type: MTLDataTypeBool
                                  atIndex: fcv_uses_ssao_map];
+        [constantValues setConstantValue: &constants.usesAnisotropy
+                                    type: MTLDataTypeBool
+                                 atIndex: fcv_uses_anisotropy];
         
         _shadingPipelineDescriptor.vertexFunction = [_library newFunctionWithName: @"screen_vert"
                                                                   constantValues: constantValues

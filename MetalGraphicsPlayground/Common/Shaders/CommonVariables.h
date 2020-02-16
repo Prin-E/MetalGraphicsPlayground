@@ -10,13 +10,20 @@
 #define ShaderCommonVariables_h
 
 #include <metal_stdlib>
+#include "SharedStructures.h"
+
 using namespace metal;
 
+// Function constants
+constant bool uses_anisotropy [[function_constant(fcv_uses_anisotropy)]];
+
+// Math
 constant constexpr float PI = 3.14159265;
 constant constexpr float PI_DIV = 1.0 / PI;
 constant constexpr float PI_2 = PI * 2;
 constant constexpr float PI_DIV2 = 1.0 / PI_2;
 
+// Samplers
 constexpr sampler linear(mip_filter::linear,
                          mag_filter::linear,
                          min_filter::linear,

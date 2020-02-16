@@ -19,12 +19,14 @@ typedef struct MGPGBufferPrepassFunctionConstants {
     bool hasAnisotropicMap;
     bool flipVertically;
     bool sRGBTexture;
+    bool usesAnisotropy;
 } MGPGBufferPrepassFunctionConstants;
 
 typedef struct MGPGBufferShadingFunctionConstants {
     bool hasIBLIrradianceMap;
     bool hasIBLSpecularMap;
     bool hasSSAOMap;
+    bool usesAnisotropy;
 } MGPGBufferShadingFunctionConstants;
 
 typedef NS_OPTIONS(NSUInteger, MGPGBufferAttachmentType) {
@@ -75,6 +77,7 @@ typedef NS_OPTIONS(NSUInteger, MGPGBufferAttachmentType) {
 @property (readonly) MTLRenderPassDescriptor *renderPassDescriptor;
 @property (readonly) MTLRenderPassDescriptor *lightingPassBaseDescriptor;
 @property (readonly) MTLRenderPassDescriptor *lightingPassAddDescriptor;
+@property (readonly) MTLRenderPassDescriptor *indirectLightingPassDescriptor;
 @property (readonly) MTLRenderPassDescriptor *shadingPassDescriptor;
 
 // resolution
@@ -95,6 +98,10 @@ typedef NS_OPTIONS(NSUInteger, MGPGBufferAttachmentType) {
 - (id<MTLRenderPipelineState>)renderPipelineStateWithConstants: (MGPGBufferPrepassFunctionConstants)constants
                                                          error: (NSError **)error;
 - (id<MTLRenderPipelineState>)lightingPipelineStateWithError: (NSError **)error;
+- (id<MTLRenderPipelineState>)lightingPipelineStateWithConstants:(MGPGBufferShadingFunctionConstants)constants
+                                                           error: (NSError **)error;
+- (id<MTLRenderPipelineState>)indirectLightingPipelineStateWithConstants: (MGPGBufferShadingFunctionConstants)constants
+                                                                   error: (NSError **)error;
 - (id<MTLRenderPipelineState>)shadingPipelineStateWithConstants: (MGPGBufferShadingFunctionConstants)constants
                                                           error: (NSError **)error;
 - (id<MTLRenderPipelineState>)nonLightCulledShadingPipelineStateWithConstants: (MGPGBufferShadingFunctionConstants)constants
