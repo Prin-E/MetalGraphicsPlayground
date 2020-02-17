@@ -726,11 +726,16 @@ const NSUInteger kLightCountPerDrawCall = 4;
     [self renderShading:shadingPassEncoder];
     
     if(_lightCullOn) {
+        // Directional lighting (with shadow) pass
+        id<MTLRenderCommandEncoder> directionalShadowedLightingPassEncoder = [commandBuffer renderCommandEncoderWithDescriptor:_gBuffer.directionalShadowedLightingPassDescriptor];
+        [self renderDirectionalShadowedLighting:directionalShadowedLightingPassEncoder];
+        
+        // Indirect lighting pass
         id<MTLRenderCommandEncoder> indirectLightingPassEncoder = [commandBuffer renderCommandEncoderWithDescriptor:_gBuffer.indirectLightingPassDescriptor];
         [self renderIndirectLighting:indirectLightingPassEncoder];
     }
     
-    // Post-process before prepass
+    // Post-process after shade pass
     [_postProcess render: commandBuffer
        forRenderingOrder: MGPPostProcessingRenderingOrderAfterShadePass];
     
@@ -1091,22 +1096,9 @@ const NSUInteger kLightCountPerDrawCall = 4;
                                 atIndex: attachment_ssao];
         }
     }
-    for(NSUInteger i = 0; i < light_globals[_currentBufferIndex].first_point_light_index; i++) {
-        if(_lights[i].castShadows) {
-            MGPShadowBuffer *shadowBuffer = [_shadowManager newShadowBufferForLight: _lights[i]
-                                                                         resolution: kShadowResolution
-                                                                      cascadeLevels: 1];
-            [encoder setFragmentTexture: shadowBuffer.texture
-                                atIndex: i+attachment_shadow_map];
-        }
-        else {
-            [encoder setFragmentTexture: nil
-                                atIndex: i+attachment_shadow_map];
-        }
-    }
     [encoder drawPrimitives: MTLPrimitiveTypeTriangle
                 vertexStart: 0
-                vertexCount: 6];
+                vertexCount: 3];
     
     [encoder endEncoding];
 }
@@ -1156,10 +1148,68 @@ const NSUInteger kLightCountPerDrawCall = 4;
     }
     [encoder drawPrimitives: MTLPrimitiveTypeTriangle
                 vertexStart: 0
-                vertexCount: 6];
+                vertexCount: 3];
     
     [encoder endEncoding];
 }
+
+- (void)renderDirectionalShadowedLighting:(id<MTLRenderCommandEncoder>)encoder {
+    light_global_t lightGlobalProps = light_globals[_currentBufferIndex];
+    MGPGBufferShadingFunctionConstants shadingConstants = {};
+    shadingConstants.usesAnisotropy = _anisotropyOn;
+    NSUInteger lightBufferOffset = _currentBufferIndex * sizeof(light_t) * MAX_NUM_LIGHTS;
+    
+    id<MTLRenderPipelineState> renderPipeline = [_gBuffer directionalShadowedLightingPipelineStateWithConstants:shadingConstants
+                                                                                                          error:nil];
+
+    encoder.label = @"Directional Shadowed Lighting";
+    [encoder setRenderPipelineState: renderPipeline];
+    [encoder setCullMode: MTLCullModeBack];
+    [encoder setFragmentBuffer: _cameraPropsBuffer
+                        offset: _currentBufferIndex * sizeof(camera_props_t)
+                       atIndex: 0];
+    [encoder setFragmentBuffer: _lightGlobalBuffer
+                        offset: _currentBufferIndex * sizeof(light_global_t)
+                       atIndex: 1];
+    [encoder setFragmentBuffer: _lightPropsBuffer
+                        offset: lightBufferOffset
+                       atIndex: 2];
+    [encoder setFragmentTexture: _gBuffer.albedo
+                        atIndex: attachment_albedo];
+    [encoder setFragmentTexture: _gBuffer.normal
+                        atIndex: attachment_normal];
+    [encoder setFragmentTexture: _gBuffer.shading
+                        atIndex: attachment_shading];
+    if(_anisotropyOn) {
+        [encoder setFragmentTexture: _gBuffer.tangent
+                            atIndex: attachment_tangent];
+    }
+    [encoder setFragmentTexture: _gBuffer.depth
+                        atIndex: attachment_depth];
+    
+    for(NSUInteger i = 0; i < lightGlobalProps.first_point_light_index; i++) {
+        if(light_props[i].cast_shadow) {
+            MGPShadowBuffer *shadowBuffer = [_shadowManager newShadowBufferForLight:_lights[i]
+                                                                         resolution: kShadowResolution
+                                                                      cascadeLevels: 1];
+            if(shadowBuffer) {
+                [encoder pushDebugGroup:[NSString stringWithFormat:@"Directional Light #%lu", i+1]];
+                [encoder setFragmentBufferOffset:lightBufferOffset + i * sizeof(light_t)
+                                         atIndex:2];
+                [encoder setFragmentTexture: shadowBuffer.texture
+                                    atIndex: attachment_shadow_map];
+                [encoder drawPrimitives: MTLPrimitiveTypeTriangle
+                            vertexStart: 0
+                            vertexCount: 3];
+                [encoder popDebugGroup];
+            }
+
+        }
+    }
+    
+    [encoder endEncoding];
+}
+
 
 - (void)renderFramebuffer:(id<MTLRenderCommandEncoder>)encoder {
     encoder.label = @"Present";

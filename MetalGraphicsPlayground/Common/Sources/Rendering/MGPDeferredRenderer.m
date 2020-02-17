@@ -228,7 +228,7 @@
     id<MTLRenderCommandEncoder> indirectLightingPassEncoder = [commandBuffer renderCommandEncoderWithDescriptor:_gBuffer.indirectLightingPassDescriptor];
     [self renderIndirectLighting:indirectLightingPassEncoder];
     
-    // Post-process before prepass
+    // Post-process after shade pass
     [_postProcess render: commandBuffer
        forRenderingOrder: MGPPostProcessingRenderingOrderAfterShadePass];
     

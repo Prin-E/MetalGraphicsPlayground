@@ -97,7 +97,7 @@ fragment GBufferOutput gbuffer_prepass_frag(GBufferFragment in [[stage_in]],
     }
     
     if(has_albedo_map) {
-        out.albedo = albedoMap.sample(linear_clamp_to_edge, in.uv);
+        out.albedo = albedoMap.sample(linear, in.uv);
         if(srgb_texture) {
             out.albedo = srgb_to_linear_fast(out.albedo);
         }
@@ -115,7 +115,7 @@ fragment GBufferOutput gbuffer_prepass_frag(GBufferFragment in [[stage_in]],
     float3 t = in.tangent;
     float3 b = in.bitangent;
     if(has_normal_map) {
-        half4 nc = normalMap.sample(linear_clamp_to_edge, in.uv);
+        half4 nc = normalMap.sample(linear, in.uv);
         nc = nc * 2.0 - 1.0;
         n = normalize(normalize(n) * nc.z + normalize(t) * nc.x + normalize(b) * nc.y);
     }
@@ -125,7 +125,7 @@ fragment GBufferOutput gbuffer_prepass_frag(GBufferFragment in [[stage_in]],
     out.normal = half4(half3((n + 1.0) * 0.5), 1.0);
     
     if(uses_anisotropic_map) {
-        half4 tc = anisotropicMap.sample(linear_clamp_to_edge, in.uv);
+        half4 tc = anisotropicMap.sample(linear, in.uv);
         tc = tc * 2.0 - 1.0;
         t = normalize(float3(tc.xyz));
     }
