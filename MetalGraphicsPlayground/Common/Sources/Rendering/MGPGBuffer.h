@@ -78,6 +78,7 @@ typedef NS_OPTIONS(NSUInteger, MGPGBufferAttachmentType) {
 @property (readonly) MTLRenderPassDescriptor *lightingPassBaseDescriptor;
 @property (readonly) MTLRenderPassDescriptor *lightingPassAddDescriptor;
 @property (readonly) MTLRenderPassDescriptor *indirectLightingPassDescriptor;
+@property (readonly) MTLRenderPassDescriptor *directionalShadowedLightingPassDescriptor;
 @property (readonly) MTLRenderPassDescriptor *shadingPassDescriptor;
 
 // resolution
@@ -102,6 +103,8 @@ typedef NS_OPTIONS(NSUInteger, MGPGBufferAttachmentType) {
                                                            error: (NSError **)error;
 - (id<MTLRenderPipelineState>)indirectLightingPipelineStateWithConstants: (MGPGBufferShadingFunctionConstants)constants
                                                                    error: (NSError **)error;
+- (id<MTLRenderPipelineState>)directionalShadowedLightingPipelineStateWithConstants: (MGPGBufferShadingFunctionConstants)constants
+                                                                              error: (NSError**)error;
 - (id<MTLRenderPipelineState>)shadingPipelineStateWithConstants: (MGPGBufferShadingFunctionConstants)constants
                                                           error: (NSError **)error;
 - (id<MTLRenderPipelineState>)nonLightCulledShadingPipelineStateWithConstants: (MGPGBufferShadingFunctionConstants)constants

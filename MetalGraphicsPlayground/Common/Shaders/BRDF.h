@@ -19,6 +19,7 @@ typedef struct {
     float3 light;
     float roughness;
     float metalic;
+    float occlusion;
     float anisotropy    [[function_constant(uses_anisotropy)]];
     float n_l;
     float n_v;

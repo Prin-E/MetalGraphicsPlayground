@@ -31,8 +31,15 @@ float3 calculate_lit_color(float3 view_pos,
                            constant camera_props_t &camera_props,
                            constant light_global_t &light_global,
                            constant light_t *lights,
-                           uint4 light_cull_cell,
-                           shadow_array shadow_maps);
+                           uint4 light_cull_cell);
 
+float3 calculate_directional_shadow_lit_color(float3 view_pos,
+                                              float3 view_normal,
+                                              float3 view_tangent,
+                                              half4 shading_values,
+                                              constant camera_props_t &camera_props,
+                                              constant light_global_t &light_global,
+                                              constant light_t &light,
+                                              depth2d<float> shadow_map);
 
 #endif /* Lighting_h */

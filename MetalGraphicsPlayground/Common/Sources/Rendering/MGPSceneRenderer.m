@@ -149,6 +149,7 @@
     size_t lightPropsBufferOffset = _currentBufferIndex * sizeof(light_t) * MAX_NUM_LIGHTS;
     for(NSUInteger i = 0; i < numLights; i++) {
         light_t lightProps = _lightComponents[i].shaderProperties;
+        lightProps.light_view_projection = simd_mul(lightGlobalProps.light_projection, lightProps.light_view);
         memcpy(_lightPropsBuffer.contents + lightPropsBufferOffset, &lightProps, sizeof(light_t));
         lightPropsBufferOffset += sizeof(light_t);
     }

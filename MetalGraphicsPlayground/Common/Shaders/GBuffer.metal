@@ -97,7 +97,7 @@ fragment GBufferOutput gbuffer_prepass_frag(GBufferFragment in [[stage_in]],
     }
     
     if(has_albedo_map) {
-        out.albedo = albedoMap.sample(linear, in.uv);
+        out.albedo = albedoMap.sample(linear_clamp_to_edge, in.uv);
         if(srgb_texture) {
             out.albedo = srgb_to_linear_fast(out.albedo);
         }
@@ -115,7 +115,7 @@ fragment GBufferOutput gbuffer_prepass_frag(GBufferFragment in [[stage_in]],
     float3 t = in.tangent;
     float3 b = in.bitangent;
     if(has_normal_map) {
-        half4 nc = normalMap.sample(linear, in.uv);
+        half4 nc = normalMap.sample(linear_clamp_to_edge, in.uv);
         nc = nc * 2.0 - 1.0;
         n = normalize(normalize(n) * nc.z + normalize(t) * nc.x + normalize(b) * nc.y);
     }
@@ -125,7 +125,7 @@ fragment GBufferOutput gbuffer_prepass_frag(GBufferFragment in [[stage_in]],
     out.normal = half4(half3((n + 1.0) * 0.5), 1.0);
     
     if(uses_anisotropic_map) {
-        half4 tc = anisotropicMap.sample(linear, in.uv);
+        half4 tc = anisotropicMap.sample(linear_clamp_to_edge, in.uv);
         tc = tc * 2.0 - 1.0;
         t = normalize(float3(tc.xyz));
     }
@@ -143,7 +143,7 @@ fragment GBufferOutput gbuffer_prepass_frag(GBufferFragment in [[stage_in]],
     
     out.shading = half4(material.roughness, material.metalic, 1, material.anisotropy * 0.5 + 0.5);
     if(has_roughness_map) {
-        out.shading.x = roughnessMap.sample(linear, in.uv).r;
+        out.shading.x = roughnessMap.sample(linear_clamp_to_edge, in.uv).r;
     }
     if(has_metalic_map) {
         out.shading.y = metalicMap.sample(linear, in.uv).r;
@@ -169,7 +169,7 @@ fragment half4 gbuffer_indirect_light_frag(ScreenFragment in [[stage_in]],
                                            texture2d<half> ssao [[texture(attachment_ssao), function_constant(uses_ssao_map)]]) {
     float4 out_color = float4(0.0, 0.0, 0.0, 0.0);
     
-    float4 n_c = float4(normal.sample(linear, in.uv));
+    float4 n_c = float4(normal.sample(linear_clamp_to_edge, in.uv));
     if(n_c.w == 0.0)
         return half4(0, 0, 0, 0);
     float3 n = normalize((n_c.xyz - 0.5) * 2.0);
@@ -177,8 +177,8 @@ fragment half4 gbuffer_indirect_light_frag(ScreenFragment in [[stage_in]],
     float3 v = normalize(-view_pos);
     float n_v = max(0.001, saturate(dot(n, v)));
     
-    float3 albedo_color = float3(albedo.sample(linear, in.uv).xyz);
-    half4 shading_props_color = shading.sample(linear, in.uv);
+    float3 albedo_color = float3(albedo.sample(linear_clamp_to_edge, in.uv).xyz);
+    half4 shading_props_color = shading.sample(linear_clamp_to_edge, in.uv);
     half roughness = shading_props_color.x;
     half metalic = shading_props_color.y;
     half occlusion = shading_props_color.z;
@@ -187,7 +187,7 @@ fragment half4 gbuffer_indirect_light_frag(ScreenFragment in [[stage_in]],
     float3 r = n;
     if(uses_anisotropy && (uses_ibl_irradiance_map || uses_ibl_specular_map)) {
         half anisotropy = shading_props_color.w * 2.0 - 1.0;
-        float4 t_c = float4(tangent.sample(linear, in.uv));
+        float4 t_c = float4(tangent.sample(linear_clamp_to_edge, in.uv));
         float3 t = normalize((t_c.xyz - 0.5) * 2.0);
         r = get_reflected_vector(n, t, v, roughness, anisotropy);
     }
@@ -196,7 +196,7 @@ fragment half4 gbuffer_indirect_light_frag(ScreenFragment in [[stage_in]],
     // SSAO
     half ao = 1.0;
     if(uses_ssao_map) {
-        ao = 1.0 - ssao.sample(linear, in.uv).r;
+        ao = 1.0 - ssao.sample(linear_clamp_to_edge, in.uv).r;
     }
     
     // global ambient color
@@ -216,8 +216,48 @@ fragment half4 gbuffer_indirect_light_frag(ScreenFragment in [[stage_in]],
         float mip_index = roughness * prefilteredSpecular.get_num_mip_levels();
         float3 prefiltered_color = float3(prefilteredSpecular.sample(linear, w_r, level(mip_index)).xyz);
         float3 environment_brdf = float3(brdfLookup.sample(linear_clamp_to_edge, float2(roughness, n_v)).xyz);
-        out_color.xyz += ao * k_s * prefiltered_color * (albedo_color * environment_brdf.x + environment_brdf.y);
+        out_color.xyz += ao * k_s * prefiltered_color * (albedo_color * environment_brdf.x + environment_brdf.y) * occlusion;
     }
+    
+    return half4(out_color);
+}
+
+#pragma mark - Direct Lighting
+fragment half4 gbuffer_directional_shadowed_light_frag(ScreenFragment in [[stage_in]],
+                                                       constant camera_props_t &camera_props [[buffer(0)]],
+                                                       constant light_global_t &light_global [[buffer(1)]],
+                                                       constant light_t &light [[buffer(2)]],
+                                                       texture2d<half> albedo [[texture(attachment_albedo)]],
+                                                       texture2d<half> normal [[texture(attachment_normal)]],
+                                                       texture2d<half> shading [[texture(attachment_shading)]],
+                                                       texture2d<half> tangent [[texture(attachment_tangent), function_constant(uses_anisotropy)]],
+                                                       depth2d<float> depth [[texture(attachment_depth)]],
+                                                       depth2d<float> shadow_map [[texture(attachment_shadow_map)]]) {
+    float4 out_color = float4(0.0, 0.0, 0.0, 0.0);
+    
+    float4 n_c = float4(normal.sample(linear_clamp_to_edge, in.uv));
+    if(n_c.w == 0.0)
+        return half4(0, 0, 0, 0);
+    float3 n = normalize((n_c.xyz - 0.5) * 2.0);
+    float3 t = float3(1.0, 0.0, 0.0);
+    
+    if(uses_anisotropy) {
+        float4 t_c = float4(tangent.sample(linear_clamp_to_edge, in.uv));
+        t = normalize((t_c.xyz - 0.5) * 2.0);
+    }
+    
+    float3 view_pos = view_pos_from_depth(camera_props.projectionInverse, in.uv, depth.sample(nearest_clamp_to_edge, in.uv));
+    float3 albedo_color = float3(albedo.sample(linear, in.uv).xyz);
+    half4 shading_props_color = shading.sample(linear, in.uv);
+    
+    out_color.xyz += calculate_directional_shadow_lit_color(view_pos,
+                                                            n,
+                                                            t,
+                                                            shading_props_color,
+                                                            camera_props,
+                                                            light_global,
+                                                            light,
+                                                            shadow_map) * albedo_color;
     
     return half4(out_color);
 }
@@ -232,24 +272,23 @@ fragment half4 gbuffer_shade_frag(ScreenFragment in [[stage_in]],
                                   texture2d<half> normal [[texture(attachment_normal)]],
                                   texture2d<half> shading [[texture(attachment_shading)]],
                                   texture2d<half> tangent [[texture(attachment_tangent), function_constant(uses_anisotropy)]],
-                                  depth2d<float> depth [[texture(attachment_depth)]],
-                                  shadow_array shadow_maps [[texture(attachment_shadow_map)]]) {
+                                  depth2d<float> depth [[texture(attachment_depth)]]) {
     float4 out_color = float4(0.0, 0.0, 0.0, 1.0);
     
-    float4 n_c = float4(normal.sample(linear, in.uv));
+    float4 n_c = float4(normal.sample(linear_clamp_to_edge, in.uv));
     if(n_c.w == 0.0)
         return half4(0, 0, 0, 0);
     float3 n = normalize((n_c.xyz - 0.5) * 2.0);
     float3 t = float3(1.0, 0.0, 0.0);
     
     if(uses_anisotropy) {
-        float4 t_c = float4(tangent.sample(linear, in.uv));
+        float4 t_c = float4(tangent.sample(linear_clamp_to_edge, in.uv));
         t = normalize((t_c.xyz - 0.5) * 2.0);
     }
     
     float3 view_pos = view_pos_from_depth(camera_props.projectionInverse, in.uv, depth.sample(nearest_clamp_to_edge, in.uv));
-    float3 albedo_color = float3(albedo.sample(linear, in.uv).xyz);
-    half4 shading_props_color = shading.sample(linear, in.uv);
+    float3 albedo_color = float3(albedo.sample(linear_clamp_to_edge, in.uv).xyz);
+    half4 shading_props_color = shading.sample(linear_clamp_to_edge, in.uv);
     
     // lit
     const uint tile_size = light_global.tile_size;
@@ -265,8 +304,7 @@ fragment half4 gbuffer_shade_frag(ScreenFragment in [[stage_in]],
                                          camera_props,
                                          light_global,
                                          lights,
-                                         light_cull_buffer[light_cull_grid_index],
-                                         shadow_maps) * albedo_color;
+                                         light_cull_buffer[light_cull_grid_index]) * albedo_color;
     
     return half4(out_color);
 }
@@ -285,19 +323,20 @@ fragment half4 gbuffer_light_frag(ScreenFragment in [[stage_in]],
     float4 out_color = float4(0.0, 0.0, 0.0, 0.0);
     
     // shared values
-    float4 n_c = float4(normal.sample(linear, in.uv));
+    float4 n_c = float4(normal.sample(linear_clamp_to_edge, in.uv));
     if(n_c.w == 0.0)
         return half4(0, 0, 0, 0);
     float3 n = normalize((n_c.xyz - 0.5) * 2.0);
-    float4 t_c = float4(tangent.sample(linear, in.uv));
+    float4 t_c = float4(tangent.sample(linear_clamp_to_edge, in.uv));
     float3 t = normalize((t_c.xyz - 0.5) * 2.0);
     float3 b = cross(t, n);
-    half4 shading_values = shading.sample(linear, in.uv);
+    half4 shading_values = shading.sample(linear_clamp_to_edge, in.uv);
     
     shading_t shading_params;
     shading_params.albedo = float3(1);
     shading_params.roughness = shading_values.x;
     shading_params.metalic = shading_values.y;
+    shading_params.occlusion = shading_values.z;
     shading_params.anisotropy = shading_values.w * 2.0 - 1.0;
     
     // world-space pos
@@ -353,7 +392,7 @@ fragment half4 gbuffer_light_frag(ScreenFragment in [[stage_in]],
             shading_params.t_v = t_v;
             shading_params.b_v = b_v;
             
-            out_color.xyz += lit * calculate_brdf(shading_params) * shading_values.z / (light_dist * light_dist);
+            out_color.xyz += lit * calculate_brdf(shading_params) / (light_dist * light_dist);
         }
     }
     return half4(out_color);
@@ -374,7 +413,7 @@ fragment half4 gbuffer_shade_old_frag(ScreenFragment in [[stage_in]],
                                   texture2d<half> ssao [[texture(attachment_ssao), function_constant(uses_ssao_map)]]) {
     float4 out_color = float4(0.0, 0.0, 0.0, 1.0);
     
-    float4 n_c = float4(normal.sample(linear, in.uv));
+    float4 n_c = float4(normal.sample(linear_clamp_to_edge, in.uv));
     if(n_c.w == 0.0)
         return half4(0, 0, 0, 0);
     float3 n = normalize((n_c.xyz - 0.5) * 2.0);
@@ -382,18 +421,18 @@ fragment half4 gbuffer_shade_old_frag(ScreenFragment in [[stage_in]],
     float3 v = normalize(-view_pos);
     float n_v = max(0.001, saturate(dot(n, v)));
     
-    float3 albedo_color = float3(albedo.sample(linear, in.uv).xyz);
-    half4 shading_props_color = shading.sample(linear, in.uv);
+    float3 albedo_color = float3(albedo.sample(linear_clamp_to_edge, in.uv).xyz);
+    half4 shading_props_color = shading.sample(linear_clamp_to_edge, in.uv);
     half roughness = shading_props_color.x;
     half metalic = shading_props_color.y;
     half occlusion = shading_props_color.z;
-    half4 light_color = light.sample(linear, in.uv);
+    half4 light_color = light.sample(linear_clamp_to_edge, in.uv);
     
     // reflection (world-space)
     float3 r = n;
     if(uses_anisotropy && (uses_ibl_irradiance_map || uses_ibl_specular_map)) {
         half anisotropy = shading_props_color.w * 2.0 - 1.0;
-        float4 t_c = float4(tangent.sample(linear, in.uv));
+        float4 t_c = float4(tangent.sample(linear_clamp_to_edge, in.uv));
         float3 t = normalize((t_c.xyz - 0.5) * 2.0);
         r = get_reflected_vector(n, t, v, roughness, anisotropy);
     }
@@ -402,7 +441,7 @@ fragment half4 gbuffer_shade_old_frag(ScreenFragment in [[stage_in]],
     // SSAO
     half ao = 1.0;
     if(uses_ssao_map) {
-        ao = 1.0 - ssao.sample(linear, in.uv).r;
+        ao = 1.0 - ssao.sample(linear_clamp_to_edge, in.uv).r;
     }
     
     // global ambient color

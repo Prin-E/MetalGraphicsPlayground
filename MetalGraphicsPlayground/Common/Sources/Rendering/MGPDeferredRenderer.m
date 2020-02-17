@@ -51,6 +51,7 @@
 - (instancetype)init {
     self = [super init];
     if(self) {
+        _usesAnisotropy = YES;
         [self _initAssets];
     }
     return self;
@@ -185,6 +186,8 @@
 
 - (void)renderCameraAtIndex:(NSUInteger)index
               commandBuffer:(id<MTLCommandBuffer>)commandBuffer {
+    [commandBuffer pushDebugGroup:[NSString stringWithFormat:@"Camera #%lu", index+1]];
+    
     // skybox pass
     if(self.scene.IBL) {
         _renderPassSkybox.colorAttachments[0].texture = self.view.currentDrawable.texture;
@@ -215,7 +218,11 @@
     
     // G-buffer shade pass
     id<MTLRenderCommandEncoder> shadingPassEncoder = [commandBuffer renderCommandEncoderWithDescriptor: _gBuffer.shadingPassDescriptor];
-    [self renderShading:shadingPassEncoder];
+    [self renderDirectLighting:shadingPassEncoder];
+    
+    // Directional lighting (with shadow) pass
+    id<MTLRenderCommandEncoder> directionalShadowedLightingPassEncoder = [commandBuffer renderCommandEncoderWithDescriptor:_gBuffer.directionalShadowedLightingPassDescriptor];
+    [self renderDirectionalShadowedLighting:directionalShadowedLightingPassEncoder];
     
     // Indirect lighting pass
     id<MTLRenderCommandEncoder> indirectLightingPassEncoder = [commandBuffer renderCommandEncoderWithDescriptor:_gBuffer.indirectLightingPassDescriptor];
@@ -233,6 +240,8 @@
         _renderPassPresent.colorAttachments[0].loadAction = MTLLoadActionClear;
     id<MTLRenderCommandEncoder> presentCommandEncoder = [commandBuffer renderCommandEncoderWithDescriptor: _renderPassPresent];
     [self renderFramebuffer:presentCommandEncoder];
+    
+    [commandBuffer popDebugGroup];
 }
 
 - (void)endFrame {
@@ -243,8 +252,6 @@
            bindTextures:(BOOL)bindTextures
     instanceBufferIndex:(NSUInteger)slotIndex
                 encoder:(id<MTLRenderCommandEncoder>)encoder {
-    MGPFrustum *frustum = drawCallList.frustum;
-    
     id<MTLTexture> textures[tex_total] = {};
     BOOL textureChangedFlags[tex_total] = {};
     for(int i = 0; i < tex_total; i++) {
@@ -264,12 +271,6 @@
         
         // draw submeshes
         for(MGPSubmesh *submesh in mesh.submeshes) {
-            id<MGPBoundingVolume> volume = submesh.volume;
-            
-            // Culling
-            if([volume isCulledInFrustum:frustum])
-                continue;
-            
             // Texture binding
             if(bindTextures) {
                 // Check previous draw call's textures and current textures are duplicated.
@@ -444,15 +445,14 @@
     [encoder endEncoding];
 }
 
-- (void)renderShading:(id<MTLRenderCommandEncoder>)encoder {
+- (void)renderDirectLighting:(id<MTLRenderCommandEncoder>)encoder {
     MGPGBufferShadingFunctionConstants shadingConstants = {};
     shadingConstants.usesAnisotropy = _usesAnisotropy;
-    light_global_t lightGlobalProps = self.scene.lightGlobalProps;
     
     id<MTLRenderPipelineState> shadingPipeline = [_gBuffer shadingPipelineStateWithConstants: shadingConstants
                                                                                        error: nil];
     
-    encoder.label = @"Shading";
+    encoder.label = @"Direct Lighting";
     [encoder setRenderPipelineState: shadingPipeline];
     [encoder setCullMode: MTLCullModeBack];
     [encoder setFragmentBuffer: _cameraPropsBuffer
@@ -479,25 +479,10 @@
         [encoder setFragmentTexture: _gBuffer.tangent
                             atIndex: attachment_tangent];
     }
-    [encoder setFragmentTexture: _gBuffer.depth
-                        atIndex: attachment_depth];
     
-    for(NSUInteger i = 0; i < lightGlobalProps.first_point_light_index; i++) {
-        if(_lightComponents[i].castShadows) {
-            MGPShadowBuffer *shadowBuffer = [_shadowManager newShadowBufferForLightComponent: _lightComponents[i]
-                                                                                  resolution: DEFAULT_SHADOW_RESOLUTION
-                                                                               cascadeLevels: 1];
-            [encoder setFragmentTexture: shadowBuffer.texture
-                                atIndex: i+attachment_shadow_map];
-        }
-        else {
-            [encoder setFragmentTexture: nil
-                                atIndex: i+attachment_shadow_map];
-        }
-    }
     [encoder drawPrimitives: MTLPrimitiveTypeTriangle
                 vertexStart: 0
-                vertexCount: 6];
+                vertexCount: 3];
     
     [encoder endEncoding];
 }
@@ -516,7 +501,7 @@
     [encoder setRenderPipelineState: renderPipeline];
     [encoder setCullMode: MTLCullModeBack];
     [encoder setFragmentBuffer: _cameraPropsBuffer
-                        offset: _currentBufferIndex * sizeof(camera_props_t)
+                        offset: _currentBufferIndex * sizeof(camera_props_t) * MAX_NUM_CAMS
                        atIndex: 0];
     [encoder setFragmentBuffer: _lightGlobalBuffer
                         offset: _currentBufferIndex * sizeof(light_global_t)
@@ -548,11 +533,67 @@
     }
     [encoder drawPrimitives: MTLPrimitiveTypeTriangle
                 vertexStart: 0
-                vertexCount: 6];
+                vertexCount: 3];
     
     [encoder endEncoding];
 }
 
+- (void)renderDirectionalShadowedLighting:(id<MTLRenderCommandEncoder>)encoder {
+    light_global_t lightGlobalProps = self.scene.lightGlobalProps;
+    MGPGBufferShadingFunctionConstants shadingConstants = {};
+    shadingConstants.usesAnisotropy = _usesAnisotropy;
+    NSUInteger lightBufferOffset = _currentBufferIndex * sizeof(light_t) * MAX_NUM_LIGHTS;
+    
+    id<MTLRenderPipelineState> renderPipeline = [_gBuffer directionalShadowedLightingPipelineStateWithConstants:shadingConstants
+                                                                                                          error:nil];
+
+    encoder.label = @"Directional Shadowed Lighting";
+    [encoder setRenderPipelineState: renderPipeline];
+    [encoder setCullMode: MTLCullModeBack];
+    [encoder setFragmentBuffer: _cameraPropsBuffer
+                        offset: _currentBufferIndex * sizeof(camera_props_t) * MAX_NUM_CAMS
+                       atIndex: 0];
+    [encoder setFragmentBuffer: _lightGlobalBuffer
+                        offset: _currentBufferIndex * sizeof(light_global_t)
+                       atIndex: 1];
+    [encoder setFragmentBuffer: _lightPropsBuffer
+                        offset: lightBufferOffset
+                       atIndex: 2];
+    [encoder setFragmentTexture: _gBuffer.albedo
+                        atIndex: attachment_albedo];
+    [encoder setFragmentTexture: _gBuffer.normal
+                        atIndex: attachment_normal];
+    [encoder setFragmentTexture: _gBuffer.shading
+                        atIndex: attachment_shading];
+    if(_usesAnisotropy) {
+        [encoder setFragmentTexture: _gBuffer.tangent
+                            atIndex: attachment_tangent];
+    }
+    [encoder setFragmentTexture: _gBuffer.depth
+                        atIndex: attachment_depth];
+    
+    for(NSUInteger i = 0; i < lightGlobalProps.first_point_light_index; i++) {
+        if(_lightComponents[i].castShadows) {
+            MGPShadowBuffer *shadowBuffer = [_shadowManager newShadowBufferForLightComponent: _lightComponents[i]
+                                                                                  resolution: DEFAULT_SHADOW_RESOLUTION
+                                                                               cascadeLevels: 1];
+            if(shadowBuffer) {
+                [encoder pushDebugGroup:[NSString stringWithFormat:@"Directional Light #%lu", i+1]];
+                [encoder setFragmentBufferOffset:lightBufferOffset + i * sizeof(light_t)
+                                         atIndex:2];
+                [encoder setFragmentTexture: shadowBuffer.texture
+                                    atIndex: attachment_shadow_map];
+                [encoder drawPrimitives: MTLPrimitiveTypeTriangle
+                            vertexStart: 0
+                            vertexCount: 3];
+                [encoder popDebugGroup];
+            }
+
+        }
+    }
+    
+    [encoder endEncoding];
+}
 
 - (void)renderFramebuffer:(id<MTLRenderCommandEncoder>)encoder {
     encoder.label = @"Present";
@@ -576,7 +617,7 @@
                         atIndex: 0];
     [encoder drawPrimitives: MTLPrimitiveTypeTriangle
                 vertexStart: 0
-                vertexCount: 6];
+                vertexCount: 3];
     
     [encoder endEncoding];
 }

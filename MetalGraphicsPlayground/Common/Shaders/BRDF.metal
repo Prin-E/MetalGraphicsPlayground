@@ -73,7 +73,7 @@ float3 calculate_brdf(shading_t shading) {
     // output
     float3 k_d = (float3(1.0) - f_s) * (1.0 - shading.metalic);
     float3 out_color = k_d * c_d + c_s;
-    out_color *= shading.albedo * shading.light * shading.n_l;
+    out_color *= shading.albedo * shading.light * shading.n_l * shading.occlusion;
     return max(0.0, out_color);
     
 }

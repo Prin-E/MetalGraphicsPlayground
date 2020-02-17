@@ -151,7 +151,7 @@ typedef void(^SGRUpdateHandler)(float deltaTime);
     [mesh2Node addChild:mesh3Node];
     
     srand((unsigned int)time(NULL));
-    for(NSUInteger i = 0; i < 256*40; i++) {
+    for(NSUInteger i = 0; i < 256*10; i++) {
         MGPPrimitiveNode *meshNode = [[MGPPrimitiveNode alloc] initWithPrimitiveType:MGPPrimitiveNodeTypeCube
                                                                      vertexDescriptor:_renderer.gBuffer.baseVertexDescriptor
                                                                                device:_renderer.device];
