@@ -95,11 +95,17 @@ typedef NS_OPTIONS(NSUInteger, MGPGBufferAttachmentType) {
 
 - (void)resize:(CGSize)newSize;
 
+// render pass
+- (MTLRenderPassDescriptor *)prePassDescriptorWithAttachment:(MGPGBufferAttachmentType)attachments;
+
 // render pipeline
 - (id<MTLRenderPipelineState>)renderPipelineStateWithConstants: (MGPGBufferPrepassFunctionConstants)constants
                                                          error: (NSError **)error;
+- (id<MTLRenderPipelineState>)renderPipelineStateWithConstants: (MGPGBufferPrepassFunctionConstants)constants
+                                                   attachments: (MGPGBufferAttachmentType)attachments
+                                                         error: (NSError **)error;
 - (id<MTLRenderPipelineState>)lightingPipelineStateWithError: (NSError **)error;
-- (id<MTLRenderPipelineState>)lightingPipelineStateWithConstants:(MGPGBufferShadingFunctionConstants)constants
+- (id<MTLRenderPipelineState>)lightingPipelineStateWithConstants: (MGPGBufferShadingFunctionConstants)constants
                                                            error: (NSError **)error;
 - (id<MTLRenderPipelineState>)indirectLightingPipelineStateWithConstants: (MGPGBufferShadingFunctionConstants)constants
                                                                    error: (NSError **)error;

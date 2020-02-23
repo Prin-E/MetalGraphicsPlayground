@@ -720,7 +720,7 @@
                     <slider verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="PEl-dg-Urb">
                         <rect key="frame" x="160" y="134" width="90" height="13"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES"/>
-                        <sliderCell key="cell" controlSize="mini" continuous="YES" state="on" alignment="left" maxValue="1" doubleValue="0.5" tickMarkPosition="above" sliderType="linear" id="4i3-9z-4Qy"/>
+                        <sliderCell key="cell" controlSize="mini" continuous="YES" state="on" alignment="left" maxValue="2" doubleValue="0.5" tickMarkPosition="above" sliderType="linear" id="4i3-9z-4Qy"/>
                         <connections>
                             <action selector="takeFloatValueFrom:" target="yCe-R8-T4p" id="Vfj-CP-tMm"/>
                             <binding destination="Voe-Tx-rLC" name="value" keyPath="self.renderer.ssaoIntensity" id="87Z-GJ-JHY"/>
@@ -729,7 +729,7 @@
                     <slider verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="bgB-hS-8x4">
                         <rect key="frame" x="376" y="134" width="90" height="12"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES"/>
-                        <sliderCell key="cell" controlSize="mini" continuous="YES" state="on" alignment="left" minValue="1" maxValue="64" doubleValue="32" tickMarkPosition="above" sliderType="linear" id="foD-jZ-2U7"/>
+                        <sliderCell key="cell" controlSize="mini" continuous="YES" state="on" alignment="left" minValue="1" maxValue="256" doubleValue="32" tickMarkPosition="above" sliderType="linear" id="foD-jZ-2U7"/>
                         <connections>
                             <action selector="takeIntegerValueFrom:" target="DhE-Kq-bMo" id="QO8-Ac-82s"/>
                             <binding destination="Voe-Tx-rLC" name="value" keyPath="self.renderer.ssaoNumSamples" id="z5I-IO-RNQ"/>

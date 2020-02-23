@@ -94,9 +94,6 @@ const NSUInteger kLightCountPerDrawCall = 4;
     // depth-stencil
     id<MTLDepthStencilState> _depthStencil;
     
-    // textures
-    id<MTLTexture> _skyboxDepthTexture;
-    
     // Meshes
     NSArray<MGPMesh *> *_meshes;
     
@@ -429,16 +426,6 @@ const NSUInteger kLightCountPerDrawCall = 4;
                               maxBuffersInFight:kMaxBuffersInFlight];
 }
 
-- (void)_initSkyboxDepthTexture {
-    MTLTextureDescriptor *desc = [MTLTextureDescriptor texture2DDescriptorWithPixelFormat:MTLPixelFormatDepth32Float_Stencil8
-                                                                                    width:_gBuffer.size.width
-                                                                                   height:_gBuffer.size.height
-                                                                                mipmapped:NO];
-    desc.usage = MTLTextureUsageRenderTarget;
-    desc.storageMode = MTLStorageModePrivate;
-    _skyboxDepthTexture = [self.device newTextureWithDescriptor:desc];
-}
-
 - (void)update:(float)deltaTime {
     // mouse pos
     NSPoint mousePos = [NSEvent mouseLocation];
@@ -674,8 +661,6 @@ const NSUInteger kLightCountPerDrawCall = 4;
     // skybox pass
     if(_IBLOn) {
         _renderPassSkybox.colorAttachments[0].texture = self.view.currentDrawable.texture;
-        //_renderPassSkybox.depthAttachment.texture = _skyboxDepthTexture;
-        //_renderPassSkybox.depthAttachment.storeAction = MTLStoreActionDontCare;
         id<MTLRenderCommandEncoder> skyboxPassEncoder = [commandBuffer renderCommandEncoderWithDescriptor: _renderPassSkybox];
         [self renderSkybox:skyboxPassEncoder];
     }
@@ -685,7 +670,13 @@ const NSUInteger kLightCountPerDrawCall = 4;
        forRenderingOrder: MGPPostProcessingRenderingOrderBeforePrepass];
     
     // G-buffer prepass
-    id<MTLRenderCommandEncoder> prepassEncoder = [commandBuffer renderCommandEncoderWithDescriptor: _gBuffer.renderPassDescriptor];
+    MGPGBufferAttachmentType prePassAttachments = MGPGBufferAttachmentTypeAlbedo;
+    prePassAttachments |= MGPGBufferAttachmentTypeNormal;
+    prePassAttachments |= MGPGBufferAttachmentTypeShading;
+    prePassAttachments |= MGPGBufferAttachmentTypeDepth;
+    if(_anisotropyOn)
+        prePassAttachments |= MGPGBufferAttachmentTypeTangent;
+    id<MTLRenderCommandEncoder> prepassEncoder = [commandBuffer renderCommandEncoderWithDescriptor: [_gBuffer prePassDescriptorWithAttachment:prePassAttachments]];
     [self renderGBuffer:prepassEncoder];
      
     // Shadowmap Passes
@@ -864,8 +855,16 @@ const NSUInteger kLightCountPerDrawCall = 4;
                 prepassConstants.flipVertically = YES;  // for sponza textures
                 prepassConstants.sRGBTexture = YES;     // for sponza textures
                 prepassConstants.usesAnisotropy = _anisotropyOn;
+
+                MGPGBufferAttachmentType prePassAttachments = MGPGBufferAttachmentTypeAlbedo;
+                prePassAttachments |= MGPGBufferAttachmentTypeNormal;
+                prePassAttachments |= MGPGBufferAttachmentTypeShading;
+                prePassAttachments |= MGPGBufferAttachmentTypeDepth;
+                if(_anisotropyOn)
+                    prePassAttachments |= MGPGBufferAttachmentTypeTangent;
                 
                 id<MTLRenderPipelineState> prepassPipeline = [_gBuffer renderPipelineStateWithConstants: prepassConstants
+                                                                                            attachments: prePassAttachments
                                                                                                   error: nil];
                 if(prepassPipeline != nil &&
                    prevPrepassPipeline != prepassPipeline) {
@@ -1264,7 +1263,6 @@ const NSUInteger kLightCountPerDrawCall = 4;
     MGPProjectionState proj = _camera.projectionState;
     proj.aspectRatio = scaledSize.width / scaledSize.height;
     _camera.projectionState = proj;
-    [self _initSkyboxDepthTexture];
 }
 
 @end

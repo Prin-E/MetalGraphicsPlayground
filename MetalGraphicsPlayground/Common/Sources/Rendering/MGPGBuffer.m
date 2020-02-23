@@ -29,6 +29,10 @@
     MTLRenderPipelineDescriptor *_directionalShadowedLightingPipelineDescriptor;
     MTLRenderPipelineDescriptor *_shadingPipelineDescriptor;
     
+    // key : big-flag of attachment types
+    // value : render-pass descriptors
+    NSMutableDictionary<NSNumber *, MTLRenderPassDescriptor *> *_prePassDescriptorDict;
+    
     // key : bit-flag of function constant values
     // value : render-pipeline state
     NSMutableDictionary<NSNumber *, id<MTLRenderPipelineState>> *_renderPipelineDict;
@@ -76,6 +80,9 @@
     _library = library;
     _size = newSize;
     _attachments = attachments;
+    
+    _prePassDescriptorDict = [NSMutableDictionary dictionaryWithCapacity:4];
+    
     _renderPipelineDict = [NSMutableDictionary dictionaryWithCapacity:24];
     _shadingPipelineDict = [NSMutableDictionary dictionaryWithCapacity:4];
     _indirectLightingPipelineDict = [NSMutableDictionary dictionaryWithCapacity:4];
@@ -88,7 +95,7 @@
     [self _makeIndirectLightingPipelineDescriptor];
     [self _makeDirectionalShadowedLightingPipelineDescriptor];
     [self _makeShadingPipelineDescriptor];
-    [self _makeRenderPassDescriptor];
+    [self _assignPassDescriptorTextures];
     [self _makeLightingPassDescriptor];
     [self _makeIndirectLightingPassDescriptor];
     [self _makeDirectionalShadowedLightingPassDescriptor];
@@ -266,37 +273,6 @@
     _shadingPipelineDescriptor = desc;
 }
 
-- (void)_makeRenderPassDescriptor {
-    if(_renderPassDescriptor == nil) {
-        _renderPassDescriptor = [[MTLRenderPassDescriptor alloc] init];
-        
-        // color attachments
-        _renderPassDescriptor.colorAttachments[attachment_albedo].loadAction = MTLLoadActionClear;
-        _renderPassDescriptor.colorAttachments[attachment_albedo].storeAction = MTLStoreActionStore;
-        _renderPassDescriptor.colorAttachments[attachment_normal].loadAction = MTLLoadActionClear;
-        _renderPassDescriptor.colorAttachments[attachment_normal].storeAction = MTLStoreActionStore;
-        _renderPassDescriptor.colorAttachments[attachment_shading].loadAction = MTLLoadActionClear;
-        _renderPassDescriptor.colorAttachments[attachment_shading].storeAction = MTLStoreActionStore;
-        _renderPassDescriptor.colorAttachments[attachment_tangent].loadAction = MTLLoadActionClear;
-        _renderPassDescriptor.colorAttachments[attachment_tangent].storeAction = MTLStoreActionStore;
-        _renderPassDescriptor.colorAttachments[attachment_albedo].clearColor = MTLClearColorMake(0, 0, 0, 0);
-        _renderPassDescriptor.colorAttachments[attachment_normal].clearColor = MTLClearColorMake(0, 0, 0, 0);
-        _renderPassDescriptor.colorAttachments[attachment_shading].clearColor = MTLClearColorMake(0, 0, 0, 0);
-        _renderPassDescriptor.colorAttachments[attachment_tangent].clearColor = MTLClearColorMake(0, 0, 0, 0);
-        
-        // depth attachments
-        _renderPassDescriptor.depthAttachment.loadAction = MTLLoadActionClear;
-        _renderPassDescriptor.depthAttachment.storeAction = MTLStoreActionStore;
-    }
-    
-    // assign or replace textures
-    _renderPassDescriptor.colorAttachments[attachment_albedo].texture = _albedo;
-    _renderPassDescriptor.colorAttachments[attachment_normal].texture = _normal;
-    _renderPassDescriptor.colorAttachments[attachment_shading].texture = _shading;
-    _renderPassDescriptor.colorAttachments[attachment_tangent].texture = _tangent;
-    _renderPassDescriptor.depthAttachment.texture = _depth;
-}
-
 - (void)_makeLightingPassDescriptor {
     if(_lightingPassBaseDescriptor == nil) {
         _lightingPassBaseDescriptor = [[MTLRenderPassDescriptor alloc] init];
@@ -390,6 +366,7 @@
 - (void)setAttachments:(MGPGBufferAttachmentType)attachments {
     _attachments = attachments;
     [self _makeGBufferTextures];
+    [self _removeRenderPassDescriptorCaches];
 }
 
 #pragma mark - Resize
@@ -399,12 +376,113 @@
     if(_albedo.width != width || _albedo.height != height) {
         _size = newSize;
         [self _makeGBufferTextures];
-        [self _makeRenderPassDescriptor];
+        [self _assignPassDescriptorTextures];
         [self _makeLightingPassDescriptor];
         [self _makeIndirectLightingPassDescriptor];
         [self _makeDirectionalShadowedLightingPassDescriptor];
         [self _makeShadingPassDescriptor];
     }
+}
+
+#pragma mark - Render passes
+- (void)_assignPassDescriptorTexturesInPassDescriptorDict:(NSDictionary<NSNumber*,MTLRenderPassDescriptor*> *)dict {
+    NSArray<NSNumber*> *keys = dict.allKeys;
+    for(NSNumber *key in keys) {
+        MGPGBufferAttachmentType attachments = key.unsignedIntegerValue;
+        MTLRenderPassDescriptor *renderPass = dict[key];
+        
+        if(attachments & MGPGBufferAttachmentTypeAlbedo)
+            renderPass.colorAttachments[attachment_albedo].texture = _albedo;
+        else
+            renderPass.colorAttachments[attachment_albedo].texture = nil;
+        
+        if(attachments & MGPGBufferAttachmentTypeNormal)
+            renderPass.colorAttachments[attachment_normal].texture = _normal;
+        else
+            renderPass.colorAttachments[attachment_normal].texture = nil;
+        
+        if(attachments & MGPGBufferAttachmentTypeShading)
+            renderPass.colorAttachments[attachment_shading].texture = _shading;
+        else
+            renderPass.colorAttachments[attachment_shading].texture = nil;
+        
+        if(attachments & MGPGBufferAttachmentTypeTangent)
+            renderPass.colorAttachments[attachment_tangent].texture = _tangent;
+        else
+            renderPass.colorAttachments[attachment_tangent].texture = nil;
+        
+        if(attachments & MGPGBufferAttachmentTypeLighting)
+            renderPass.colorAttachments[attachment_light].texture = _tangent;
+        else
+            renderPass.colorAttachments[attachment_light].texture = nil;
+        
+        if(attachments & MGPGBufferAttachmentTypeDepth)
+            renderPass.depthAttachment.texture = _depth;
+        else
+            renderPass.depthAttachment.texture = nil;
+    }
+}
+
+- (void)_assignPassDescriptorTextures {
+    [self _assignPassDescriptorTexturesInPassDescriptorDict:_prePassDescriptorDict];
+}
+
+- (void)_removeRenderPassDescriptorCaches {
+    NSArray<NSNumber*> *keys = _prePassDescriptorDict.allKeys;
+    for(NSNumber *key in keys) {
+        MGPGBufferAttachmentType attachments = key.unsignedIntegerValue;
+        if((attachments & (~_attachments)) != 0) {
+            [_prePassDescriptorDict removeObjectForKey:key];
+        }
+    }
+}
+
+- (MTLRenderPassDescriptor *)prePassDescriptorWithAttachment:(MGPGBufferAttachmentType)attachments {
+    NSNumber *key = @(attachments);
+    MTLRenderPassDescriptor *renderPass = [_prePassDescriptorDict objectForKey:key];
+    if(renderPass == nil) {
+        renderPass = [[MTLRenderPassDescriptor alloc] init];
+        
+        // color attachments
+        if(attachments & MGPGBufferAttachmentTypeAlbedo) {
+            renderPass.colorAttachments[attachment_albedo].loadAction = MTLLoadActionClear;
+            renderPass.colorAttachments[attachment_albedo].storeAction = MTLStoreActionStore;
+            renderPass.colorAttachments[attachment_albedo].clearColor = MTLClearColorMake(0, 0, 0, 0);
+        }
+        if(attachments & MGPGBufferAttachmentTypeNormal) {
+            renderPass.colorAttachments[attachment_normal].loadAction = MTLLoadActionClear;
+            renderPass.colorAttachments[attachment_normal].storeAction = MTLStoreActionStore;
+            renderPass.colorAttachments[attachment_normal].clearColor = MTLClearColorMake(0, 0, 0, 0);
+        }
+        if(attachments & MGPGBufferAttachmentTypeShading) {
+            renderPass.colorAttachments[attachment_shading].loadAction = MTLLoadActionClear;
+            renderPass.colorAttachments[attachment_shading].storeAction = MTLStoreActionStore;
+            renderPass.colorAttachments[attachment_shading].clearColor = MTLClearColorMake(0, 0, 0, 0);
+        }
+        if(attachments & MGPGBufferAttachmentTypeTangent) {
+            renderPass.colorAttachments[attachment_tangent].loadAction = MTLLoadActionClear;
+            renderPass.colorAttachments[attachment_tangent].storeAction = MTLStoreActionStore;
+            renderPass.colorAttachments[attachment_tangent].clearColor = MTLClearColorMake(0, 0, 0, 0);
+        }
+        if(attachments & MGPGBufferAttachmentTypeDepth) {
+            renderPass.depthAttachment.loadAction = MTLLoadActionClear;
+            renderPass.depthAttachment.storeAction = MTLStoreActionStore;
+        }
+        
+        // assign or replace textures
+        if(attachments & MGPGBufferAttachmentTypeAlbedo)
+            renderPass.colorAttachments[attachment_albedo].texture = _albedo;
+        if(attachments & MGPGBufferAttachmentTypeNormal)
+            renderPass.colorAttachments[attachment_normal].texture = _normal;
+        if(attachments & MGPGBufferAttachmentTypeShading)
+            renderPass.colorAttachments[attachment_shading].texture = _shading;
+        if(attachments & MGPGBufferAttachmentTypeTangent)
+            renderPass.colorAttachments[attachment_tangent].texture = _tangent;
+        if(attachments & MGPGBufferAttachmentTypeDepth)
+            renderPass.depthAttachment.texture = _depth;
+    }
+
+    return renderPass;
 }
 
 #pragma mark - Render pipeline states
@@ -464,6 +542,96 @@
         _renderPipelineDescriptor.fragmentFunction = [_library newFunctionWithName: @"gbuffer_prepass_frag"
                                                                     constantValues: constantValues
                                                                              error: error];
+        renderPipelineState = [_device newRenderPipelineStateWithDescriptor: _renderPipelineDescriptor
+                                                                      error: error];
+        _renderPipelineDict[key] = renderPipelineState;
+    }
+    return renderPipelineState;
+}
+
+- (id<MTLRenderPipelineState>)renderPipelineStateWithConstants:(MGPGBufferPrepassFunctionConstants)constants
+                                                   attachments:(MGPGBufferAttachmentType)attachments
+                                                         error:(NSError **)error {
+    if(error != nil) {
+        *error = nil;
+    }
+    
+    NSUInteger bitflag = 0;
+    bitflag |= constants.hasAlbedoMap ? (1L << fcv_albedo) : 0;
+    bitflag |= constants.hasNormalMap ? (1L << fcv_normal) : 0;
+    bitflag |= constants.hasRoughnessMap ? (1L << fcv_roughness) : 0;
+    bitflag |= constants.hasMetalicMap ? (1L << fcv_metalic) : 0;
+    bitflag |= constants.hasOcclusionMap ? (1L << fcv_occlusion) : 0;
+    bitflag |= constants.hasAnisotropicMap ? (1L << fcv_anisotropic) : 0;
+    bitflag |= constants.flipVertically ? (1L << fcv_flip_vertically) : 0;
+    bitflag |= constants.sRGBTexture ? (1L << fcv_srgb_texture) : 0;
+    bitflag |= constants.usesAnisotropy ? (1L << fcv_uses_anisotropy) : 0;
+    
+    NSNumber *key = @(bitflag);
+    id<MTLRenderPipelineState> renderPipelineState = [_renderPipelineDict objectForKey: key];
+    if(renderPipelineState == nil) {
+        // make function constant values object
+        MTLFunctionConstantValues *constantValues = [MTLFunctionConstantValues new];
+        [constantValues setConstantValue: &constants.hasAlbedoMap
+                                    type: MTLDataTypeBool
+                                 atIndex: fcv_albedo];
+        [constantValues setConstantValue: &constants.hasNormalMap
+                                    type: MTLDataTypeBool
+                                 atIndex: fcv_normal];
+        [constantValues setConstantValue: &constants.hasRoughnessMap
+                                    type: MTLDataTypeBool
+                                 atIndex: fcv_roughness];
+        [constantValues setConstantValue: &constants.hasMetalicMap
+                                    type: MTLDataTypeBool
+                                 atIndex: fcv_metalic];
+        [constantValues setConstantValue: &constants.hasOcclusionMap
+                                    type: MTLDataTypeBool
+                                 atIndex: fcv_occlusion];
+        [constantValues setConstantValue: &constants.hasAnisotropicMap
+                                    type: MTLDataTypeBool
+                                 atIndex: fcv_anisotropic];
+        [constantValues setConstantValue: &constants.flipVertically
+                                    type: MTLDataTypeBool
+                                 atIndex: fcv_flip_vertically];
+        [constantValues setConstantValue: &constants.sRGBTexture
+                                    type: MTLDataTypeBool
+                                 atIndex: fcv_srgb_texture];
+        [constantValues setConstantValue: &constants.usesAnisotropy
+                                    type: MTLDataTypeBool
+                                 atIndex: fcv_uses_anisotropy];
+        
+        _renderPipelineDescriptor.vertexFunction = [_library newFunctionWithName: @"gbuffer_prepass_vert"
+                                                                  constantValues: constantValues
+                                                                           error: error];
+        _renderPipelineDescriptor.fragmentFunction = [_library newFunctionWithName: @"gbuffer_prepass_frag"
+                                                                    constantValues: constantValues
+                                                                             error: error];
+        
+        if(attachments & MGPGBufferAttachmentTypeAlbedo)
+            _renderPipelineDescriptor.colorAttachments[attachment_albedo].pixelFormat = _albedo.pixelFormat;
+        else
+            _renderPipelineDescriptor.colorAttachments[attachment_albedo].pixelFormat = MTLPixelFormatInvalid;
+        
+        if(attachments & MGPGBufferAttachmentTypeNormal)
+            _renderPipelineDescriptor.colorAttachments[attachment_normal].pixelFormat = _normal.pixelFormat;
+        else
+            _renderPipelineDescriptor.colorAttachments[attachment_normal].pixelFormat = MTLPixelFormatInvalid;
+        
+        if(attachments & MGPGBufferAttachmentTypeShading)
+            _renderPipelineDescriptor.colorAttachments[attachment_shading].pixelFormat = _shading.pixelFormat;
+        else
+            _renderPipelineDescriptor.colorAttachments[attachment_shading].pixelFormat = MTLPixelFormatInvalid;
+        
+        if(attachments & MGPGBufferAttachmentTypeTangent)
+            _renderPipelineDescriptor.colorAttachments[attachment_tangent].pixelFormat = _tangent.pixelFormat;
+        else
+            _renderPipelineDescriptor.colorAttachments[attachment_tangent].pixelFormat = MTLPixelFormatInvalid;
+        
+        if(attachments & MGPGBufferAttachmentTypeDepth)
+            _renderPipelineDescriptor.depthAttachmentPixelFormat = _depth.pixelFormat;
+        else
+            _renderPipelineDescriptor.depthAttachmentPixelFormat = MTLPixelFormatInvalid;
+        
         renderPipelineState = [_device newRenderPipelineStateWithDescriptor: _renderPipelineDescriptor
                                                                       error: error];
         _renderPipelineDict[key] = renderPipelineState;
