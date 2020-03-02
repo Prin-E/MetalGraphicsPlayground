@@ -16,6 +16,7 @@
 #import "../Model/MGPMesh.h"
 #import "../Model/MGPFrustum.h"
 #import "../Model/MGPBoundingVolume.h"
+#import "../Utility/MGPTextureManager.h"
 #import "LightingCommon.h"
 
 @interface MGPDrawCall ()
@@ -51,6 +52,7 @@
 @end
 
 @implementation MGPSceneRenderer {
+    MGPTextureManager *_textureManager;
     NSMutableArray<id<MTLBuffer>> *_instancePropsBuffersList[kMaxBuffersInFlight];
     NSUInteger _instancePropsBufferIndex;
     NSUInteger _instancePropsBufferOffset;
@@ -74,6 +76,9 @@
         _cameraComponents = [NSMutableArray new];
         _lightComponents = [NSMutableArray new];
         _meshComponents = [NSMutableArray new];
+        
+        // texture manager
+        _textureManager = [[MGPTextureManager alloc] initWithDevice:self.device];
     }
     return self;
 }
