@@ -201,7 +201,7 @@
        forRenderingOrder: MGPPostProcessingRenderingOrderBeforePrepass];
     
     // G-buffer prepass
-    id<MTLRenderCommandEncoder> prepassEncoder = [commandBuffer renderCommandEncoderWithDescriptor: _gBuffer.renderPassDescriptor];
+    id<MTLRenderCommandEncoder> prepassEncoder = [commandBuffer renderCommandEncoderWithDescriptor: [_gBuffer prePassDescriptorWithAttachment:_gBuffer.attachments]];
     [self renderGBuffer:prepassEncoder];
     
     // Post-process before light pass

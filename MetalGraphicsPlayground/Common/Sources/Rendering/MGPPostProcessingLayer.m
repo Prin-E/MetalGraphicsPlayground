@@ -10,6 +10,7 @@
 #import "MGPPostProcessing.h"
 #import "../Rendering/MGPGBuffer.h"
 #import "../../Shaders/SharedStructures.h"
+#import "../Utility/MGPTextureManager.h"
 
 NSString * const MGPPostProcessingLayerErrorDomain = @"MGPPostProcessingLayerErrorDomain";
 
@@ -89,12 +90,11 @@ NSString * const MGPPostProcessingLayerErrorDomain = @"MGPPostProcessingLayerErr
     size.height = MAX(16, size.height / powf(2, _downsample));
     
     MTLTextureDescriptor *desc = [MTLTextureDescriptor texture2DDescriptorWithPixelFormat: MTLPixelFormatR16Float
-                                                                                    width: size.width height:size.height
+                                                                                    width: size.width
+                                                                                   height: size.height
                                                                                 mipmapped: NO];
     desc.usage = MTLTextureUsageShaderRead | MTLTextureUsageShaderWrite;
     desc.storageMode = MTLStorageModePrivate;
-    _temporarySSAOTexture = [_device newTextureWithDescriptor: desc];
-    _temporarySSAOTexture.label = @"SSAO Temporary Texture";
     _ssaoTexture = [_device newTextureWithDescriptor: desc];
     _ssaoTexture.label = @"SSAO Texture";
 }
@@ -141,6 +141,14 @@ NSString * const MGPPostProcessingLayerErrorDomain = @"MGPPostProcessingLayerErr
     memcpy(_ssaoPropsBuffer.contents + sizeof(ssao_props_t) * _postProcessing.currentBufferIndex,
            &props, sizeof(ssao_props_t));
     [_ssaoPropsBuffer didModifyRange: NSMakeRange(sizeof(ssao_props_t) * _postProcessing.currentBufferIndex, sizeof(ssao_props_t))];
+    
+    // make temporary textures
+    _temporarySSAOTexture = [_postProcessing.textureManager newTemporaryTextureWithWidth:_destinationResolution.width
+                                                                                  height:_destinationResolution.height
+                                                                             pixelFormat:MTLPixelFormatR16Float
+                                                                             storageMode:MTLStorageModePrivate
+                                                                                   usage:MTLTextureUsageShaderRead | MTLTextureUsageShaderWrite
+                                                                        mipmapLevelCount:1];
     
     NSUInteger width = _ssaoTexture.width, height = _ssaoTexture.height;
     MGPGBuffer *gBuffer = _postProcessing.gBuffer;
@@ -189,6 +197,8 @@ NSString * const MGPPostProcessingLayerErrorDomain = @"MGPPostProcessingLayerErr
             threadsPerThreadgroup:threadsPerThreadgroup];
     
     [encoder endEncoding];
+    
+    [_postProcessing.textureManager releaseTemporaryTexture:_temporarySSAOTexture];
 }
 
 - (void)resize: (CGSize)newSize {

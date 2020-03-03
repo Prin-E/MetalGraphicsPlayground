@@ -336,7 +336,7 @@
 }
 
 - (MTLRenderPassDescriptor *)renderPassDescriptor {
-    return _renderPassDescriptor;
+    return [self prePassDescriptorWithAttachment:_attachments];
 }
 
 - (MTLRenderPassDescriptor *)lightingPassBaseDescriptor {

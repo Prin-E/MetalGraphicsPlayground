@@ -17,13 +17,16 @@ NS_ASSUME_NONNULL_BEGIN
 
 + (MGPTextureManager *)sharedTextureManager;
 
+- (id<MTLTexture>)newTemporaryTextureWithDescriptor:(MTLTextureDescriptor *)descriptor;
+
 - (id<MTLTexture>)newTemporaryTextureWithWidth:(NSUInteger)width
                                         height:(NSUInteger)height
                                    pixelFormat:(MTLPixelFormat)pixelFormat
-                               resourceOptions:(MTLResourceOptions)options
+                                   storageMode:(MTLStorageMode)storageMode
                                          usage:(MTLTextureUsage)usage
                               mipmapLevelCount:(NSUInteger)mipmapLevelCount;
 - (void)releaseTemporaryTexture:(id<MTLTexture>)texture;
+- (void)clearUnusedTemporaryTextures;
 
 @end
 

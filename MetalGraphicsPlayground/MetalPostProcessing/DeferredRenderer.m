@@ -24,6 +24,7 @@
 #import "../Common/Sources/Model/MGPFrustum.h"
 #import "../Common/Sources/Model/MGPBoundingVolume.h"
 #import "../Common/Sources/Rendering/MGPGizmos.h"
+#import "../Common/Sources/Utility/MGPTextureManager.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #import "../Common/STB/stb_image.h"
@@ -111,6 +112,9 @@ const NSUInteger kLightCountPerDrawCall = 4;
     
     // Gizmos
     MGPGizmos *_gizmos;
+    
+    // Texture Manager
+    MGPTextureManager *_textureManager;
 }
 
 - (void)setView:(MGPView *)view {
@@ -396,6 +400,9 @@ const NSUInteger kLightCountPerDrawCall = 4;
     projection.orthographicSize = 5;
     _camera.projectionState = projection;
     
+    // texture manager
+    _textureManager = [[MGPTextureManager alloc] initWithDevice:self.device];
+    
     // shadow
     _shadowManager = [[MGPShadowManager alloc] initWithDevice: self.device
                                                       library: self.defaultLibrary
@@ -403,7 +410,8 @@ const NSUInteger kLightCountPerDrawCall = 4;
     
     // post-process
     _postProcess = [[MGPPostProcessing alloc] initWithDevice: self.device
-                                                     library: self.defaultLibrary];
+                                                     library: self.defaultLibrary
+                                              textureManager:_textureManager];
     _postProcess.gBuffer = _gBuffer;
     _postProcess.cameraBuffer = _cameraPropsBuffer;
     MGPPostProcessingLayerSSAO *ssao = [[MGPPostProcessingLayerSSAO alloc] initWithDevice: self.device
@@ -1258,6 +1266,7 @@ const NSUInteger kLightCountPerDrawCall = 4;
     [super resize:newSize];
     
     CGSize scaledSize = self.scaledSize;
+    [_textureManager clearUnusedTemporaryTextures];
     [_gBuffer resize:scaledSize];
     [_postProcess resize:scaledSize];
     MGPProjectionState proj = _camera.projectionState;

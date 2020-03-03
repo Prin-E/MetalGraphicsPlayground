@@ -351,17 +351,21 @@ const float kCameraSpeed = 100;
     prepassConstants.hasOcclusionMap = _meshes[0].submeshes[0].textures[tex_occlusion] != NSNull.null;
     prepassConstants.hasAnisotropicMap = _meshes[0].submeshes[0].textures[tex_anisotropic] != NSNull.null;
     prepassConstants.flipVertically = NO;
+    prepassConstants.usesAnisotropy = YES;
     MGPGBufferShadingFunctionConstants shadingConstants = {};
     shadingConstants.hasIBLIrradianceMap = _IBLs.count > 0;
     shadingConstants.hasIBLSpecularMap = _IBLs.count > 0;
     shadingConstants.hasSSAOMap = NO;
+    shadingConstants.usesAnisotropy = YES;
     _renderPipelinePrepass = [_gBuffer renderPipelineStateWithConstants: prepassConstants
                                                                   error: nil];
-    _renderPipelineLighting = [_gBuffer lightingPipelineStateWithError: nil];
+    _renderPipelineLighting = [_gBuffer lightingPipelineStateWithConstants:shadingConstants
+                                                                     error:nil];
     _renderPipelineShading = [_gBuffer nonLightCulledShadingPipelineStateWithConstants: shadingConstants
                                                                    error: nil];
     
     MGPGBufferPrepassFunctionConstants prepassTestConstants = {};
+    prepassTestConstants.usesAnisotropy = YES;
     /*
     prepassTestConstants.hasAlbedoMap = _testObjects[0].submeshes[0].textures[tex_albedo] != NSNull.null;
     prepassTestConstants.hasNormalMap = _testObjects[0].submeshes[0].textures[tex_normal] != NSNull.null;

@@ -22,6 +22,8 @@ static MGPTextureManager *_sharedTextureManager = nil;
     if(self) {
         _device = device;
         _sharedTextureManager = self;
+        _unusedTemporaryTextures = [NSMutableDictionary new];
+        _usedTemporaryTextures = [NSMutableDictionary new];
     }
     return self;
 }
@@ -33,28 +35,40 @@ static MGPTextureManager *_sharedTextureManager = nil;
 - (NSNumber*)_identifierFromWidth:(NSUInteger)width
                            height:(NSUInteger)height
                       pixelFormat:(MTLPixelFormat)pixelFormat
-                  resourceOptions:(MTLResourceOptions)options
+                      storageMode:(MTLStorageMode)storageMode
                             usage:(MTLTextureUsage)usage
                  mipmapLevelCount:(NSUInteger)mipmapLevelCount {
     NSUInteger identifier = width;
     identifier = (identifier << 14) | height;
     identifier = (identifier << 10) | pixelFormat;
-    identifier = (identifier << 6) | options;
+    identifier = (identifier << 4) | storageMode;
     identifier = (identifier << 6) | usage;
     identifier = (identifier << 4) | mipmapLevelCount;
     return @(identifier);
 }
 
+- (id<MTLTexture>)newTemporaryTextureWithDescriptor:(MTLTextureDescriptor *)descriptor {
+    if(descriptor == nil)
+        return nil;
+    
+    return [self newTemporaryTextureWithWidth:descriptor.width
+                                       height:descriptor.height
+                                  pixelFormat:descriptor.pixelFormat
+                                  storageMode:descriptor.storageMode
+                                        usage:descriptor.usage
+                             mipmapLevelCount:descriptor.mipmapLevelCount];
+}
+
 - (id<MTLTexture>)newTemporaryTextureWithWidth:(NSUInteger)width
                                         height:(NSUInteger)height
                                    pixelFormat:(MTLPixelFormat)pixelFormat
-                               resourceOptions:(MTLResourceOptions)options
+                                   storageMode:(MTLStorageMode)storageMode
                                          usage:(MTLTextureUsage)usage
                               mipmapLevelCount:(NSUInteger)mipmapLevelCount {
     NSNumber *identifier = [self _identifierFromWidth:width
                                                height:height
                                           pixelFormat:pixelFormat
-                                      resourceOptions:options
+                                          storageMode:storageMode
                                                 usage:usage
                                      mipmapLevelCount:mipmapLevelCount];
     
@@ -80,7 +94,7 @@ static MGPTextureManager *_sharedTextureManager = nil;
                                                                                              height:height
                                                                                           mipmapped:mipmapLevelCount > 1];
         descriptor.usage = usage;
-        descriptor.resourceOptions = options;
+        descriptor.storageMode = storageMode;
         if(mipmapLevelCount > 1)
             descriptor.mipmapLevelCount = mipmapLevelCount;
         texture = [_device newTextureWithDescriptor:descriptor];
@@ -97,7 +111,7 @@ static MGPTextureManager *_sharedTextureManager = nil;
     NSNumber *identifier = [self _identifierFromWidth:texture.width
                                                height:texture.height
                                           pixelFormat:texture.pixelFormat
-                                      resourceOptions:texture.resourceOptions
+                                          storageMode:texture.storageMode
                                                 usage:texture.usage
                                      mipmapLevelCount:texture.mipmapLevelCount];
     
@@ -119,6 +133,15 @@ static MGPTextureManager *_sharedTextureManager = nil;
     else {
         NSLog(@"This is not temporary texture(0x%016lX)!", (uintptr_t)texture);
     }
+}
+
+- (void)clearUnusedTemporaryTextures {
+    NSNumber *key = nil;
+    NSEnumerator<NSNumber*> *e = _unusedTemporaryTextures.keyEnumerator;
+    while((key = e.nextObject)) {
+        [_unusedTemporaryTextures[key] removeAllObjects];
+    }
+    [_unusedTemporaryTextures removeAllObjects];
 }
 
 @end

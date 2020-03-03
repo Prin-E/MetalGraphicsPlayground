@@ -280,4 +280,9 @@
     return drawCallList;
 }
 
+- (void)resize:(CGSize)newSize {
+    [super resize:newSize];
+    [_textureManager clearUnusedTemporaryTextures];
+}
+
 @end
