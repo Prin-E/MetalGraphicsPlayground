@@ -24,7 +24,8 @@ NS_ASSUME_NONNULL_BEGIN
                                    pixelFormat:(MTLPixelFormat)pixelFormat
                                    storageMode:(MTLStorageMode)storageMode
                                          usage:(MTLTextureUsage)usage
-                              mipmapLevelCount:(NSUInteger)mipmapLevelCount;
+                              mipmapLevelCount:(NSUInteger)mipmapLevelCount
+                                   arrayLength:(NSUInteger)arrayLength;
 - (void)releaseTemporaryTexture:(id<MTLTexture>)texture;
 - (void)clearUnusedTemporaryTextures;
 

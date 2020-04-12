@@ -37,13 +37,15 @@ static MGPTextureManager *_sharedTextureManager = nil;
                       pixelFormat:(MTLPixelFormat)pixelFormat
                       storageMode:(MTLStorageMode)storageMode
                             usage:(MTLTextureUsage)usage
-                 mipmapLevelCount:(NSUInteger)mipmapLevelCount {
+                 mipmapLevelCount:(NSUInteger)mipmapLevelCount
+                      arrayLength:(NSUInteger)arrayLength {
     NSUInteger identifier = width;
     identifier = (identifier << 14) | height;
     identifier = (identifier << 10) | pixelFormat;
     identifier = (identifier << 4) | storageMode;
     identifier = (identifier << 6) | usage;
     identifier = (identifier << 4) | mipmapLevelCount;
+    identifier = (identifier << 4) | arrayLength;
     return @(identifier);
 }
 
@@ -56,7 +58,8 @@ static MGPTextureManager *_sharedTextureManager = nil;
                                   pixelFormat:descriptor.pixelFormat
                                   storageMode:descriptor.storageMode
                                         usage:descriptor.usage
-                             mipmapLevelCount:descriptor.mipmapLevelCount];
+                             mipmapLevelCount:descriptor.mipmapLevelCount
+                                  arrayLength:descriptor.arrayLength];
 }
 
 - (id<MTLTexture>)newTemporaryTextureWithWidth:(NSUInteger)width
@@ -64,13 +67,15 @@ static MGPTextureManager *_sharedTextureManager = nil;
                                    pixelFormat:(MTLPixelFormat)pixelFormat
                                    storageMode:(MTLStorageMode)storageMode
                                          usage:(MTLTextureUsage)usage
-                              mipmapLevelCount:(NSUInteger)mipmapLevelCount {
+                              mipmapLevelCount:(NSUInteger)mipmapLevelCount
+                                   arrayLength:(NSUInteger)arrayLength {
     NSNumber *identifier = [self _identifierFromWidth:width
                                                height:height
                                           pixelFormat:pixelFormat
                                           storageMode:storageMode
                                                 usage:usage
-                                     mipmapLevelCount:mipmapLevelCount];
+                                     mipmapLevelCount:mipmapLevelCount
+                                          arrayLength:arrayLength];
     
     NSMutableSet<id<MTLTexture>> *unusedSet = _unusedTemporaryTextures[identifier];
     NSMutableSet<id<MTLTexture>> *usedSet = _usedTemporaryTextures[identifier];
@@ -97,6 +102,10 @@ static MGPTextureManager *_sharedTextureManager = nil;
         descriptor.storageMode = storageMode;
         if(mipmapLevelCount > 1)
             descriptor.mipmapLevelCount = mipmapLevelCount;
+        if(arrayLength > 1) {
+            descriptor.textureType = MTLTextureType2DArray;
+            descriptor.arrayLength = arrayLength;
+        }
         texture = [_device newTextureWithDescriptor:descriptor];
     }
     if(texture)
@@ -113,7 +122,8 @@ static MGPTextureManager *_sharedTextureManager = nil;
                                           pixelFormat:texture.pixelFormat
                                           storageMode:texture.storageMode
                                                 usage:texture.usage
-                                     mipmapLevelCount:texture.mipmapLevelCount];
+                                     mipmapLevelCount:texture.mipmapLevelCount
+                                          arrayLength:texture.arrayLength];
     
     NSMutableSet<id<MTLTexture>> *unusedSet = _unusedTemporaryTextures[identifier];
     NSMutableSet<id<MTLTexture>> *usedSet = _usedTemporaryTextures[identifier];

@@ -13,9 +13,9 @@
 
 using namespace metal;
 
-kernel void ssao(texture2d<float> normal [[texture(0)]],
-                 texture2d<float> tangent [[texture(1)]],
-                 depth2d<float> depth [[texture(2)]],
+kernel void ssao(depth2d<float> depth [[texture(0)]],
+                 texture2d<float> normal [[ texture(1)]],
+                 texture2d<float> tangent [[texture(2)]],
                  texture2d<float, access::write> output [[texture(3)]],
                  device float3 *random_samples [[buffer(0)]],
                  constant ssao_props_t &ssao_props [[buffer(1)]],
@@ -166,4 +166,57 @@ kernel void ssao_blur_vertical(texture2d<float> ssao [[texture(0)]],
         float g = group_vals[groupval_pos.x][groupval_pos.y+3];
         output.write(blur_gaussian(a,b,c,d,e,f,g),thread_pos);
     }
+}
+
+#pragma mark - Adaptive SSAO
+
+kernel void deinterleave_depth_2x2(depth2d<float, access::read> depth [[texture(0)]],
+                                   texture2d_array<float, access::write> output [[texture(1)]],
+                                   uint2 thread_pos [[thread_position_in_grid]],
+                                   uint2 thread_group_pos [[thread_position_in_threadgroup]]) {
+    threadgroup float group_vals[16][16] = {};
+    
+    float value = depth.read(thread_pos);
+    group_vals[thread_group_pos.x][thread_group_pos.y] = value;
+    simdgroup_barrier(mem_flags::mem_threadgroup);
+    
+    uint2 tex_coord = thread_pos >> 1;
+    ushort tex_index = (thread_group_pos.x & 1) | ((thread_group_pos.y & 1) << 1);
+    
+    output.write(group_vals[thread_group_pos.x][thread_group_pos.y], tex_coord, tex_index);
+}
+
+kernel void deinterleave_depth_4x4(depth2d<float, access::read> depth [[texture(0)]],
+                                   texture2d_array<float, access::write> output [[texture(1)]],
+                                   uint2 thread_pos [[thread_position_in_grid]],
+                                   uint2 thread_group_pos [[thread_position_in_threadgroup]]) {
+    threadgroup float group_vals[16][16] = {};
+    
+    float value = depth.read(thread_pos);
+    //uint2 size = uint2(output.get_width(), output.get_height());
+    //float view_z = view_pos_from_depth(camera_props.projectionInverse, thread_pos, size, value).z;
+    
+    group_vals[thread_group_pos.x][thread_group_pos.y] = value;
+    simdgroup_barrier(mem_flags::mem_threadgroup);
+    
+    uint2 tex_coord = thread_pos >> 2;
+    ushort tex_index = (thread_group_pos.x & 2) | ((thread_group_pos.y & 2) << 2);
+    
+    output.write(group_vals[thread_group_pos.x][thread_group_pos.y], tex_coord, tex_index);
+}
+
+kernel void interleave_depth_2x2(texture2d_array<float, access::read> input [[texture(0)]],
+                                 texture2d<float, access::write> output [[texture(1)]],
+                                 uint2 thread_pos [[thread_position_in_grid]],
+                                 uint2 thread_group_pos [[thread_position_in_threadgroup]]) {
+    threadgroup float group_vals[16][16] = {};
+    
+    uint2 half_pos = thread_pos >> 1;
+    uint tex_index = ((thread_group_pos.y & 1) << 1) + (thread_group_pos.x & 1);
+    float value = input.read(half_pos, tex_index).r;
+    group_vals[thread_group_pos.x][thread_group_pos.y] = value;
+    
+    simdgroup_barrier(mem_flags::mem_threadgroup);
+    
+    output.write(group_vals[thread_group_pos.x][thread_group_pos.y], thread_pos);
 }

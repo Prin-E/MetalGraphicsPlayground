@@ -53,9 +53,9 @@ NSString * const MGPPostProcessingLayerErrorDomain = @"MGPPostProcessingLayerErr
 @end
 
 @implementation MGPPostProcessingLayerSSAO {
-    id<MTLTexture> _temporarySSAOTexture;
     id<MTLComputePipelineState> _ssaoPipeline;
     id<MTLComputePipelineState> _blurHPipeline, _blurVPipeline;
+    id<MTLComputePipelineState> _deinterleave2x2Pipeline, _interleave2x2Pipeline;
     id<MTLBuffer> _ssaoRandomSamplesBuffer;
     id<MTLBuffer> _ssaoPropsBuffer;
     CGSize _destinationResolution;
@@ -80,9 +80,13 @@ NSString * const MGPPostProcessingLayerErrorDomain = @"MGPPostProcessingLayerErr
     _ssaoPipeline = [_device newComputePipelineStateWithFunction: [_library newFunctionWithName: @"ssao"]
                                                            error: nil];
     _blurHPipeline = [_device newComputePipelineStateWithFunction: [_library newFunctionWithName: @"ssao_blur_horizontal"]
-                                                          error: nil];
+                                                            error: nil];
     _blurVPipeline = [_device newComputePipelineStateWithFunction: [_library newFunctionWithName: @"ssao_blur_vertical"]
-                                                                                                                 error: nil];
+                                                            error: nil];
+    _deinterleave2x2Pipeline = [_device newComputePipelineStateWithFunction: [_library newFunctionWithName: @"deinterleave_depth_2x2"]
+                                                                      error: nil];
+    _interleave2x2Pipeline = [_device newComputePipelineStateWithFunction: [_library newFunctionWithName: @"interleave_depth_2x2"]
+                                                                    error: nil];
 }
 
 - (void)_makeTexturesWithSize: (CGSize)size {
@@ -143,12 +147,26 @@ NSString * const MGPPostProcessingLayerErrorDomain = @"MGPPostProcessingLayerErr
     [_ssaoPropsBuffer didModifyRange: NSMakeRange(sizeof(ssao_props_t) * _postProcessing.currentBufferIndex, sizeof(ssao_props_t))];
     
     // make temporary textures
-    _temporarySSAOTexture = [_postProcessing.textureManager newTemporaryTextureWithWidth:_destinationResolution.width
-                                                                                  height:_destinationResolution.height
-                                                                             pixelFormat:MTLPixelFormatR16Float
-                                                                             storageMode:MTLStorageModePrivate
-                                                                                   usage:MTLTextureUsageShaderRead | MTLTextureUsageShaderWrite
-                                                                        mipmapLevelCount:1];
+    id<MTLTexture> temporarySSAOTexture = nil;
+    id<MTLTexture> deinterleavedTextureArray = nil;
+    temporarySSAOTexture = [_postProcessing.textureManager newTemporaryTextureWithWidth:_ssaoTexture.width
+                                                                                 height:_ssaoTexture.height
+                                                                            pixelFormat:MTLPixelFormatR16Float
+                                                                            storageMode:MTLStorageModePrivate
+                                                                                  usage:MTLTextureUsageShaderRead | MTLTextureUsageShaderWrite
+                                                                       mipmapLevelCount:1
+                                                                            arrayLength:1];
+    _type = MGPSSAOTypeAdaptive;
+    if(_type == MGPSSAOTypeAdaptive) {
+        deinterleavedTextureArray = [_postProcessing.textureManager newTemporaryTextureWithWidth:_destinationResolution.width / 2
+                                                                                          height:_destinationResolution.height / 2
+                                                                                     pixelFormat:MTLPixelFormatR16Float
+                                                                                     storageMode:MTLStorageModePrivate
+                                                                                           usage:MTLTextureUsageShaderRead | MTLTextureUsageShaderWrite
+                                                                                mipmapLevelCount:1
+                                                                                     arrayLength:4];
+    }
+    
     
     NSUInteger width = _ssaoTexture.width, height = _ssaoTexture.height;
     MGPGBuffer *gBuffer = _postProcessing.gBuffer;
@@ -164,11 +182,24 @@ NSString * const MGPPostProcessingLayerErrorDomain = @"MGPPostProcessingLayerErr
                                        (height+threadsPerThreadgroup.height-1)/threadsPerThreadgroup.height,
                                        1);
     
+    MTLSize threadgroups2 = MTLSizeMake((_destinationResolution.width+threadsPerThreadgroup.width-1)/threadsPerThreadgroup.width,
+                                       (_destinationResolution.height+threadsPerThreadgroup.height-1)/threadsPerThreadgroup.height,
+                                       1);
+    
+    // deinterleave
+    if(_type == MGPSSAOTypeAdaptive) {
+        [encoder setComputePipelineState: _deinterleave2x2Pipeline];
+        [encoder setTexture:gBuffer.depth atIndex:0];
+        [encoder setTexture:deinterleavedTextureArray atIndex:1];
+        [encoder dispatchThreadgroups:threadgroups2
+                threadsPerThreadgroup:threadsPerThreadgroup];
+    }
+    
     // step 1 : ssao
     [encoder setComputePipelineState: _ssaoPipeline];
-    [encoder setTexture: gBuffer.normal atIndex: 0];
-    [encoder setTexture: gBuffer.tangent atIndex: 1];
-    [encoder setTexture: gBuffer.depth atIndex: 2];
+    [encoder setTexture: gBuffer.depth atIndex: 0];
+    [encoder setTexture: gBuffer.normal atIndex: 1];
+    [encoder setTexture: gBuffer.tangent atIndex: 2];
     [encoder setTexture: _ssaoTexture atIndex: 3];
     [encoder setBuffer: _ssaoRandomSamplesBuffer
                 offset: 0
@@ -185,20 +216,37 @@ NSString * const MGPPostProcessingLayerErrorDomain = @"MGPPostProcessingLayerErr
     // step 2 : blur horizontal
     [encoder setComputePipelineState: _blurHPipeline];
     [encoder setTexture: _ssaoTexture atIndex: 0];
-    [encoder setTexture: _temporarySSAOTexture atIndex: 1];
+    [encoder setTexture: temporarySSAOTexture atIndex: 1];
     [encoder dispatchThreadgroups:threadgroups
             threadsPerThreadgroup:threadsPerThreadgroup];
     
     // step 3 : blur vertical
     [encoder setComputePipelineState: _blurVPipeline];
-    [encoder setTexture: _temporarySSAOTexture atIndex: 0];
+    [encoder setTexture: temporarySSAOTexture atIndex: 0];
     [encoder setTexture: _ssaoTexture atIndex: 1];
     [encoder dispatchThreadgroups:threadgroups
             threadsPerThreadgroup:threadsPerThreadgroup];
     
+    // interleave
+    if(_type == MGPSSAOTypeAdaptive) {
+        temporarySSAOTexture = [_postProcessing.textureManager newTemporaryTextureWithWidth:_destinationResolution.width
+                                                                                     height:_destinationResolution.height
+                                                                                pixelFormat:MTLPixelFormatR16Float
+                                                                                storageMode:MTLStorageModePrivate
+                                                                                      usage:MTLTextureUsageShaderRead | MTLTextureUsageShaderWrite
+                                                                           mipmapLevelCount:1
+                                                                                arrayLength:1];
+        
+        [encoder setComputePipelineState: _interleave2x2Pipeline];
+        [encoder setTexture:deinterleavedTextureArray atIndex:0];
+        [encoder setTexture:temporarySSAOTexture atIndex:1];
+        [encoder dispatchThreadgroups:threadgroups2
+                threadsPerThreadgroup:threadsPerThreadgroup];
+    }
+    
     [encoder endEncoding];
     
-    [_postProcessing.textureManager releaseTemporaryTexture:_temporarySSAOTexture];
+    [_postProcessing.textureManager releaseTemporaryTexture:temporarySSAOTexture];
 }
 
 - (void)resize: (CGSize)newSize {
