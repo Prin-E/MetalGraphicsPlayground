@@ -39,7 +39,6 @@ const float kCameraSpeed = 100;
 #define DEG_TO_RAD(x) ((x)*0.0174532925)
 
 @implementation DeferredRenderer {
-    size_t _currentBufferIndex;
     float _elapsedTime;
     bool _animate;
     float _animationTime;
@@ -52,29 +51,9 @@ const float kCameraSpeed = 100;
     BOOL _mouseDown;
     MGPCameraComponent *_camera;
     
-    // common vertex buffer (quad + cube)
-    id<MTLBuffer> _commonVertexBuffer;
-    
     // image-based lighting
     NSMutableArray<MGPImageBasedLighting *> *_IBLs;
-    NSInteger _currentIBLIndex, _renderingIBLIndex;
-    BOOL _renderIrradiance;
-    
-    // render pass, pipeline states
-    id<MTLRenderPipelineState> _renderPipelineSkybox;
-    id<MTLRenderPipelineState> _renderPipelinePrepass;
-    id<MTLRenderPipelineState> _renderPipelinePrepassTest;
-    id<MTLRenderPipelineState> _renderPipelineLighting;
-    id<MTLRenderPipelineState> _renderPipelineShading;
-    id<MTLRenderPipelineState> _renderPipelinePresent;
-    MTLRenderPassDescriptor *_renderPassSkybox;
-    MTLRenderPassDescriptor *_renderPassPresent;
-    
-    // depth-stencil
-    id<MTLDepthStencilState> _depthStencil;
-    
-    // textures
-    id<MTLTexture> _skyboxDepthTexture;
+    NSInteger _currentIBLIndex;
     
     // Meshes
     NSArray<MGPMesh *> *_meshes;
@@ -83,9 +62,6 @@ const float kCameraSpeed = 100;
     
     // Lights
     NSMutableArray<MGPLightComponent *> *_lights;
-    
-    // Shadow
-    MGPShadowManager *_shadowManager;
 }
 
 - (void)setView:(MGPView *)view {
@@ -197,13 +173,6 @@ const float kCameraSpeed = 100;
 }
 
 - (void)initAssets {
-    // vertex buffer (mesh)
-    _commonVertexBuffer = [self.device newBufferWithLength:1024
-                                                   options:MTLResourceStorageModeManaged];
-    memcpy(_commonVertexBuffer.contents, QuadVertices, sizeof(QuadVertices));
-    memcpy(_commonVertexBuffer.contents + 256, SkyboxVertices, sizeof(SkyboxVertices));
-    [_commonVertexBuffer didModifyRange: NSMakeRange(0, 1024)];
-    
     // IBL
     _IBLs = [NSMutableArray array];
     NSArray<NSString*> *skyboxNames = @[@"bush_restaurant_1k", @"Tropical_Beach_3k", @"Factory_Catwalk_2k",
@@ -404,6 +373,9 @@ const float kCameraSpeed = 100;
 }
 
 - (void)_updateUniformBuffers: (float)deltaTime {
+    // IBLs
+    self.scene.IBL = _IBLs[_currentIBLIndex];
+    
     // Update per-instance properties
     static const simd_float3 instance_pos[] = {
         { 0, 0, 0 },
@@ -426,6 +398,7 @@ const float kCameraSpeed = 100;
         }
     }
     
+    // Meshes
     for(NSInteger i = 0; i < kNumInstance; i++) {
         MGPSceneNode *meshNode = _meshNodes[i];
         meshNode.enabled = i < kNumInstance;
@@ -445,7 +418,7 @@ const float kCameraSpeed = 100;
         }
     }
     
-    // Update lights
+    // Lights
     static simd_float3 light_colors[MAX_NUM_LIGHTS];
     static float light_intensities[MAX_NUM_LIGHTS];
     static simd_float4 light_dirs[MAX_NUM_LIGHTS];
