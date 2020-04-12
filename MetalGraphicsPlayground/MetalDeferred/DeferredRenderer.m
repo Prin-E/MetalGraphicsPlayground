@@ -52,7 +52,8 @@ const float kCameraSpeed = 100;
     MGPCameraComponent *_camera;
     
     // image-based lighting
-    NSMutableArray<MGPImageBasedLighting *> *_IBLs;
+    NSArray<NSString*> *_skyboxNames;
+    NSMutableDictionary<NSString*, MGPImageBasedLighting*> *_IBLs;
     NSInteger _currentIBLIndex;
     
     // Meshes
@@ -174,52 +175,7 @@ const float kCameraSpeed = 100;
 
 - (void)initAssets {
     // IBL
-    _IBLs = [NSMutableArray array];
-    NSArray<NSString*> *skyboxNames = @[@"bush_restaurant_1k", @"Tropical_Beach_3k", @"Factory_Catwalk_2k",
-                                        @"Milkyway_small", @"WinterForest_Ref"];
-    for(NSInteger i = 0; i < skyboxNames.count; i++) {
-        NSString *skyboxImagePath = [[NSBundle mainBundle] pathForResource:skyboxNames[i]
-                                                                    ofType:@"hdr"];
-        int skyboxWidth, skyboxHeight, skyboxComps;
-        float* skyboxImageData = stbi_loadf(skyboxImagePath.UTF8String, &skyboxWidth, &skyboxHeight, &skyboxComps, 4);
-        
-        MTLTextureDescriptor *skyboxTextureDescriptor = [MTLTextureDescriptor texture2DDescriptorWithPixelFormat:MTLPixelFormatRGBA32Float
-                                                                                                           width:skyboxWidth
-                                                                                                          height:skyboxHeight
-                                                                                                       mipmapped:NO];
-        
-        // Create intermediate texture for upload
-        id<MTLTexture> skyboxIntermediateTexture = [self.device newTextureWithDescriptor: skyboxTextureDescriptor];
-        [skyboxIntermediateTexture replaceRegion:MTLRegionMake2D(0, 0, skyboxWidth, skyboxHeight)
-                         mipmapLevel:0
-                           withBytes:skyboxImageData
-                         bytesPerRow:16*skyboxWidth];
-        stbi_image_free(skyboxImageData);
-        
-        // Create GPU-only texture and blit pixels
-        skyboxTextureDescriptor.usage = MTLTextureUsageShaderRead;
-        skyboxTextureDescriptor.storageMode = MTLStorageModePrivate;
-        id<MTLTexture> skyboxTexture = [self.device newTextureWithDescriptor: skyboxTextureDescriptor];
-        id<MTLCommandBuffer> blitBuffer = [self.queue commandBuffer];
-        id<MTLBlitCommandEncoder> blit = [blitBuffer blitCommandEncoder];
-        [blit copyFromTexture:skyboxIntermediateTexture
-                  sourceSlice:0
-                  sourceLevel:0
-                 sourceOrigin:MTLOriginMake(0, 0, 0)
-                   sourceSize:MTLSizeMake(skyboxWidth, skyboxHeight, 1)
-                    toTexture:skyboxTexture
-             destinationSlice:0
-             destinationLevel:0
-            destinationOrigin:MTLOriginMake(0, 0, 0)];
-        [blit endEncoding];
-        [blitBuffer commit];
-        [blitBuffer waitUntilCompleted];
-        
-        MGPImageBasedLighting *IBL = [[MGPImageBasedLighting alloc] initWithDevice: self.device
-                                                                           library: self.defaultLibrary
-                                                                equirectangularMap: skyboxTexture];
-        [_IBLs addObject: IBL];
-    }
+    _skyboxNames = @[@"bush_restaurant_1k", @"Tropical_Beach_3k", @"Factory_Catwalk_2k", @"Milkyway_small", @"WinterForest_Ref"];
     
     // vertex descriptor
     MDLVertexDescriptor *mdlVertexDescriptor = MTKModelIOVertexDescriptorFromMetal(self.gBuffer.baseVertexDescriptor);
@@ -284,12 +240,66 @@ const float kCameraSpeed = 100;
     _testObjects = @[ mesh ];
 }
 
+- (MGPImageBasedLighting *)loadIBLAtIndex:(NSUInteger)index {
+    if(_IBLs == nil) {
+        _IBLs = [NSMutableDictionary new];
+    }
+    
+    NSString *skyboxName = _skyboxNames[index];
+    MGPImageBasedLighting *IBL = [_IBLs objectForKey:skyboxName];
+    if(IBL == nil) {
+        NSString *skyboxImagePath = [[NSBundle mainBundle] pathForResource:skyboxName
+                                                                    ofType:@"hdr"];
+        int skyboxWidth, skyboxHeight, skyboxComps;
+        float* skyboxImageData = stbi_loadf(skyboxImagePath.UTF8String, &skyboxWidth, &skyboxHeight, &skyboxComps, 4);
+        
+        MTLTextureDescriptor *skyboxTextureDescriptor = [MTLTextureDescriptor texture2DDescriptorWithPixelFormat:MTLPixelFormatRGBA32Float
+                                                                                                           width:skyboxWidth
+                                                                                                          height:skyboxHeight
+                                                                                                       mipmapped:NO];
+        
+        // Create intermediate texture for upload
+        id<MTLTexture> skyboxIntermediateTexture = [self.device newTextureWithDescriptor: skyboxTextureDescriptor];
+        [skyboxIntermediateTexture replaceRegion:MTLRegionMake2D(0, 0, skyboxWidth, skyboxHeight)
+                         mipmapLevel:0
+                           withBytes:skyboxImageData
+                         bytesPerRow:16*skyboxWidth];
+        stbi_image_free(skyboxImageData);
+        
+        // Create GPU-only texture and blit pixels
+        skyboxTextureDescriptor.usage = MTLTextureUsageShaderRead;
+        skyboxTextureDescriptor.storageMode = MTLStorageModePrivate;
+        id<MTLTexture> skyboxTexture = [self.device newTextureWithDescriptor: skyboxTextureDescriptor];
+        id<MTLCommandBuffer> blitBuffer = [self.queue commandBuffer];
+        id<MTLBlitCommandEncoder> blit = [blitBuffer blitCommandEncoder];
+        [blit copyFromTexture:skyboxIntermediateTexture
+                  sourceSlice:0
+                  sourceLevel:0
+                 sourceOrigin:MTLOriginMake(0, 0, 0)
+                   sourceSize:MTLSizeMake(skyboxWidth, skyboxHeight, 1)
+                    toTexture:skyboxTexture
+             destinationSlice:0
+             destinationLevel:0
+            destinationOrigin:MTLOriginMake(0, 0, 0)];
+        [blit endEncoding];
+        [blitBuffer commit];
+        [blitBuffer waitUntilCompleted];
+        
+        IBL = [[MGPImageBasedLighting alloc] initWithDevice: self.device
+                                                    library: self.defaultLibrary
+                                         equirectangularMap: skyboxTexture];
+        
+        _IBLs[skyboxName] = IBL;
+    }
+    return IBL;
+}
+
 - (void)initScene {
     if(self.scene == nil)
         self.scene = [[MGPScene alloc] init];
     
     // IBL
-    self.scene.IBL = _IBLs[0];
+    self.scene.IBL = [self loadIBLAtIndex:_currentBufferIndex];
     
     // Mesh
     _meshNodes = [NSMutableArray new];
@@ -374,7 +384,7 @@ const float kCameraSpeed = 100;
 
 - (void)_updateUniformBuffers: (float)deltaTime {
     // IBLs
-    self.scene.IBL = _IBLs[_currentIBLIndex];
+    self.scene.IBL =  [self loadIBLAtIndex:_currentIBLIndex];
     
     // Update per-instance properties
     static const simd_float3 instance_pos[] = {
