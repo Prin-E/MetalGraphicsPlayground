@@ -201,8 +201,8 @@ typedef void(^SGRUpdateHandler)(float deltaTime);
     pointLightComp.color = simd_make_float3(1.0f, 0.4f, 0.0f);
     pointLightComp.intensity = 8;
     pointLightComp.radius = 100;
-    pointLightComp.type = MGPLightTypePoint;
-    pointLightComp.castShadows = NO;
+    pointLightComp.type = MGPLightTypeDirectional;
+    pointLightComp.castShadows = YES;
     [meshNode addComponent:pointLightComp];
     
     [_scene.rootNode addChild: centerNode];

@@ -93,16 +93,20 @@
         MGPSceneNode *node = [nodes lastObject];
         [nodes removeLastObject];
         
-        for(MGPSceneNodeComponent *comp in node.components) {
-            if([comp isKindOfClass:MGPCameraComponent.class])
-               [_cameraComponents addObject:(MGPCameraComponent*)comp];
-            else if([comp isKindOfClass:MGPLightComponent.class])
-                [_lightComponents addObject:(MGPLightComponent*)comp];
-            else if([comp isKindOfClass:MGPMeshComponent.class])
-                [_meshComponents addObject:(MGPMeshComponent*)comp];
-        }
+        if(node.enabled) {
+            for(MGPSceneNodeComponent *comp in node.components) {
+                if(!comp.enabled) continue;
+                
+                if([comp isKindOfClass:MGPCameraComponent.class])
+                   [_cameraComponents addObject:(MGPCameraComponent*)comp];
+                else if([comp isKindOfClass:MGPLightComponent.class])
+                    [_lightComponents addObject:(MGPLightComponent*)comp];
+                else if([comp isKindOfClass:MGPMeshComponent.class])
+                    [_meshComponents addObject:(MGPMeshComponent*)comp];
+            }
         
-        [nodes addObjectsFromArray:node.children];
+            [nodes addObjectsFromArray:node.children];
+        }
     }
     
     // sort lights by light type

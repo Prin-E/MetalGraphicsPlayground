@@ -16,8 +16,11 @@
 #import "../Common/Sources/Utility/MGPTextureLoader.h"
 #import "../Common/Sources/Model/MGPShadowBuffer.h"
 #import "../Common/Sources/Model/MGPShadowManager.h"
-#import "../Common/Sources/Model/MGPLight.h"
-#import "../Common/Sources/Model/MGPCamera.h"
+#import "../Common/Sources/Model/MGPScene.h"
+#import "../Common/Sources/Model/MGPSceneNode.h"
+#import "../Common/Sources/Model/MGPMeshComponent.h"
+#import "../Common/Sources/Model/MGPLightComponent.h"
+#import "../Common/Sources/Model/MGPCameraComponent.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #import "../Common/STB/stb_image.h"
@@ -25,8 +28,6 @@
 #ifndef LERP
 #define LERP(x,y,t) ((x)*(1.0-(t))+(y)*(t))
 #endif
-
-#define TEST 1
 
 const size_t kNumInstance = 8;
 const uint32_t MAX_NUM_LIGHTS = 128;
@@ -38,12 +39,6 @@ const float kCameraSpeed = 100;
 #define DEG_TO_RAD(x) ((x)*0.0174532925)
 
 @implementation DeferredRenderer {
-    camera_props_t camera_props[kMaxBuffersInFlight];
-    instance_props_t instance_props[kMaxBuffersInFlight * kNumInstance];
-    light_t light_props[kMaxBuffersInFlight * MAX_NUM_LIGHTS];
-    light_global_t light_globals[kMaxBuffersInFlight];
-    
-    size_t _currentBufferIndex;
     float _elapsedTime;
     bool _animate;
     float _animationTime;
@@ -54,50 +49,19 @@ const float kCameraSpeed = 100;
     NSPoint _mouseDelta, _prevMousePos;
     
     BOOL _mouseDown;
-    MGPCamera *_camera;
-    
-    // props
-    id<MTLBuffer> _cameraPropsBuffer;
-    id<MTLBuffer> _instancePropsBuffer;
-    id<MTLBuffer> _lightPropsBuffer;
-    id<MTLBuffer> _lightGlobalBuffer;
-    
-    // common vertex buffer (quad + cube)
-    id<MTLBuffer> _commonVertexBuffer;
-    
-    // g-buffer
-    MGPGBuffer *_gBuffer;
+    MGPCameraComponent *_camera;
     
     // image-based lighting
     NSMutableArray<MGPImageBasedLighting *> *_IBLs;
-    NSInteger _currentIBLIndex, _renderingIBLIndex;
-    BOOL _renderIrradiance;
-    
-    // render pass, pipeline states
-    id<MTLRenderPipelineState> _renderPipelineSkybox;
-    id<MTLRenderPipelineState> _renderPipelinePrepass;
-    id<MTLRenderPipelineState> _renderPipelinePrepassTest;
-    id<MTLRenderPipelineState> _renderPipelineLighting;
-    id<MTLRenderPipelineState> _renderPipelineShading;
-    id<MTLRenderPipelineState> _renderPipelinePresent;
-    MTLRenderPassDescriptor *_renderPassSkybox;
-    MTLRenderPassDescriptor *_renderPassPresent;
-    
-    // depth-stencil
-    id<MTLDepthStencilState> _depthStencil;
-    
-    // textures
-    id<MTLTexture> _skyboxDepthTexture;
+    NSInteger _currentIBLIndex;
     
     // Meshes
     NSArray<MGPMesh *> *_meshes;
     NSArray<MGPMesh *> *_testObjects;
+    NSMutableArray<MGPSceneNode *> *_meshNodes;
     
     // Lights
-    NSMutableArray<MGPLight *> *_lights;
-    
-    // Shadow
-    MGPShadowManager *_shadowManager;
+    NSMutableArray<MGPLightComponent *> *_lights;
 }
 
 - (void)setView:(MGPView *)view {
@@ -202,37 +166,13 @@ const float kCameraSpeed = 100;
     if(self) {
         _numLights = 1;
         _animate = YES;
-        [self initUniformBuffers];
         [self initAssets];
+        [self initScene];
     }
     return self;
 }
 
-- (void)initUniformBuffers {
-    // props
-    _cameraPropsBuffer = [self.device newBufferWithLength: sizeof(camera_props)
-                                                  options: MTLResourceStorageModeManaged];
-    _instancePropsBuffer = [self.device newBufferWithLength: sizeof(instance_props)
-                                                    options: MTLResourceStorageModeManaged];
-    _lightPropsBuffer = [self.device newBufferWithLength: sizeof(light_props)
-                                                 options: MTLResourceStorageModeManaged];
-    _lightGlobalBuffer = [self.device newBufferWithLength: sizeof(light_globals)
-                                                  options: MTLResourceStorageModeManaged];
-}
-
 - (void)initAssets {
-    // vertex buffer (mesh)
-    _commonVertexBuffer = [self.device newBufferWithLength:1024
-                                                   options:MTLResourceStorageModeManaged];
-    memcpy(_commonVertexBuffer.contents, QuadVertices, sizeof(QuadVertices));
-    memcpy(_commonVertexBuffer.contents + 256, SkyboxVertices, sizeof(SkyboxVertices));
-    [_commonVertexBuffer didModifyRange: NSMakeRange(0, 1024)];
-    
-    // G-buffer
-    _gBuffer = [[MGPGBuffer alloc] initWithDevice:self.device
-                                          library:self.defaultLibrary
-                                             size:CGSizeMake(512,512)];
-    
     // IBL
     _IBLs = [NSMutableArray array];
     NSArray<NSString*> *skyboxNames = @[@"bush_restaurant_1k", @"Tropical_Beach_3k", @"Factory_Catwalk_2k",
@@ -282,7 +222,7 @@ const float kCameraSpeed = 100;
     }
     
     // vertex descriptor
-    MDLVertexDescriptor *mdlVertexDescriptor = MTKModelIOVertexDescriptorFromMetal(_gBuffer.baseVertexDescriptor);
+    MDLVertexDescriptor *mdlVertexDescriptor = MTKModelIOVertexDescriptorFromMetal(self.gBuffer.baseVertexDescriptor);
     mdlVertexDescriptor.attributes[attrib_pos].name = MDLVertexAttributePosition;
     mdlVertexDescriptor.attributes[attrib_uv].name = MDLVertexAttributeTextureCoordinate;
     mdlVertexDescriptor.attributes[attrib_normal].name = MDLVertexAttributeNormal;
@@ -313,6 +253,7 @@ const float kCameraSpeed = 100;
                                         calculateNormals: NO
                                                    error: nil];
     
+    /*
     mesh.submeshes[0].textures[tex_albedo] = [textureLoader newTextureFromURL: [[NSBundle mainBundle] URLForResource: @"albedo" withExtension: @"png"]
                                                                         usage: MTLTextureUsageShaderRead
                                                                   storageMode: MTLStorageModePrivate
@@ -333,7 +274,7 @@ const float kCameraSpeed = 100;
                                                                            usage: MTLTextureUsageShaderRead
                                                                      storageMode: MTLStorageModePrivate
                                                                            error: nil];
-    /*
+    
     mesh.submeshes[0].textures[tex_anisotropic] = [textureLoader newTextureFromURL: [[NSBundle mainBundle] URLForResource: @"AnisoDirection1" withExtension: @"jpg"]
                                                                            usage: MTLTextureUsageShaderRead
                                                                      storageMode: MTLStorageModePrivate
@@ -341,113 +282,53 @@ const float kCameraSpeed = 100;
      */
     
     _testObjects = @[ mesh ];
+}
+
+- (void)initScene {
+    if(self.scene == nil)
+        self.scene = [[MGPScene alloc] init];
     
-    // build render pipeline
-    MGPGBufferPrepassFunctionConstants prepassConstants = {};
-    prepassConstants.hasAlbedoMap = _meshes[0].submeshes[0].textures[tex_albedo] != NSNull.null;
-    prepassConstants.hasNormalMap = NO;
-    prepassConstants.hasRoughnessMap = _meshes[0].submeshes[0].textures[tex_roughness] != NSNull.null;
-    prepassConstants.hasMetalicMap = _meshes[0].submeshes[0].textures[tex_metalic] != NSNull.null;
-    prepassConstants.hasOcclusionMap = _meshes[0].submeshes[0].textures[tex_occlusion] != NSNull.null;
-    prepassConstants.hasAnisotropicMap = _meshes[0].submeshes[0].textures[tex_anisotropic] != NSNull.null;
-    prepassConstants.flipVertically = NO;
-    prepassConstants.usesAnisotropy = YES;
-    MGPGBufferShadingFunctionConstants shadingConstants = {};
-    shadingConstants.hasIBLIrradianceMap = _IBLs.count > 0;
-    shadingConstants.hasIBLSpecularMap = _IBLs.count > 0;
-    shadingConstants.hasSSAOMap = NO;
-    shadingConstants.usesAnisotropy = YES;
-    _renderPipelinePrepass = [_gBuffer renderPipelineStateWithConstants: prepassConstants
-                                                                  error: nil];
-    _renderPipelineLighting = [_gBuffer lightingPipelineStateWithConstants:shadingConstants
-                                                                     error:nil];
-    _renderPipelineShading = [_gBuffer nonLightCulledShadingPipelineStateWithConstants: shadingConstants
-                                                                   error: nil];
+    // IBL
+    self.scene.IBL = _IBLs[0];
     
-    MGPGBufferPrepassFunctionConstants prepassTestConstants = {};
-    prepassTestConstants.usesAnisotropy = YES;
-    /*
-    prepassTestConstants.hasAlbedoMap = _testObjects[0].submeshes[0].textures[tex_albedo] != NSNull.null;
-    prepassTestConstants.hasNormalMap = _testObjects[0].submeshes[0].textures[tex_normal] != NSNull.null;
-    prepassTestConstants.hasRoughnessMap = _testObjects[0].submeshes[0].textures[tex_roughness] != NSNull.null;
-    prepassTestConstants.hasMetalicMap = _testObjects[0].submeshes[0].textures[tex_metalic] != NSNull.null;
-    prepassTestConstants.hasOcclusionMap = _testObjects[0].submeshes[0].textures[tex_occlusion] != NSNull.null;
-    prepassTestConstants.hasAnisotropicMap = _testObjects[0].submeshes[0].textures[tex_anisotropic] != NSNull.null;
-     */
-    _renderPipelinePrepassTest = [_gBuffer renderPipelineStateWithConstants: prepassTestConstants
-                                                                      error: nil];
-    
-    MTLRenderPipelineDescriptor *renderPipelineDescriptorPresent = [[MTLRenderPipelineDescriptor alloc] init];
-    renderPipelineDescriptorPresent.colorAttachments[0].pixelFormat = MTLPixelFormatBGRA8Unorm_sRGB;
-    renderPipelineDescriptorPresent.colorAttachments[0].blendingEnabled = YES;
-    renderPipelineDescriptorPresent.colorAttachments[0].sourceRGBBlendFactor = MTLBlendFactorSourceAlpha;
-    renderPipelineDescriptorPresent.colorAttachments[0].destinationRGBBlendFactor = MTLBlendFactorOneMinusSourceAlpha;
-    renderPipelineDescriptorPresent.colorAttachments[0].sourceAlphaBlendFactor = MTLBlendFactorOne;
-    renderPipelineDescriptorPresent.colorAttachments[0].sourceAlphaBlendFactor = MTLBlendFactorOne;
-    renderPipelineDescriptorPresent.vertexFunction = [self.defaultLibrary newFunctionWithName: @"screen_vert"];
-    renderPipelineDescriptorPresent.fragmentFunction = [self.defaultLibrary newFunctionWithName: @"screen_frag"];
-    _renderPipelinePresent = [self.device newRenderPipelineStateWithDescriptor: renderPipelineDescriptorPresent
-                                                                         error: nil];
-    
-    MTLRenderPipelineDescriptor *renderPipelineDescriptorSkybox = [[MTLRenderPipelineDescriptor alloc] init];
-    renderPipelineDescriptorSkybox.colorAttachments[0].pixelFormat = MTLPixelFormatBGRA8Unorm_sRGB;
-    renderPipelineDescriptorSkybox.vertexFunction = [self.defaultLibrary newFunctionWithName: @"skybox_vert"];
-    renderPipelineDescriptorSkybox.fragmentFunction = [self.defaultLibrary newFunctionWithName: @"skybox_frag"];
-    renderPipelineDescriptorSkybox.depthAttachmentPixelFormat = _gBuffer.depth.pixelFormat;
-    _renderPipelineSkybox = [self.device newRenderPipelineStateWithDescriptor: renderPipelineDescriptorSkybox
-                                                                        error: nil];
-    
-    // render pass
-    _renderPassSkybox = [[MTLRenderPassDescriptor alloc] init];
-    _renderPassSkybox.colorAttachments[0].loadAction = MTLLoadActionClear;
-    _renderPassSkybox.colorAttachments[0].storeAction = MTLStoreActionStore;
-    _renderPassSkybox.colorAttachments[0].clearColor = MTLClearColorMake(0, 0, 0, 0);
-    _renderPassSkybox.depthAttachment.loadAction = MTLLoadActionClear;
-    _renderPassSkybox.depthAttachment.storeAction = MTLStoreActionStore;
-    
-    _renderPassPresent = [[MTLRenderPassDescriptor alloc] init];
-    _renderPassPresent.colorAttachments[0].loadAction = MTLLoadActionDontCare;
-    _renderPassPresent.colorAttachments[0].storeAction = MTLStoreActionStore;
-    
-    // depth-stencil
-    MTLDepthStencilDescriptor *depthStencilDescriptor = [[MTLDepthStencilDescriptor alloc] init];
-    depthStencilDescriptor.depthWriteEnabled = YES;
-    depthStencilDescriptor.depthCompareFunction = MTLCompareFunctionLess;
-    _depthStencil = [self.device newDepthStencilStateWithDescriptor: depthStencilDescriptor];
-    
-    // lights
-    _lights = [[NSMutableArray alloc] initWithCapacity: MAX_NUM_LIGHTS];
-    for(int i = 0; i < MAX_NUM_LIGHTS; i++) {
-        [_lights addObject: [[MGPLight alloc] init]];
+    // Mesh
+    _meshNodes = [NSMutableArray new];
+    for(NSUInteger i = 0; i < kNumInstance; i++) {
+        MGPSceneNode *node = [[MGPSceneNode alloc] init];
+        MGPMeshComponent *meshComp = [[MGPMeshComponent alloc] init];
+        meshComp.mesh = !(_showsTestObjects) ? _meshes[0] : _testObjects[0];
+        [node addComponent: meshComp];
+        [_meshNodes addObject: node];
+        [self.scene.rootNode addChild: node];
     }
     
-    // camera
-    _camera = [[MGPCamera alloc] init];
-    _camera.position = simd_make_float3(0, 0.0, -60.0f);
+    // Light
+    _lights = [NSMutableArray new];
+    for(NSUInteger i = 0; i < MAX_NUM_LIGHTS; i++) {
+        MGPSceneNode *lightNode = [[MGPSceneNode alloc] init];
+        MGPLightComponent *lightComp = [[MGPLightComponent alloc] init];
+        [lightNode addComponent: lightComp];
+        lightNode.enabled = i < _numLights;
+        [_lights addObject: lightComp];
+        [self.scene.rootNode addChild: lightNode];
+    }
+    
+    // Camera
+    MGPSceneNode *cameraNode = [[MGPSceneNode alloc] init];
+    cameraNode.position = simd_make_float3(0.0f, 0.0f, -60.0f);
+    MGPCameraComponent *cameraComp = [[MGPCameraComponent alloc] init];
+    [cameraNode addComponent: cameraComp];
+    [self.scene.rootNode addChild: cameraNode];
+    _camera = cameraComp;
     
     // projection
     MGPProjectionState projection = _camera.projectionState;
-    projection.aspectRatio = _gBuffer.size.width / _gBuffer.size.height;
+    projection.aspectRatio = self.gBuffer.size.width / self.gBuffer.size.height;
     projection.fieldOfView = DEG_TO_RAD(60.0f);
     projection.nearPlane = 0.5f;
     projection.farPlane = 300.0f;
     projection.orthographicSize = 5;
     _camera.projectionState = projection;
-    
-    // shadow
-    _shadowManager = [[MGPShadowManager alloc] initWithDevice: self.device
-                                                      library: self.defaultLibrary
-                                             vertexDescriptor: _gBuffer.baseVertexDescriptor];
-}
-
-- (void)_initSkyboxDepthTexture {
-    MTLTextureDescriptor *desc = [MTLTextureDescriptor texture2DDescriptorWithPixelFormat:MTLPixelFormatDepth32Float_Stencil8
-                                                                                    width:_gBuffer.size.width
-                                                                                   height:_gBuffer.size.height
-                                                                                mipmapped:NO];
-    desc.usage = MTLTextureUsageRenderTarget;
-    desc.storageMode = MTLStorageModePrivate;
-    _skyboxDepthTexture = [self.device newTextureWithDescriptor:desc];
 }
 
 - (void)update:(float)deltaTime {
@@ -468,14 +349,14 @@ const float kCameraSpeed = 100;
     if(_mouseDown) {
         NSPoint pixelMouseDelta = [self.view convertPointToBacking: _mouseDelta];
         simd_float3 rot = _camera.rotation;
-        rot.y = rot.y + pixelMouseDelta.x / (0.5f * _gBuffer.size.height) * M_PI_2;
-        rot.x = MIN(MAX(rot.x - pixelMouseDelta.y / (0.5f * _gBuffer.size.height) * M_PI_2, -M_PI*0.4), M_PI*0.4);
-        _camera.rotation = rot;
+        rot.y = rot.y + pixelMouseDelta.x / (0.5f * self.gBuffer.size.height) * M_PI_2;
+        rot.x = MIN(MAX(rot.x - pixelMouseDelta.y / (0.5f * self.gBuffer.size.height) * M_PI_2, -M_PI*0.4), M_PI*0.4);
+        _camera.node.rotation = rot;
     }
     
     // move
     static int columnIndices[] = { 2, 2, 0, 0, 1, 1 };
-    simd_float4x4 rotationMatrix = _camera.cameraToWorldRotationMatrix;
+    simd_float4x4 rotationMatrix = _camera.node.localToWorldRotationMatrix;
     simd_float3 positionAdd = {};
     BOOL positionIsChanged = NO;
     for(int i = 0; i < 6; i++) {
@@ -488,12 +369,12 @@ const float kCameraSpeed = 100;
         }
     }
     if(positionIsChanged)
-        _camera.position += positionAdd;
+        _camera.node.position += positionAdd;
 }
 
 - (void)_updateUniformBuffers: (float)deltaTime {
-    // Update camera properties
-    camera_props[_currentBufferIndex] = _camera.shaderProperties;
+    // IBLs
+    self.scene.IBL = _IBLs[_currentIBLIndex];
     
     // Update per-instance properties
     static const simd_float3 instance_pos[] = {
@@ -517,16 +398,27 @@ const float kCameraSpeed = 100;
         }
     }
     
+    // Meshes
     for(NSInteger i = 0; i < kNumInstance; i++) {
-        instance_props_t *p = &instance_props[_currentBufferIndex * kNumInstance + i];
-        p->model = matrix_multiply(matrix_from_translation(instance_pos[i].x, instance_pos[i].y, instance_pos[i].z), matrix_from_rotation(_animationTime, 0, 1, 0));
-        p->material.albedo = instance_albedo[i];
-        p->material.roughness = self.roughness;
-        p->material.metalic = self.metalic;
-        p->material.anisotropy = self.anisotropy;
+        MGPSceneNode *meshNode = _meshNodes[i];
+        meshNode.enabled = i < kNumInstance;
+        
+        if(meshNode.enabled) {
+            meshNode.position = instance_pos[i];
+            meshNode.rotation = simd_make_float3(0, _animationTime, 0);
+            MGPMeshComponent *meshComp = (MGPMeshComponent *)[meshNode componentOfType:MGPMeshComponent.class];
+            meshComp.mesh = !(_showsTestObjects) ? _meshes[0] : _testObjects[0];
+
+            material_t material;
+            material.albedo = instance_albedo[i];
+            material.roughness = self.roughness;
+            material.metalic = self.metalic;
+            material.anisotropy = self.anisotropy;
+            meshComp.material = material;
+        }
     }
     
-    // Update lights
+    // Lights
     static simd_float3 light_colors[MAX_NUM_LIGHTS];
     static float light_intensities[MAX_NUM_LIGHTS];
     static simd_float4 light_dirs[MAX_NUM_LIGHTS];
@@ -542,8 +434,9 @@ const float kCameraSpeed = 100;
     }
     
     for(NSInteger i = 0; i < MAX_NUM_LIGHTS; i++) {
-        MGPLight *light = _lights[i];
+        MGPLightComponent *light = _lights[i];
         if(i < _numLights) {
+            light.node.enabled = YES;
             simd_float3 rot_dir = simd_cross(vector3(light_dirs[i].x, light_dirs[i].y, light_dirs[i].z), vector3(0.0f, 1.0f, 0.0f));
             simd_float4 dir = matrix_multiply(matrix_from_rotation(_animationTime * 3.0f, rot_dir.x, rot_dir.y, rot_dir.z), light_dirs[i]);
             simd_float3 eye = -simd_make_float3(dir);
@@ -551,325 +444,18 @@ const float kCameraSpeed = 100;
             // set light properties
             light.color = light_colors[i];
             light.intensity = light_intensities[i];
-            light.direction = simd_make_float3(dir);
-            light.position = eye;
+            [light.node lookAt: light.position + simd_make_float3(dir)];
+            light.node.position = eye;
             light.castShadows = NO;
         }
         else {
-            light.intensity = 0;
+            light.node.enabled = NO;
         }
-        
-        // light properties -> buffer
-        light_t *light_props_ptr = &light_props[_currentBufferIndex * MAX_NUM_LIGHTS + i];
-        *light_props_ptr = light.shaderProperties;
     }
-    
-    light_globals[_currentBufferIndex].num_light = _numLights;
-    
-    // Synchronize buffers
-    memcpy(_cameraPropsBuffer.contents + _currentBufferIndex * sizeof(camera_props_t),
-           &camera_props[_currentBufferIndex], sizeof(camera_props_t));
-    [_cameraPropsBuffer didModifyRange: NSMakeRange(_currentBufferIndex * sizeof(camera_props_t),
-                                                    sizeof(camera_props_t))];
-    
-    memcpy(_instancePropsBuffer.contents + _currentBufferIndex * sizeof(instance_props_t) * kNumInstance,
-           &instance_props[_currentBufferIndex * kNumInstance], sizeof(instance_props_t) * kNumInstance);
-    [_instancePropsBuffer didModifyRange: NSMakeRange(_currentBufferIndex * sizeof(instance_props_t) * kNumInstance,
-                                                      sizeof(instance_props_t) * kNumInstance)];
-    
-    memcpy(_lightPropsBuffer.contents + _currentBufferIndex * sizeof(light_t) * MAX_NUM_LIGHTS,
-           &light_props[_currentBufferIndex * MAX_NUM_LIGHTS], sizeof(light_t) * _numLights);
-    [_lightPropsBuffer didModifyRange: NSMakeRange(_currentBufferIndex * sizeof(light_t) * MAX_NUM_LIGHTS,
-                                                   sizeof(light_t) * _numLights)];
-    
-    memcpy(_lightGlobalBuffer.contents + _currentBufferIndex * sizeof(light_global_t), &light_globals[_currentBufferIndex], sizeof(light_global_t));
-    [_lightGlobalBuffer didModifyRange: NSMakeRange(_currentBufferIndex * sizeof(light_global_t),
-                                                    sizeof(light_global_t))];
     
     _elapsedTime += deltaTime;
     if(_animate)
         _animationTime += deltaTime;
-}
-
-- (void)render {
-    if(_IBLs.count > 0) {
-        if(_IBLs[_currentIBLIndex].isAnyRenderingRequired) {
-            [self performPrefilterPass];
-        }
-        else {
-            _renderingIBLIndex = _currentIBLIndex;
-        }
-    }
-    
-    [self performRenderingPassWithCompletionHandler:^{
-        [self signal];
-    }];
-    
-    _currentBufferIndex = (_currentBufferIndex + 1) % kMaxBuffersInFlight;
-}
-
-- (void)performPrefilterPass {
-    id<MTLCommandBuffer> commandBuffer = [self.queue commandBuffer];
-    commandBuffer.label = @"Prefilter";
-    
-    [_IBLs[_currentIBLIndex] render: commandBuffer];
-    
-    [commandBuffer addCompletedHandler:^(id<MTLCommandBuffer> buffer) {
-        self->_renderingIBLIndex = self->_currentIBLIndex;
-    }];
-    [commandBuffer commit];
-}
-
-- (void)performRenderingPassWithCompletionHandler: (void(^)(void))handler {
-    // begin
-    id<MTLCommandBuffer> commandBuffer = [self.queue commandBuffer];
-    commandBuffer.label = @"Render";
-    [self beginGPUTime:commandBuffer];
-    
-    // skybox pass
-    _renderPassSkybox.colorAttachments[0].texture = self.view.currentDrawable.texture;
-    _renderPassSkybox.depthAttachment.texture = _skyboxDepthTexture;
-    _renderPassSkybox.depthAttachment.storeAction = MTLStoreActionDontCare;
-    id<MTLRenderCommandEncoder> skyboxPassEncoder = [commandBuffer renderCommandEncoderWithDescriptor: _renderPassSkybox];
-    [self renderSkybox:skyboxPassEncoder];
-    
-    // G-buffer prepass
-    id<MTLRenderCommandEncoder> prepassEncoder = [commandBuffer renderCommandEncoderWithDescriptor: _gBuffer.renderPassDescriptor];
-    [self renderGBuffer:prepassEncoder];
-    
-    // G-buffer light-accumulation pass
-    // render 4 lights per each draw call
-    const NSUInteger lightCountPerDrawCall = 4;
-    id<MTLRenderCommandEncoder> lightingPassEncoder = [commandBuffer renderCommandEncoderWithDescriptor: _gBuffer.lightingPassBaseDescriptor];
-    [self renderLighting:lightingPassEncoder
-               fromIndex:0
-                 toIndex:lightCountPerDrawCall-1
-        countPerDrawCall:lightCountPerDrawCall];
-    if(_numLights > lightCountPerDrawCall) {
-        lightingPassEncoder = [commandBuffer renderCommandEncoderWithDescriptor: _gBuffer.lightingPassAddDescriptor];
-        [self renderLighting:lightingPassEncoder
-                   fromIndex:lightCountPerDrawCall
-                     toIndex:_numLights-1
-            countPerDrawCall:lightCountPerDrawCall];
-    }
-    
-    // G-buffer shade pass
-    id<MTLRenderCommandEncoder> shadingPassEncoder = [commandBuffer renderCommandEncoderWithDescriptor: _gBuffer.shadingPassDescriptor];
-    [self renderShading:shadingPassEncoder];
-    
-    // present to framebuffer
-    _renderPassPresent.colorAttachments[0].texture = self.view.currentDrawable.texture;
-    id<MTLRenderCommandEncoder> presentCommandEncoder = [commandBuffer renderCommandEncoderWithDescriptor: _renderPassPresent];
-    [self renderFramebuffer:presentCommandEncoder];
-    
-    // present
-    [commandBuffer presentDrawable: self.view.currentDrawable];
-    [commandBuffer addCompletedHandler:^(id<MTLCommandBuffer> buffer) {
-        [self endGPUTime:buffer];
-        if(handler != nil)
-            handler();
-    }];
-    [commandBuffer commit];
-}
-
-- (void)renderSkybox:(id<MTLRenderCommandEncoder>)encoder {
-    encoder.label = @"Skybox";
-    [encoder setRenderPipelineState: _renderPipelineSkybox];
-    [encoder setDepthStencilState: _depthStencil];
-    [encoder setCullMode: MTLCullModeBack];
-    
-    if(_IBLs.count > 0) {
-        [encoder setVertexBuffer: _commonVertexBuffer
-                          offset: 256
-                         atIndex: 0];
-        [encoder setVertexBuffer: _cameraPropsBuffer
-                          offset: _currentBufferIndex * sizeof(camera_props_t)
-                         atIndex: 1];
-        [encoder setFragmentTexture: _IBLs[_renderingIBLIndex].environmentMap
-                            atIndex: 0];
-        [encoder drawPrimitives: MTLPrimitiveTypeTriangle
-                    vertexStart: 0
-                    vertexCount: 36];
-    }
-    [encoder endEncoding];
-}
-
-- (void)renderObjects:(id<MTLRenderCommandEncoder>)encoder
-         bindTextures:(BOOL)bindTextures {
-    NSArray<MGPMesh *> *meshes = _meshes;
-    if(_showsTestObjects)
-        meshes = _testObjects;
-    
-    for(MGPMesh *mesh in meshes) {
-        for(MGPSubmesh *submesh in mesh.submeshes) {
-            [encoder setVertexBuffer: mesh.metalKitMesh.vertexBuffers[0].buffer
-                              offset: 0
-                             atIndex: 0];
-            
-            if(bindTextures) {
-                for(int i = 0; i < tex_total; i++) {
-                    if(submesh.textures[i] != NSNull.null) {
-                        [encoder setFragmentTexture: submesh.textures[i] atIndex: i];
-                    }
-                    else {
-                        [encoder setFragmentTexture: nil atIndex: i];
-                    }
-                }
-            }
-            
-            [encoder drawIndexedPrimitives: submesh.metalKitSubmesh.primitiveType
-                                indexCount: submesh.metalKitSubmesh.indexCount
-                                 indexType: submesh.metalKitSubmesh.indexType
-                               indexBuffer: submesh.metalKitSubmesh.indexBuffer.buffer
-                         indexBufferOffset: submesh.metalKitSubmesh.indexBuffer.offset
-                             instanceCount: kNumInstance];
-        }
-    }
-}
-
-- (void)renderGBuffer:(id<MTLRenderCommandEncoder>)encoder {
-    encoder.label = @"G-buffer";
-    if(_showsTestObjects)
-        [encoder setRenderPipelineState: _renderPipelinePrepassTest];
-    else
-        [encoder setRenderPipelineState: _renderPipelinePrepass];
-    [encoder setDepthStencilState: _depthStencil];
-    [encoder setCullMode: MTLCullModeBack];
-    
-    // camera
-    [encoder setVertexBuffer: _cameraPropsBuffer
-                      offset: _currentBufferIndex * sizeof(camera_props_t)
-                     atIndex: 1];
-    [encoder setFragmentBuffer: _cameraPropsBuffer
-                        offset: _currentBufferIndex * sizeof(camera_props_t)
-                       atIndex: 1];
-    
-    // instance
-    [encoder setVertexBuffer: _instancePropsBuffer
-                      offset: _currentBufferIndex * sizeof(instance_props_t) * kNumInstance
-                     atIndex: 2];
-    [encoder setFragmentBuffer: _instancePropsBuffer
-                        offset: _currentBufferIndex * sizeof(instance_props_t) * kNumInstance
-                       atIndex: 2];
-    
-    [self renderObjects: encoder
-           bindTextures: YES];
-    [encoder endEncoding];
-}
-
-- (void)renderLighting:(id<MTLRenderCommandEncoder>)encoder
-             fromIndex:(NSUInteger)lightFromIndex
-               toIndex:(NSUInteger)lightToIndex
-      countPerDrawCall:(NSUInteger)lightCountPerDrawCall {
-    encoder.label = [NSString stringWithFormat: @"Lighting %@", lightFromIndex == 0 ? @"Base" : @"Add"];
-    [encoder setRenderPipelineState: _renderPipelineLighting];
-    [encoder setCullMode: MTLCullModeBack];
-    [encoder setFragmentBuffer: _cameraPropsBuffer
-                        offset: _currentBufferIndex * sizeof(camera_props_t)
-                       atIndex: 0];
-    [encoder setFragmentBuffer: _lightGlobalBuffer
-                        offset: _currentBufferIndex * sizeof(light_global_t)
-                       atIndex: 2];
-    [encoder setFragmentTexture: _gBuffer.normal
-                        atIndex: attachment_normal];
-    [encoder setFragmentTexture: _gBuffer.shading
-                        atIndex: attachment_shading];
-    [encoder setFragmentTexture: _gBuffer.tangent
-                        atIndex: attachment_tangent];
-    [encoder setFragmentTexture: _gBuffer.depth
-                        atIndex: attachment_depth];
-    
-    for(NSUInteger i = lightFromIndex; i <= lightToIndex; i += lightCountPerDrawCall) {
-        [encoder setFragmentBuffer: _lightPropsBuffer
-                            offset: (_currentBufferIndex * MAX_NUM_LIGHTS + i) * sizeof(light_t)
-                           atIndex: 1];
-        
-        for(NSUInteger j = 0; j < lightCountPerDrawCall; j++) {
-            if(_lights[i + j].castShadows) {
-                MGPShadowBuffer *shadowBuffer = [_shadowManager newShadowBufferForLight: _lights[i + j]
-                                                                             resolution: DEFAULT_SHADOW_RESOLUTION
-                                                                          cascadeLevels: 1];
-                [encoder setFragmentTexture: shadowBuffer.texture
-                                    atIndex: j+attachment_shadow_map];
-            }
-            else {
-                [encoder setFragmentTexture: nil
-                                    atIndex: j+attachment_shadow_map];
-            }
-        }
-        [encoder drawPrimitives: MTLPrimitiveTypeTriangle
-                    vertexStart: 0
-                    vertexCount: 6];
-    }
-    
-    [encoder endEncoding];
-}
-
-- (void)renderShading:(id<MTLRenderCommandEncoder>)encoder {
-    encoder.label = @"Shading";
-    [encoder setRenderPipelineState: _renderPipelineShading];
-    [encoder setCullMode: MTLCullModeBack];
-    [encoder setFragmentBuffer: _cameraPropsBuffer
-                        offset: _currentBufferIndex * sizeof(camera_props_t)
-                       atIndex: 0];
-    [encoder setFragmentBuffer: _lightGlobalBuffer
-                        offset: _currentBufferIndex * sizeof(light_global_t)
-                       atIndex: 1];
-    [encoder setFragmentBuffer: _lightPropsBuffer
-                        offset: _currentBufferIndex * sizeof(light_t) * MAX_NUM_LIGHTS
-                       atIndex: 2];
-    [encoder setFragmentTexture: _gBuffer.albedo
-                        atIndex: attachment_albedo];
-    [encoder setFragmentTexture: _gBuffer.normal
-                        atIndex: attachment_normal];
-    [encoder setFragmentTexture: _gBuffer.shading
-                        atIndex: attachment_shading];
-    [encoder setFragmentTexture: _gBuffer.depth
-                        atIndex: attachment_depth];
-    [encoder setFragmentTexture: _gBuffer.tangent
-                        atIndex: attachment_tangent];
-    [encoder setFragmentTexture: _gBuffer.depth
-                        atIndex: attachment_depth];
-    [encoder setFragmentTexture: _gBuffer.lighting
-                        atIndex: attachment_light];
-    
-    if(_IBLs.count > 0) {
-        [encoder setFragmentTexture: _IBLs[_renderingIBLIndex].irradianceMap
-                            atIndex: attachment_irradiance];
-        [encoder setFragmentTexture: _IBLs[_renderingIBLIndex].prefilteredSpecularMap
-                            atIndex: attachment_prefiltered_specular];
-        [encoder setFragmentTexture: _IBLs[_renderingIBLIndex].BRDFLookupTexture
-                            atIndex: attachment_brdf_lookup];
-    }
-    [encoder drawPrimitives: MTLPrimitiveTypeTriangle
-                vertexStart: 0
-                vertexCount: 6];
-    
-    [encoder endEncoding];
-}
-
-- (void)renderFramebuffer:(id<MTLRenderCommandEncoder>)encoder {
-    encoder.label = @"Present";
-    [encoder setRenderPipelineState: _renderPipelinePresent];
-    [encoder setCullMode: MTLCullModeBack];
-    [encoder setVertexBuffer: _commonVertexBuffer
-                      offset: 0
-                     atIndex: 0];
-    [encoder setFragmentTexture: _gBuffer.output
-                        atIndex: 0];
-    [encoder drawPrimitives: MTLPrimitiveTypeTriangle
-                vertexStart: 0
-                vertexCount: 6];
-    
-    [encoder endEncoding];
-}
-
-- (void)resize:(CGSize)newSize {
-    [_gBuffer resize:newSize];
-    MGPProjectionState proj = _camera.projectionState;
-    proj.aspectRatio = newSize.width / newSize.height;
-    _camera.projectionState = proj;
-    [self _initSkyboxDepthTexture];
 }
 
 @end

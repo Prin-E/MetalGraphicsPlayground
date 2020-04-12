@@ -33,6 +33,7 @@
         _localToWorldRotationMatrix = matrix_identity_float4x4;
         _worldToLocalRotationMatrix = matrix_identity_float4x4;
         _scale = simd_make_float3(1, 1, 1);
+        _enabled = YES;
     }
     return self;
 }

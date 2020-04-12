@@ -33,6 +33,7 @@
 		953040A11BEF96B2001DECA7 /* MetalKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 95273DD71B9BEB180015BB27 /* MetalKit.framework */; };
 		953040A21BEF96B6001DECA7 /* Metal.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 95273DD51B9BEB100015BB27 /* Metal.framework */; };
 		953040A41BEF993D001DECA7 /* Shaders.metal in Sources */ = {isa = PBXBuildFile; fileRef = 953040A31BEF993D001DECA7 /* Shaders.metal */; };
+		953E26FD24435F5500D23EB1 /* MGPScene.m in Sources */ = {isa = PBXBuildFile; fileRef = 95F002AA22CCEEFF000A951B /* MGPScene.m */; };
 		953EAB801B9B5AFC0024994F /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 953EAB7F1B9B5AFC0024994F /* AppDelegate.m */; };
 		953EAB831B9B5AFC0024994F /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 953EAB821B9B5AFC0024994F /* main.m */; };
 		953EAB851B9B5AFC0024994F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 953EAB841B9B5AFC0024994F /* Assets.xcassets */; };
@@ -1974,6 +1975,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				953E26FD24435F5500D23EB1 /* MGPScene.m in Sources */,
 				95C7C8C323CB302D006E8B5E /* MGPPrimitiveNode.m in Sources */,
 				950CF3842322A4B5008F581E /* ScreenSpaceReflection.metal in Sources */,
 				95EFB7D222C7AD5A00813903 /* MGPShadowManager.m in Sources */,
