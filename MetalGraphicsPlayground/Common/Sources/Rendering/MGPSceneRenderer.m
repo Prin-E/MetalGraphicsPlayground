@@ -122,9 +122,12 @@
     // find first point light index
     NSUInteger numLights = MIN(MAX_NUM_LIGHTS, _lightComponents.count);
     NSUInteger firstPointLightIndex = 0;
+    NSUInteger numDirectionalShadowedLight = 0;
     for(NSUInteger i = 0; i < numLights; i++) {
         if(_lightComponents[i].type == MGPLightTypeDirectional) {
             firstPointLightIndex++;
+            if(_lightComponents[i].castShadows)
+                numDirectionalShadowedLight++;
         }
         else {
             break;
@@ -149,6 +152,7 @@
     light_global_t lightGlobalProps = _scene.lightGlobalProps;
     lightGlobalProps.num_light = (unsigned int)numLights;
     lightGlobalProps.first_point_light_index = (unsigned int)firstPointLightIndex;
+    lightGlobalProps.num_directional_shadowed_light = (unsigned int)numDirectionalShadowedLight;
     _scene.lightGlobalProps = lightGlobalProps;
     memcpy(_lightGlobalBuffer.contents + _currentBufferIndex * sizeof(light_global_t), &lightGlobalProps, sizeof(light_global_t));
     [_lightGlobalBuffer didModifyRange: NSMakeRange(_currentBufferIndex * sizeof(light_global_t),

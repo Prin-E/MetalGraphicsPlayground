@@ -221,8 +221,10 @@
     [self renderDirectLighting:shadingPassEncoder];
     
     // Directional lighting (with shadow) pass
-    id<MTLRenderCommandEncoder> directionalShadowedLightingPassEncoder = [commandBuffer renderCommandEncoderWithDescriptor:_gBuffer.directionalShadowedLightingPassDescriptor];
-    [self renderDirectionalShadowedLighting:directionalShadowedLightingPassEncoder];
+    if(self.scene.lightGlobalProps.num_directional_shadowed_light > 0) {
+        id<MTLRenderCommandEncoder> directionalShadowedLightingPassEncoder = [commandBuffer renderCommandEncoderWithDescriptor:_gBuffer.directionalShadowedLightingPassDescriptor];
+        [self renderDirectionalShadowedLighting:directionalShadowedLightingPassEncoder];
+    }
     
     // Indirect lighting pass
     id<MTLRenderCommandEncoder> indirectLightingPassEncoder = [commandBuffer renderCommandEncoderWithDescriptor:_gBuffer.indirectLightingPassDescriptor];

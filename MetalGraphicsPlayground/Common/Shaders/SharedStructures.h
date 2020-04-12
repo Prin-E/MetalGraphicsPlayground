@@ -51,6 +51,7 @@ typedef struct __attribute__((__aligned__(256))) {
     matrix_float4x4 light_projection;
     vector_float3 ambient_color;
     unsigned int num_light;                 // max num : 64 (dir.light : 16)
+    unsigned int num_directional_shadowed_light;
     unsigned int first_point_light_index;
     unsigned int tile_size;                 // 16~32
 } light_global_t;
