@@ -7,12 +7,12 @@
 //
 
 #import <Foundation/Foundation.h>
-#import "../Common/Sources/Rendering/MGPRenderer.h"
+#import "../Common/Sources/Rendering/MGPDeferredRenderer.h"
 #import "../Common/Sources/View/MGPView.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface DeferredRenderer : MGPRenderer <MGPViewDelegate>
+@interface DeferredRenderer : MGPDeferredRenderer <MGPViewDelegate>
 
 @property (readwrite) float roughness, metalic, anisotropy;
 @property (readwrite) unsigned int numLights;
