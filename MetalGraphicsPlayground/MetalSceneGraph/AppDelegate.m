@@ -60,7 +60,7 @@ typedef void(^SGRUpdateHandler)(float deltaTime);
     
     // TODO: IBL
     NSMutableArray *IBLs = [NSMutableArray array];
-    NSArray<NSString*> *skyboxNames = @[/*@"Tropical_Beach_3k", @"Milkyway_small", @"WinterForest_Ref"*/];
+    NSArray<NSString*> *skyboxNames = @[@"Tropical_Beach_3k"];
     for(NSInteger i = 0; i < skyboxNames.count; i++) {
         NSString *skyboxImagePath = [[NSBundle mainBundle] pathForResource:skyboxNames[i]
                                                                     ofType:@"hdr"];
@@ -105,11 +105,6 @@ typedef void(^SGRUpdateHandler)(float deltaTime);
         [IBLs addObject: IBL];
     }
     
-    // Light globals
-    light_global_t lightGlobal = _scene.lightGlobalProps;
-    //lightGlobal.ambient_color = simd_make_float3(0.1, 0.096, 0.09);
-    _scene.lightGlobalProps = lightGlobal;
-    
     // Center
     MGPSceneNode *centerNode = [[MGPSceneNode alloc] init];
     centerNode.position = simd_make_float3(0, 0, -4);
@@ -150,23 +145,6 @@ typedef void(^SGRUpdateHandler)(float deltaTime);
     mesh3Node.scale = simd_make_float3(0.5, 0.5, 0.5);
     [mesh2Node addChild:mesh3Node];
     
-    srand((unsigned int)time(NULL));
-    for(NSUInteger i = 0; i < 256*40; i++) {
-        MGPPrimitiveNode *meshNode = [[MGPPrimitiveNode alloc] initWithPrimitiveType:MGPPrimitiveNodeTypeCube
-                                                                     vertexDescriptor:_renderer.gBuffer.baseVertexDescriptor
-                                                                               device:_renderer.device];
-        mat.roughness = 1.0;
-        mat.metalic = 0.0;
-        mat.albedo = simd_make_float3(1.0f, 1.0f, 1.0f);
-        meshNode.material = mat;
-        float r = rand()/(float)RAND_MAX;
-        float r2 = rand()/(float)RAND_MAX;
-        float r3 = rand()/(float)RAND_MAX;
-        meshNode.position = simd_make_float3(cos(r*M_PI*2), sin(r*M_PI*2), 0) * (3.0+r2*3.0);
-        meshNode.scale = simd_make_float3(1,1,1)*(r3+0.5)*0.1;
-        [centerNode addChild:meshNode];
-    }
-    
     // Plane
     MGPPrimitiveNode *planeNode = [[MGPPrimitiveNode alloc] initWithPrimitiveType:MGPPrimitiveNodeTypePlane
                                                                  vertexDescriptor:_renderer.gBuffer.baseVertexDescriptor
@@ -188,22 +166,14 @@ typedef void(^SGRUpdateHandler)(float deltaTime);
     MGPSceneNode *lightNode = [[MGPSceneNode alloc] init];
     MGPLightComponent *lightComp = [[MGPLightComponent alloc] init];
     lightComp.color = simd_make_float3(1.0f, 1.0f, 0.0f);
-    lightComp.intensity = 4;
+    lightComp.intensity = 4.0;
     lightComp.type = MGPLightTypeDirectional;
     lightComp.castShadows = YES;
-    lightComp.shadowBias = 0.0001;
+    lightComp.shadowBias = 0.001;
     lightComp.shadowNear = 0.5;
-    lightComp.shadowFar = 30;
+    lightComp.shadowFar = 10;
     [lightNode addComponent:lightComp];
-    lightNode.position = simd_make_float3(12.0f, 12.0f, 0.0f);
-    
-    MGPLightComponent *pointLightComp = [[MGPLightComponent alloc] init];
-    pointLightComp.color = simd_make_float3(1.0f, 0.4f, 0.0f);
-    pointLightComp.intensity = 8;
-    pointLightComp.radius = 100;
-    pointLightComp.type = MGPLightTypeDirectional;
-    pointLightComp.castShadows = YES;
-    [meshNode addComponent:pointLightComp];
+    lightNode.position = simd_make_float3(12.0f, 12.0f, -12.0f);
     
     [_scene.rootNode addChild: centerNode];
     [_scene.rootNode addChild: planeNode];
@@ -217,33 +187,9 @@ typedef void(^SGRUpdateHandler)(float deltaTime);
     if(IBLs.count > 0)
         self.scene.IBL = IBLs[0];
     
-    __block NSInteger IBLIndex = 0;
-    __block float IBLTime = 0;
-    
     SGRUpdateHandler handler = ^(float deltaTime) {
         static float rot = 0;
-        rot += deltaTime*M_PI;
-        static float y = 0;
-        static bool flag = true;
-        y += 0.1 * (flag ? 1 : -1);
-        if(y > 16) {
-            y = 16;
-            flag = false;
-        }
-        else if(y < 0) {
-            y = 0;
-            flag = true;
-        }
-        
-        IBLTime += deltaTime;
-        if(IBLTime > 3.0f) {
-            IBLTime -= 3.0f;
-            if(IBLs.count > 0) {
-                IBLIndex = (IBLIndex + 1) % IBLs.count;
-                self.scene.IBL = IBLs[IBLIndex];
-            }
-        }
-        
+        rot += deltaTime * M_PI;
         centerNode.rotation = simd_make_float3(0, 0, rot);
         mesh2Node.rotation = simd_make_float3(0, rot, 0);
     };
