@@ -41,11 +41,14 @@
     id<MTLRenderPipelineState> _renderPipelineSkybox;
     id<MTLRenderPipelineState> _renderPipelinePresent;
     id<MTLDepthStencilState> _depthStencil;
+    id<MTLDepthStencilState> _depthStencilNoWrite;
     
     // Light-cull
     id<MTLComputePipelineState> _computePipelineLightCulling;
     id<MTLRenderPipelineState> _renderPipelineLightCullTile;
     id<MTLBuffer> _lightCullBuffer;
+    
+    id<MTLFence> _fence;
 }
 
 - (instancetype)init {
@@ -57,6 +60,10 @@
 }
 
 - (void)_initAssets {
+    // Fence
+    _fence = [self.device newFence];
+    _fence.label = @"Fence";
+    
     // G-buffer
     MGPGBufferAttachmentType attachments =
         MGPGBufferAttachmentTypeAlbedo |
@@ -121,6 +128,11 @@
     [depthStencilDesc setDepthCompareFunction:MTLCompareFunctionLessEqual];
     _depthStencil = [self.device newDepthStencilStateWithDescriptor:depthStencilDesc];
     
+    MTLDepthStencilDescriptor *depthStencilNoWriteDesc = [[MTLDepthStencilDescriptor alloc] init];
+    [depthStencilNoWriteDesc setDepthWriteEnabled:NO];
+    [depthStencilNoWriteDesc setDepthCompareFunction:MTLCompareFunctionNever];
+    _depthStencilNoWrite = [self.device newDepthStencilStateWithDescriptor:depthStencilNoWriteDesc];
+    
     // light-cull
     _lightCullBuffer = [self.device newBufferWithLength: LIGHT_CULL_BUFFER_SIZE
                                                 options:MTLResourceStorageModePrivate];
@@ -156,7 +168,7 @@
     [self beginGPUTime:commandBuffer];
     
     // shadow
-    [self renderShadows: commandBuffer];
+    [self renderShadows:commandBuffer];
     
     for(NSUInteger i = 0; i < MIN(4, _cameraComponents.count); i++) {
         MGPCameraComponent *cameraComp = _cameraComponents[i];
@@ -328,6 +340,17 @@
 
 - (void)renderSkybox:(id<MTLRenderCommandEncoder>)encoder {
     encoder.label = @"Skybox";
+    
+    // wait for shadow pass
+    [encoder waitForFence:_fence
+             beforeStages:MTLRenderStageFragment];
+    [encoder memoryBarrierWithScope:MTLBarrierScopeTextures
+                        afterStages:MTLRenderStageFragment
+                       beforeStages:MTLRenderStageFragment];
+    [encoder memoryBarrierWithScope:MTLBarrierScopeRenderTargets
+                        afterStages:MTLRenderStageFragment
+                       beforeStages:MTLRenderStageFragment];
+    
     [encoder setRenderPipelineState: _renderPipelineSkybox];
     [encoder setDepthStencilState: _depthStencil];
     [encoder setCullMode: MTLCullModeBack];
@@ -345,11 +368,25 @@
                     vertexStart: 0
                     vertexCount: 36];
     }
+    
+    [encoder updateFence:_fence afterStages:MTLRenderStageFragment];
+    
     [encoder endEncoding];
 }
 
 - (void)renderGBuffer:(id<MTLRenderCommandEncoder>)encoder {
     encoder.label = @"G-buffer";
+    
+    // wait for skybox pass
+    [encoder waitForFence:_fence
+             beforeStages:MTLRenderStageFragment];
+    [encoder memoryBarrierWithScope:MTLBarrierScopeTextures
+                        afterStages:MTLRenderStageFragment
+                       beforeStages:MTLRenderStageFragment];
+    [encoder memoryBarrierWithScope:MTLBarrierScopeRenderTargets
+                        afterStages:MTLRenderStageFragment
+                       beforeStages:MTLRenderStageFragment];
+    
     [encoder setCullMode: MTLCullModeBack];
     [encoder setDepthStencilState: _depthStencil];
     
@@ -369,6 +406,8 @@
           instanceBufferIndex:2
                       encoder:encoder];
     }
+    
+    [encoder updateFence:_fence afterStages:MTLRenderStageFragment];
     
     [encoder endEncoding];
 }
@@ -399,10 +438,15 @@
                 
                 MGPDrawCallList *drawCallList = [self drawCallListWithFrustum:lightComponent.frustum];
                 
+                if(i > 0)
+                    [encoder waitForFence:_fence beforeStages:MTLRenderStageFragment];
+                
                 [self renderDrawCalls:drawCallList
                          bindTextures:NO
                   instanceBufferIndex:3
                               encoder:encoder];
+                
+                [encoder updateFence:_fence afterStages:MTLRenderStageFragment];
                 
                 [encoder endEncoding];
             }
@@ -412,6 +456,9 @@
 
 - (void)computeLightCullGrid:(id<MTLComputeCommandEncoder>)encoder {
     encoder.label = @"Light Culling";
+    
+    // wait for g-buffer pass
+    [encoder waitForFence:_fence];
     
     [encoder setComputePipelineState: _computePipelineLightCulling];
     NSUInteger tileSize = LIGHT_CULL_GRID_TILE_SIZE;
@@ -436,6 +483,9 @@
                 atIndex: 0];
     [encoder dispatchThreadgroups:threadSize
             threadsPerThreadgroup:MTLSizeMake(tileSize, tileSize, 1)];
+    
+    [encoder updateFence:_fence];
+    
     [encoder endEncoding];
 }
 
@@ -454,7 +504,19 @@
                                                                                        error: nil];
     
     encoder.label = @"Shading";
+    
+    // wait for light cull pass
+    [encoder waitForFence:_fence
+             beforeStages:MTLRenderStageFragment];
+    [encoder memoryBarrierWithScope:MTLBarrierScopeTextures
+                        afterStages:MTLRenderStageFragment
+                       beforeStages:MTLRenderStageFragment];
+    [encoder memoryBarrierWithScope:MTLBarrierScopeRenderTargets
+                        afterStages:MTLRenderStageFragment
+                       beforeStages:MTLRenderStageFragment];
+    
     [encoder setRenderPipelineState: shadingPipeline];
+    [encoder setDepthStencilState:_depthStencilNoWrite];
     [encoder setCullMode: MTLCullModeBack];
     [encoder setFragmentBuffer: _cameraPropsBuffer
                         offset: _currentBufferIndex * sizeof(camera_props_t) * MAX_NUM_CAMS
@@ -506,9 +568,13 @@
                                 atIndex: i+attachment_shadow_map];
         }
     }
+    
     [encoder drawPrimitives: MTLPrimitiveTypeTriangle
                 vertexStart: 0
                 vertexCount: 6];
+
+    [encoder updateFence:_fence
+             afterStages:MTLRenderStageFragment];
     
     [encoder endEncoding];
 }
@@ -516,9 +582,20 @@
 - (void)renderFramebuffer:(id<MTLRenderCommandEncoder>)encoder {
     encoder.label = @"Present";
     
+    // wait for shading pass
+    [encoder waitForFence:_fence
+             beforeStages:MTLRenderStageFragment];
+    [encoder memoryBarrierWithScope:MTLBarrierScopeTextures
+                        afterStages:MTLRenderStageFragment
+                       beforeStages:MTLRenderStageFragment];
+    [encoder memoryBarrierWithScope:MTLBarrierScopeRenderTargets
+                        afterStages:MTLRenderStageFragment
+                       beforeStages:MTLRenderStageFragment];
+    
     if(_gBufferIndex == 6) {
         // Draw light-culling tiles
         [encoder setRenderPipelineState: _renderPipelineLightCullTile];
+        [encoder setDepthStencilState:_depthStencilNoWrite];
         [encoder setFragmentBuffer: _lightCullBuffer
                             offset: 0
                            atIndex: 0];
@@ -528,6 +605,7 @@
     }
     else {
         [encoder setRenderPipelineState: _renderPipelinePresent];
+        [encoder setDepthStencilState:_depthStencilNoWrite];
     }
     
     [encoder setCullMode: MTLCullModeBack];
