@@ -51,14 +51,7 @@ typedef void(^SGRUpdateHandler)(float deltaTime);
 
 @implementation AppDelegate
 
-- (void)applicationDidFinishLaunching:(NSNotification *)aNotification {
-    _renderer = [[SceneGraphRenderer alloc] init];
-    _view.renderer = _renderer;
-    
-    // scene
-    _scene = [[MGPScene alloc] init];
-    
-    // TODO: IBL
+- (void)loadIBL {
     NSMutableArray *IBLs = [NSMutableArray array];
     NSArray<NSString*> *skyboxNames = @[@"Tropical_Beach_3k"];
     for(NSInteger i = 0; i < skyboxNames.count; i++) {
@@ -104,6 +97,20 @@ typedef void(^SGRUpdateHandler)(float deltaTime);
                                                                 equirectangularMap: skyboxTexture];
         [IBLs addObject: IBL];
     }
+    
+    if(IBLs.count > 0)
+        _scene.IBL = IBLs[0];
+}
+
+- (void)applicationDidFinishLaunching:(NSNotification *)aNotification {
+    _renderer = [[SceneGraphRenderer alloc] init];
+    _view.renderer = _renderer;
+    
+    // Scene
+    _scene = [[MGPScene alloc] init];
+    
+    // IBL
+    [self loadIBL];
     
     // Center
     MGPSceneNode *centerNode = [[MGPSceneNode alloc] init];
@@ -162,7 +169,7 @@ typedef void(^SGRUpdateHandler)(float deltaTime);
     [cameraNode addComponent:cameraComp];
     cameraNode.position = simd_make_float3(0, 0, -20);
     
-    // Light
+    // Light (+shadow)
     MGPSceneNode *lightNode = [[MGPSceneNode alloc] init];
     MGPLightComponent *lightComp = [[MGPLightComponent alloc] init];
     lightComp.color = simd_make_float3(1.0f, 1.0f, 0.0f);
@@ -175,17 +182,30 @@ typedef void(^SGRUpdateHandler)(float deltaTime);
     [lightNode addComponent:lightComp];
     lightNode.position = simd_make_float3(12.0f, 12.0f, -12.0f);
     
+    // Second light (+shadow)
+    MGPSceneNode *light2Node = [[MGPSceneNode alloc] init];
+    MGPLightComponent *light2Comp = [[MGPLightComponent alloc] init];
+    light2Comp.color = simd_make_float3(0.0f, 1.0f, 1.0f);
+    light2Comp.intensity = 4.0;
+    light2Comp.type = MGPLightTypeDirectional;
+    light2Comp.castShadows = YES;
+    light2Comp.shadowBias = 0.001;
+    light2Comp.shadowNear = 0.5;
+    light2Comp.shadowFar = 10;
+    [light2Node addComponent:light2Comp];
+    light2Node.position = simd_make_float3(-12.0f, 12.0f, -12.0f);
+    
+    // Add nodes into the scene
     [_scene.rootNode addChild: centerNode];
     [_scene.rootNode addChild: planeNode];
     [_scene.rootNode addChild: cameraNode];
     [_scene.rootNode addChild: lightNode];
+    [_scene.rootNode addChild: light2Node];
     _renderer.scene = _scene;
     
     [cameraNode lookAt:meshNode.position];
     [lightNode lookAt:meshNode.position];
-
-    if(IBLs.count > 0)
-        self.scene.IBL = IBLs[0];
+    [light2Node lookAt:meshNode.position];
     
     SGRUpdateHandler handler = ^(float deltaTime) {
         static float rot = 0;

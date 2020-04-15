@@ -48,7 +48,11 @@
     id<MTLRenderPipelineState> _renderPipelineLightCullTile;
     id<MTLBuffer> _lightCullBuffer;
     
-    id<MTLFence> _fence;
+    // Synchronization
+    id<MTLFence> _shadowFence, _gBufferFence;
+    BOOL _isAnyShadowRendered;
+    id<MTLEvent> _event;
+    NSUInteger _signalValue;
 }
 
 - (instancetype)init {
@@ -61,8 +65,15 @@
 
 - (void)_initAssets {
     // Fence
-    _fence = [self.device newFence];
-    _fence.label = @"Fence";
+    _shadowFence = [self.device newFence];
+    _shadowFence.label = @"Shadow Fence";
+    _gBufferFence = [self.device newFence];
+    _gBufferFence.label = @"G-buffer Fence";
+    
+    // Event
+    _event = [self.device newEvent];
+    _event.label = @"Event";
+    _signalValue = 0;
     
     // G-buffer
     MGPGBufferAttachmentType attachments =
@@ -164,11 +175,21 @@
     
     // begin
     id<MTLCommandBuffer> commandBuffer = [self.queue commandBuffer];
-    commandBuffer.label = [NSString stringWithFormat: @"Render"];
+    commandBuffer.label = @"Render";
     [self beginGPUTime:commandBuffer];
     
     // shadow
     [self renderShadows:commandBuffer];
+    
+    // event test (but it doesn't resolve the shadow corruption problem :-()
+    /*
+    [commandBuffer encodeSignalEvent:_event value:++_signalValue];
+    [commandBuffer commit];
+     
+    commandBuffer = [self.queue commandBuffer];
+    commandBuffer.label = @"Render-2";
+    [commandBuffer encodeWaitForEvent:_event value:_signalValue];
+    */
     
     for(NSUInteger i = 0; i < MIN(4, _cameraComponents.count); i++) {
         MGPCameraComponent *cameraComp = _cameraComponents[i];
@@ -341,16 +362,6 @@
 - (void)renderSkybox:(id<MTLRenderCommandEncoder>)encoder {
     encoder.label = @"Skybox";
     
-    // wait for shadow pass
-    [encoder waitForFence:_fence
-             beforeStages:MTLRenderStageFragment];
-    [encoder memoryBarrierWithScope:MTLBarrierScopeTextures
-                        afterStages:MTLRenderStageFragment
-                       beforeStages:MTLRenderStageFragment];
-    [encoder memoryBarrierWithScope:MTLBarrierScopeRenderTargets
-                        afterStages:MTLRenderStageFragment
-                       beforeStages:MTLRenderStageFragment];
-    
     [encoder setRenderPipelineState: _renderPipelineSkybox];
     [encoder setDepthStencilState: _depthStencil];
     [encoder setCullMode: MTLCullModeBack];
@@ -369,23 +380,22 @@
                     vertexCount: 36];
     }
     
-    [encoder updateFence:_fence afterStages:MTLRenderStageFragment];
-    
+    [encoder updateFence:_gBufferFence
+             afterStages:MTLRenderStageFragment];
+    [encoder memoryBarrierWithScope:MTLBarrierScopeRenderTargets
+                        afterStages:MTLRenderStageFragment
+                       beforeStages:MTLRenderStageFragment];
     [encoder endEncoding];
 }
 
 - (void)renderGBuffer:(id<MTLRenderCommandEncoder>)encoder {
     encoder.label = @"G-buffer";
     
-    // wait for skybox pass
-    [encoder waitForFence:_fence
-             beforeStages:MTLRenderStageFragment];
-    [encoder memoryBarrierWithScope:MTLBarrierScopeTextures
-                        afterStages:MTLRenderStageFragment
-                       beforeStages:MTLRenderStageFragment];
-    [encoder memoryBarrierWithScope:MTLBarrierScopeRenderTargets
-                        afterStages:MTLRenderStageFragment
-                       beforeStages:MTLRenderStageFragment];
+    // wait for skybox if it exists
+    if(self.scene.IBL) {
+        [encoder waitForFence:_gBufferFence
+                 beforeStages:MTLRenderStageFragment];
+    }
     
     [encoder setCullMode: MTLCullModeBack];
     [encoder setDepthStencilState: _depthStencil];
@@ -407,7 +417,11 @@
                       encoder:encoder];
     }
     
-    [encoder updateFence:_fence afterStages:MTLRenderStageFragment];
+    [encoder updateFence:_gBufferFence
+             afterStages:MTLRenderStageFragment];
+    [encoder memoryBarrierWithScope:MTLBarrierScopeRenderTargets
+                        afterStages:MTLRenderStageFragment
+                       beforeStages:MTLRenderStageFragment];
     
     [encoder endEncoding];
 }
@@ -415,6 +429,7 @@
 - (void)renderShadows:(id<MTLCommandBuffer>)buffer {
     if(_lightComponents.count == 0) return;
     
+    _isAnyShadowRendered = FALSE;
     for(NSUInteger i = 0, count = _lightComponents.count; i < count; i++) {
         MGPLightComponent *lightComponent = _lightComponents[i];
         if(lightComponent.castShadows) {
@@ -438,15 +453,31 @@
                 
                 MGPDrawCallList *drawCallList = [self drawCallListWithFrustum:lightComponent.frustum];
                 
-                if(i > 0)
-                    [encoder waitForFence:_fence beforeStages:MTLRenderStageFragment];
+                if(i > 0) {
+                    // Wait for previous shadow rendering
+                    [encoder waitForFence:_shadowFence
+                             beforeStages:MTLRenderStageFragment];
+                }
                 
                 [self renderDrawCalls:drawCallList
                          bindTextures:NO
                   instanceBufferIndex:3
                               encoder:encoder];
                 
-                [encoder updateFence:_fence afterStages:MTLRenderStageFragment];
+                // Update the shadow fence
+                [encoder updateFence:_shadowFence
+                         afterStages:MTLRenderStageFragment];
+                
+                // Memory barrier
+                //[encoder textureBarrier];
+                [encoder memoryBarrierWithScope:MTLBarrierScopeTextures
+                                    afterStages:MTLRenderStageFragment
+                                   beforeStages:MTLRenderStageFragment];
+                [encoder memoryBarrierWithScope:MTLBarrierScopeRenderTargets
+                                    afterStages:MTLRenderStageFragment
+                                   beforeStages:MTLRenderStageFragment];
+                
+                _isAnyShadowRendered = YES;
                 
                 [encoder endEncoding];
             }
@@ -458,7 +489,7 @@
     encoder.label = @"Light Culling";
     
     // wait for g-buffer pass
-    [encoder waitForFence:_fence];
+    [encoder waitForFence:_gBufferFence];
     
     [encoder setComputePipelineState: _computePipelineLightCulling];
     NSUInteger tileSize = LIGHT_CULL_GRID_TILE_SIZE;
@@ -484,8 +515,8 @@
     [encoder dispatchThreadgroups:threadSize
             threadsPerThreadgroup:MTLSizeMake(tileSize, tileSize, 1)];
     
-    [encoder updateFence:_fence];
-    
+    [encoder updateFence:_gBufferFence];
+    [encoder memoryBarrierWithScope:MTLBarrierScopeBuffers];
     [encoder endEncoding];
 }
 
@@ -505,15 +536,13 @@
     
     encoder.label = @"Shading";
     
-    // wait for light cull pass
-    [encoder waitForFence:_fence
+    // wait for shadow and light cull pass
+    if(_isAnyShadowRendered) {
+        [encoder waitForFence:_shadowFence
+                 beforeStages:MTLRenderStageFragment];
+    }
+    [encoder waitForFence:_gBufferFence
              beforeStages:MTLRenderStageFragment];
-    [encoder memoryBarrierWithScope:MTLBarrierScopeTextures
-                        afterStages:MTLRenderStageFragment
-                       beforeStages:MTLRenderStageFragment];
-    [encoder memoryBarrierWithScope:MTLBarrierScopeRenderTargets
-                        afterStages:MTLRenderStageFragment
-                       beforeStages:MTLRenderStageFragment];
     
     [encoder setRenderPipelineState: shadingPipeline];
     [encoder setDepthStencilState:_depthStencilNoWrite];
@@ -573,7 +602,7 @@
                 vertexStart: 0
                 vertexCount: 6];
 
-    [encoder updateFence:_fence
+    [encoder updateFence:_gBufferFence
              afterStages:MTLRenderStageFragment];
     
     [encoder endEncoding];
@@ -583,7 +612,7 @@
     encoder.label = @"Present";
     
     // wait for shading pass
-    [encoder waitForFence:_fence
+    [encoder waitForFence:_gBufferFence
              beforeStages:MTLRenderStageFragment];
     [encoder memoryBarrierWithScope:MTLBarrierScopeTextures
                         afterStages:MTLRenderStageFragment
