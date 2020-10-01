@@ -1,4 +1,4 @@
-# MetalGraphicsPlayground
+# MetalGraphicsPlaygroundthegreatproject
 
 This workspace contains subprojects for testing Metal features.
 Requires Xcode 11 or later.
