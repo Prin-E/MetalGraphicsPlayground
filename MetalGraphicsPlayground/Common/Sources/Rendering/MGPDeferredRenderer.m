@@ -41,40 +41,23 @@
     id<MTLRenderPipelineState> _renderPipelineSkybox;
     id<MTLRenderPipelineState> _renderPipelinePresent;
     id<MTLDepthStencilState> _depthStencil;
-    id<MTLDepthStencilState> _depthStencilNoWrite;
     
     // Light-cull
     id<MTLComputePipelineState> _computePipelineLightCulling;
     id<MTLRenderPipelineState> _renderPipelineLightCullTile;
     id<MTLBuffer> _lightCullBuffer;
-    
-    // Synchronization
-    id<MTLFence> _shadowFence, _gBufferFence;
-    BOOL _isAnyShadowRendered;
-    id<MTLEvent> _event;
-    NSUInteger _signalValue;
 }
 
 - (instancetype)init {
     self = [super init];
     if(self) {
+        _usesAnisotropy = YES;
         [self _initAssets];
     }
     return self;
 }
 
 - (void)_initAssets {
-    // Fence
-    _shadowFence = [self.device newFence];
-    _shadowFence.label = @"Shadow Fence";
-    _gBufferFence = [self.device newFence];
-    _gBufferFence.label = @"G-buffer Fence";
-    
-    // Event
-    _event = [self.device newEvent];
-    _event.label = @"Event";
-    _signalValue = 0;
-    
     // G-buffer
     MGPGBufferAttachmentType attachments =
         MGPGBufferAttachmentTypeAlbedo |
@@ -139,11 +122,6 @@
     [depthStencilDesc setDepthCompareFunction:MTLCompareFunctionLessEqual];
     _depthStencil = [self.device newDepthStencilStateWithDescriptor:depthStencilDesc];
     
-    MTLDepthStencilDescriptor *depthStencilNoWriteDesc = [[MTLDepthStencilDescriptor alloc] init];
-    [depthStencilNoWriteDesc setDepthWriteEnabled:NO];
-    [depthStencilNoWriteDesc setDepthCompareFunction:MTLCompareFunctionNever];
-    _depthStencilNoWrite = [self.device newDepthStencilStateWithDescriptor:depthStencilNoWriteDesc];
-    
     // light-cull
     _lightCullBuffer = [self.device newBufferWithLength: LIGHT_CULL_BUFFER_SIZE
                                                 options:MTLResourceStorageModePrivate];
@@ -179,17 +157,7 @@
     [self beginGPUTime:commandBuffer];
     
     // shadow
-    [self renderShadows:commandBuffer];
-    
-    // event test (but it doesn't resolve the shadow corruption problem :-()
-    /*
-    [commandBuffer encodeSignalEvent:_event value:++_signalValue];
-    [commandBuffer commit];
-     
-    commandBuffer = [self.queue commandBuffer];
-    commandBuffer.label = @"Render-2";
-    [commandBuffer encodeWaitForEvent:_event value:_signalValue];
-    */
+    [self renderShadows: commandBuffer];
     
     for(NSUInteger i = 0; i < MIN(4, _cameraComponents.count); i++) {
         MGPCameraComponent *cameraComp = _cameraComponents[i];
@@ -218,6 +186,8 @@
 
 - (void)renderCameraAtIndex:(NSUInteger)index
               commandBuffer:(id<MTLCommandBuffer>)commandBuffer {
+    [commandBuffer pushDebugGroup:[NSString stringWithFormat:@"Camera #%lu", index+1]];
+    
     // skybox pass
     if(self.scene.IBL) {
         _renderPassSkybox.colorAttachments[0].texture = self.view.currentDrawable.texture;
@@ -231,7 +201,7 @@
        forRenderingOrder: MGPPostProcessingRenderingOrderBeforePrepass];
     
     // G-buffer prepass
-    id<MTLRenderCommandEncoder> prepassEncoder = [commandBuffer renderCommandEncoderWithDescriptor: _gBuffer.renderPassDescriptor];
+    id<MTLRenderCommandEncoder> prepassEncoder = [commandBuffer renderCommandEncoderWithDescriptor: [_gBuffer prePassDescriptorWithAttachment:_gBuffer.attachments]];
     [self renderGBuffer:prepassEncoder];
     
     // Post-process before light pass
@@ -248,9 +218,19 @@
     
     // G-buffer shade pass
     id<MTLRenderCommandEncoder> shadingPassEncoder = [commandBuffer renderCommandEncoderWithDescriptor: _gBuffer.shadingPassDescriptor];
-    [self renderShading:shadingPassEncoder];
+    [self renderDirectLighting:shadingPassEncoder];
     
-    // Post-process before prepass
+    // Directional lighting (with shadow) pass
+    if(self.scene.lightGlobalProps.num_directional_shadowed_light > 0) {
+        id<MTLRenderCommandEncoder> directionalShadowedLightingPassEncoder = [commandBuffer renderCommandEncoderWithDescriptor:_gBuffer.directionalShadowedLightingPassDescriptor];
+        [self renderDirectionalShadowedLighting:directionalShadowedLightingPassEncoder];
+    }
+    
+    // Indirect lighting pass
+    id<MTLRenderCommandEncoder> indirectLightingPassEncoder = [commandBuffer renderCommandEncoderWithDescriptor:_gBuffer.indirectLightingPassDescriptor];
+    [self renderIndirectLighting:indirectLightingPassEncoder];
+    
+    // Post-process after shade pass
     [_postProcess render: commandBuffer
        forRenderingOrder: MGPPostProcessingRenderingOrderAfterShadePass];
     
@@ -262,6 +242,8 @@
         _renderPassPresent.colorAttachments[0].loadAction = MTLLoadActionClear;
     id<MTLRenderCommandEncoder> presentCommandEncoder = [commandBuffer renderCommandEncoderWithDescriptor: _renderPassPresent];
     [self renderFramebuffer:presentCommandEncoder];
+    
+    [commandBuffer popDebugGroup];
 }
 
 - (void)endFrame {
@@ -272,8 +254,6 @@
            bindTextures:(BOOL)bindTextures
     instanceBufferIndex:(NSUInteger)slotIndex
                 encoder:(id<MTLRenderCommandEncoder>)encoder {
-    MGPFrustum *frustum = drawCallList.frustum;
-    
     id<MTLTexture> textures[tex_total] = {};
     BOOL textureChangedFlags[tex_total] = {};
     for(int i = 0; i < tex_total; i++) {
@@ -293,12 +273,6 @@
         
         // draw submeshes
         for(MGPSubmesh *submesh in mesh.submeshes) {
-            id<MGPBoundingVolume> volume = submesh.volume;
-            
-            // Culling
-            if([volume isCulledInFrustum:frustum])
-                continue;
-            
             // Texture binding
             if(bindTextures) {
                 // Check previous draw call's textures and current textures are duplicated.
@@ -330,6 +304,7 @@
                 prepassConstants.hasAnisotropicMap = submesh.textures[tex_anisotropic] != NSNull.null;
                 //prepassConstants.flipVertically = YES;  // for sponza textures
                 //prepassConstants.sRGBTexture = YES;     // for sponza textures
+                prepassConstants.usesAnisotropy = _usesAnisotropy;
                 
                 id<MTLRenderPipelineState> prepassPipeline = [_gBuffer renderPipelineStateWithConstants: prepassConstants
                                                                                                   error: nil];
@@ -361,7 +336,6 @@
 
 - (void)renderSkybox:(id<MTLRenderCommandEncoder>)encoder {
     encoder.label = @"Skybox";
-    
     [encoder setRenderPipelineState: _renderPipelineSkybox];
     [encoder setDepthStencilState: _depthStencil];
     [encoder setCullMode: MTLCullModeBack];
@@ -379,24 +353,11 @@
                     vertexStart: 0
                     vertexCount: 36];
     }
-    
-    [encoder updateFence:_gBufferFence
-             afterStages:MTLRenderStageFragment];
-    [encoder memoryBarrierWithScope:MTLBarrierScopeRenderTargets
-                        afterStages:MTLRenderStageFragment
-                       beforeStages:MTLRenderStageFragment];
     [encoder endEncoding];
 }
 
 - (void)renderGBuffer:(id<MTLRenderCommandEncoder>)encoder {
     encoder.label = @"G-buffer";
-    
-    // wait for skybox if it exists
-    if(self.scene.IBL) {
-        [encoder waitForFence:_gBufferFence
-                 beforeStages:MTLRenderStageFragment];
-    }
-    
     [encoder setCullMode: MTLCullModeBack];
     [encoder setDepthStencilState: _depthStencil];
     
@@ -417,19 +378,12 @@
                       encoder:encoder];
     }
     
-    [encoder updateFence:_gBufferFence
-             afterStages:MTLRenderStageFragment];
-    [encoder memoryBarrierWithScope:MTLBarrierScopeRenderTargets
-                        afterStages:MTLRenderStageFragment
-                       beforeStages:MTLRenderStageFragment];
-    
     [encoder endEncoding];
 }
 
 - (void)renderShadows:(id<MTLCommandBuffer>)buffer {
     if(_lightComponents.count == 0) return;
     
-    _isAnyShadowRendered = FALSE;
     for(NSUInteger i = 0, count = _lightComponents.count; i < count; i++) {
         MGPLightComponent *lightComponent = _lightComponents[i];
         if(lightComponent.castShadows) {
@@ -453,31 +407,10 @@
                 
                 MGPDrawCallList *drawCallList = [self drawCallListWithFrustum:lightComponent.frustum];
                 
-                if(i > 0) {
-                    // Wait for previous shadow rendering
-                    [encoder waitForFence:_shadowFence
-                             beforeStages:MTLRenderStageFragment];
-                }
-                
                 [self renderDrawCalls:drawCallList
                          bindTextures:NO
                   instanceBufferIndex:3
                               encoder:encoder];
-                
-                // Update the shadow fence
-                [encoder updateFence:_shadowFence
-                         afterStages:MTLRenderStageFragment];
-                
-                // Memory barrier
-                //[encoder textureBarrier];
-                [encoder memoryBarrierWithScope:MTLBarrierScopeTextures
-                                    afterStages:MTLRenderStageFragment
-                                   beforeStages:MTLRenderStageFragment];
-                [encoder memoryBarrierWithScope:MTLBarrierScopeRenderTargets
-                                    afterStages:MTLRenderStageFragment
-                                   beforeStages:MTLRenderStageFragment];
-                
-                _isAnyShadowRendered = YES;
                 
                 [encoder endEncoding];
             }
@@ -487,9 +420,6 @@
 
 - (void)computeLightCullGrid:(id<MTLComputeCommandEncoder>)encoder {
     encoder.label = @"Light Culling";
-    
-    // wait for g-buffer pass
-    [encoder waitForFence:_gBufferFence];
     
     [encoder setComputePipelineState: _computePipelineLightCulling];
     NSUInteger tileSize = LIGHT_CULL_GRID_TILE_SIZE;
@@ -514,36 +444,17 @@
                 atIndex: 0];
     [encoder dispatchThreadgroups:threadSize
             threadsPerThreadgroup:MTLSizeMake(tileSize, tileSize, 1)];
-    
-    [encoder updateFence:_gBufferFence];
-    [encoder memoryBarrierWithScope:MTLBarrierScopeBuffers];
     [encoder endEncoding];
 }
 
-- (void)renderShading:(id<MTLRenderCommandEncoder>)encoder {
+- (void)renderDirectLighting:(id<MTLRenderCommandEncoder>)encoder {
     MGPGBufferShadingFunctionConstants shadingConstants = {};
-    MGPImageBasedLighting *IBL = self.scene.IBL;
-    light_global_t lightGlobalProps = self.scene.lightGlobalProps;
-    BOOL IBLOn = self.scene.IBL != nil;
-    BOOL ssaoOn = [_postProcess layerByClass:MGPPostProcessingLayerSSAO.class].enabled;
-    
-    shadingConstants.hasIBLIrradianceMap = IBLOn;
-    shadingConstants.hasIBLSpecularMap = IBLOn;
-    shadingConstants.hasSSAOMap = ssaoOn;
+    shadingConstants.usesAnisotropy = _usesAnisotropy;
     
     id<MTLRenderPipelineState> shadingPipeline = [_gBuffer shadingPipelineStateWithConstants: shadingConstants
                                                                                        error: nil];
     
-    encoder.label = @"Shading";
-    
-    // wait for shadow and light cull pass
-    if(_isAnyShadowRendered) {
-        [encoder waitForFence:_shadowFence
-                 beforeStages:MTLRenderStageFragment];
-    }
-    [encoder waitForFence:_gBufferFence
-             beforeStages:MTLRenderStageFragment];
-    
+    encoder.label = @"Direct Lighting";
     [encoder setRenderPipelineState: shadingPipeline];
     [encoder setDepthStencilState:_depthStencilNoWrite];
     [encoder setCullMode: MTLCullModeBack];
@@ -567,43 +478,122 @@
                         atIndex: attachment_shading];
     [encoder setFragmentTexture: _gBuffer.depth
                         atIndex: attachment_depth];
-    [encoder setFragmentTexture: _gBuffer.tangent
-                        atIndex: attachment_tangent];
+    if(_usesAnisotropy) {
+        [encoder setFragmentTexture: _gBuffer.tangent
+                            atIndex: attachment_tangent];
+    }
+    
+    [encoder drawPrimitives: MTLPrimitiveTypeTriangle
+                vertexStart: 0
+                vertexCount: 3];
+    
+    [encoder endEncoding];
+}
+
+- (void)renderIndirectLighting:(id<MTLRenderCommandEncoder>)encoder {
+    MGPGBufferShadingFunctionConstants shadingConstants = {};
+    shadingConstants.hasIBLIrradianceMap = self.scene.IBL.irradianceMap != nil;
+    shadingConstants.hasIBLSpecularMap = self.scene.IBL.prefilteredSpecularMap != nil;
+    shadingConstants.hasSSAOMap = [_postProcess layerByClass:MGPPostProcessingLayerSSAO.class].enabled;
+    shadingConstants.usesAnisotropy = _usesAnisotropy;
+    
+    id<MTLRenderPipelineState> renderPipeline = [_gBuffer indirectLightingPipelineStateWithConstants:shadingConstants
+                                                                                               error:nil];
+    
+    encoder.label = @"Indirect Lighting";
+    [encoder setRenderPipelineState: renderPipeline];
+    [encoder setCullMode: MTLCullModeBack];
+    [encoder setFragmentBuffer: _cameraPropsBuffer
+                        offset: _currentBufferIndex * sizeof(camera_props_t) * MAX_NUM_CAMS
+                       atIndex: 0];
+    [encoder setFragmentBuffer: _lightGlobalBuffer
+                        offset: _currentBufferIndex * sizeof(light_global_t)
+                       atIndex: 1];
+    [encoder setFragmentTexture: _gBuffer.albedo
+                        atIndex: attachment_albedo];
+    [encoder setFragmentTexture: _gBuffer.normal
+                        atIndex: attachment_normal];
+    [encoder setFragmentTexture: _gBuffer.shading
+                        atIndex: attachment_shading];
+    if(_usesAnisotropy) {
+        [encoder setFragmentTexture: _gBuffer.tangent
+                            atIndex: attachment_tangent];
+    }
     [encoder setFragmentTexture: _gBuffer.depth
                         atIndex: attachment_depth];
-    
-    if(IBLOn) {
-        [encoder setFragmentTexture: IBL.irradianceMap
+    if(shadingConstants.hasIBLIrradianceMap)
+        [encoder setFragmentTexture: self.scene.IBL.irradianceMap
                             atIndex: attachment_irradiance];
-        [encoder setFragmentTexture: IBL.prefilteredSpecularMap
+    if(shadingConstants.hasIBLSpecularMap) {
+        [encoder setFragmentTexture: self.scene.IBL.prefilteredSpecularMap
                             atIndex: attachment_prefiltered_specular];
-        [encoder setFragmentTexture: IBL.BRDFLookupTexture
+        [encoder setFragmentTexture: self.scene.IBL.BRDFLookupTexture
                             atIndex: attachment_brdf_lookup];
     }
-    if(_postProcess.layers.count > 0) {
+    if(shadingConstants.hasSSAOMap) {
         [encoder setFragmentTexture: ((MGPPostProcessingLayerSSAO *)_postProcess[0]).ssaoTexture
                             atIndex: attachment_ssao];
     }
+    [encoder drawPrimitives: MTLPrimitiveTypeTriangle
+                vertexStart: 0
+                vertexCount: 3];
+    
+    [encoder endEncoding];
+}
+
+- (void)renderDirectionalShadowedLighting:(id<MTLRenderCommandEncoder>)encoder {
+    light_global_t lightGlobalProps = self.scene.lightGlobalProps;
+    MGPGBufferShadingFunctionConstants shadingConstants = {};
+    shadingConstants.usesAnisotropy = _usesAnisotropy;
+    NSUInteger lightBufferOffset = _currentBufferIndex * sizeof(light_t) * MAX_NUM_LIGHTS;
+    
+    id<MTLRenderPipelineState> renderPipeline = [_gBuffer directionalShadowedLightingPipelineStateWithConstants:shadingConstants
+                                                                                                          error:nil];
+
+    encoder.label = @"Directional Shadowed Lighting";
+    [encoder setRenderPipelineState: renderPipeline];
+    [encoder setCullMode: MTLCullModeBack];
+    [encoder setFragmentBuffer: _cameraPropsBuffer
+                        offset: _currentBufferIndex * sizeof(camera_props_t) * MAX_NUM_CAMS
+                       atIndex: 0];
+    [encoder setFragmentBuffer: _lightGlobalBuffer
+                        offset: _currentBufferIndex * sizeof(light_global_t)
+                       atIndex: 1];
+    [encoder setFragmentBuffer: _lightPropsBuffer
+                        offset: lightBufferOffset
+                       atIndex: 2];
+    [encoder setFragmentTexture: _gBuffer.albedo
+                        atIndex: attachment_albedo];
+    [encoder setFragmentTexture: _gBuffer.normal
+                        atIndex: attachment_normal];
+    [encoder setFragmentTexture: _gBuffer.shading
+                        atIndex: attachment_shading];
+    if(_usesAnisotropy) {
+        [encoder setFragmentTexture: _gBuffer.tangent
+                            atIndex: attachment_tangent];
+    }
+    [encoder setFragmentTexture: _gBuffer.depth
+                        atIndex: attachment_depth];
+    
     for(NSUInteger i = 0; i < lightGlobalProps.first_point_light_index; i++) {
         if(_lightComponents[i].castShadows) {
             MGPShadowBuffer *shadowBuffer = [_shadowManager newShadowBufferForLightComponent: _lightComponents[i]
                                                                                   resolution: DEFAULT_SHADOW_RESOLUTION
                                                                                cascadeLevels: 1];
-            [encoder setFragmentTexture: shadowBuffer.texture
-                                atIndex: i+attachment_shadow_map];
-        }
-        else {
-            [encoder setFragmentTexture: nil
-                                atIndex: i+attachment_shadow_map];
+            if(shadowBuffer) {
+                [encoder pushDebugGroup:[NSString stringWithFormat:@"Directional Light #%lu", i+1]];
+                [encoder setFragmentBufferOffset:lightBufferOffset + i * sizeof(light_t)
+                                         atIndex:2];
+                [encoder setFragmentTexture: shadowBuffer.texture
+                                    atIndex: attachment_shadow_map];
+                [encoder drawPrimitives: MTLPrimitiveTypeTriangle
+                            vertexStart: 0
+                            vertexCount: 3];
+                [encoder popDebugGroup];
+            }
+
         }
     }
-    
-    [encoder drawPrimitives: MTLPrimitiveTypeTriangle
-                vertexStart: 0
-                vertexCount: 6];
-
-    [encoder updateFence:_gBufferFence
-             afterStages:MTLRenderStageFragment];
     
     [encoder endEncoding];
 }
@@ -611,20 +601,9 @@
 - (void)renderFramebuffer:(id<MTLRenderCommandEncoder>)encoder {
     encoder.label = @"Present";
     
-    // wait for shading pass
-    [encoder waitForFence:_gBufferFence
-             beforeStages:MTLRenderStageFragment];
-    [encoder memoryBarrierWithScope:MTLBarrierScopeTextures
-                        afterStages:MTLRenderStageFragment
-                       beforeStages:MTLRenderStageFragment];
-    [encoder memoryBarrierWithScope:MTLBarrierScopeRenderTargets
-                        afterStages:MTLRenderStageFragment
-                       beforeStages:MTLRenderStageFragment];
-    
     if(_gBufferIndex == 6) {
         // Draw light-culling tiles
         [encoder setRenderPipelineState: _renderPipelineLightCullTile];
-        [encoder setDepthStencilState:_depthStencilNoWrite];
         [encoder setFragmentBuffer: _lightCullBuffer
                             offset: 0
                            atIndex: 0];
@@ -634,7 +613,6 @@
     }
     else {
         [encoder setRenderPipelineState: _renderPipelinePresent];
-        [encoder setDepthStencilState:_depthStencilNoWrite];
     }
     
     [encoder setCullMode: MTLCullModeBack];
@@ -642,7 +620,7 @@
                         atIndex: 0];
     [encoder drawPrimitives: MTLPrimitiveTypeTriangle
                 vertexStart: 0
-                vertexCount: 6];
+                vertexCount: 3];
     
     [encoder endEncoding];
 }
@@ -669,7 +647,7 @@
 
 - (void)resize:(CGSize)newSize {
     [super resize:newSize];
-    [_gBuffer resize:newSize];
+    [_gBuffer resize:self.scaledSize];
 }
 
 @end

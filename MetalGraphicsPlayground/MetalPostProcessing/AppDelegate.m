@@ -16,6 +16,7 @@
 
 @property (weak) IBOutlet NSWindow *window;
 @property (weak) IBOutlet NSTextField *CPUTimeText, *GPUTimeText;
+@property (weak) IBOutlet NSTextField *outputSizeText;
 @end
 
 @implementation AppDelegate
@@ -31,6 +32,7 @@
                                             repeats: YES block:^(NSTimer * _Nonnull timer) {
         self->_CPUTimeText.stringValue = [NSString stringWithFormat: @"CPU : %.2fms", self->renderer.CPUTime * 1000];
         self->_GPUTimeText.stringValue = [NSString stringWithFormat: @"GPU : %.2fms", self->renderer.GPUTime * 1000];
+        self->_outputSizeText.stringValue = [NSString stringWithFormat: @"Output (%.fx%.f)", self->renderer.scaledSize.width, self->renderer.scaledSize.height];
     }];
 }
 

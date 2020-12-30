@@ -76,6 +76,9 @@
 		9554894B1BA8663200F4868E /* ModelIO.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9554894A1BA8663100F4868E /* ModelIO.framework */; };
 		9554894E1BA86D5D00F4868E /* Shaders.metal in Sources */ = {isa = PBXBuildFile; fileRef = 9554894D1BA86D5D00F4868E /* Shaders.metal */; };
 		955B2F911E1BFA8F002C763C /* Media.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 955B2F901E1BFA8F002C763C /* Media.xcassets */; };
+		955D1BFD240D65FF0022035C /* MGPTextureManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 955D1BFC240D65FF0022035C /* MGPTextureManager.m */; };
+		955D1BFE240D65FF0022035C /* MGPTextureManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 955D1BFC240D65FF0022035C /* MGPTextureManager.m */; };
+		955D1BFF240D65FF0022035C /* MGPTextureManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 955D1BFC240D65FF0022035C /* MGPTextureManager.m */; };
 		955DA6AF1F0E74E100464E54 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 955DA6AE1F0E74E100464E54 /* AppDelegate.m */; };
 		955DA6B21F0E74E100464E54 /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 955DA6B11F0E74E100464E54 /* ViewController.m */; };
 		955DA6B41F0E74E100464E54 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 955DA6B31F0E74E100464E54 /* Assets.xcassets */; };
@@ -396,6 +399,8 @@
 		9554894D1BA86D5D00F4868E /* Shaders.metal */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.metal; path = Shaders.metal; sourceTree = "<group>"; };
 		9554894F1BA8705000F4868E /* SharedStructures.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SharedStructures.h; sourceTree = "<group>"; };
 		955B2F901E1BFA8F002C763C /* Media.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Media.xcassets; sourceTree = "<group>"; };
+		955D1BFB240D65FF0022035C /* MGPTextureManager.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MGPTextureManager.h; sourceTree = "<group>"; };
+		955D1BFC240D65FF0022035C /* MGPTextureManager.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MGPTextureManager.m; sourceTree = "<group>"; };
 		955DA6AB1F0E74E100464E54 /* MetalInstancing.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MetalInstancing.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		955DA6AD1F0E74E100464E54 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		955DA6AE1F0E74E100464E54 /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
@@ -1140,6 +1145,8 @@
 				95EFEC4C22AEAE3B0091C698 /* MGPTextureLoader.m */,
 				95EFD8DA22AF941800D4C0F5 /* DDSTextureLoader.h */,
 				95EFD8D922AF941800D4C0F5 /* DDSTextureLoader.mm */,
+				955D1BFB240D65FF0022035C /* MGPTextureManager.h */,
+				955D1BFC240D65FF0022035C /* MGPTextureManager.m */,
 			);
 			path = Utility;
 			sourceTree = "<group>";
@@ -1919,6 +1926,7 @@
 				95784A8423C229CB00296A51 /* MGPImageBasedLighting.m in Sources */,
 				95C7C8C523CB302D006E8B5E /* MGPPrimitiveNode.m in Sources */,
 				95784A8523C229CB00296A51 /* MGPLight.m in Sources */,
+				955D1BFF240D65FF0022035C /* MGPTextureManager.m in Sources */,
 				95784A8623C229CB00296A51 /* MGPShadowBuffer.m in Sources */,
 				95784A8723C229CB00296A51 /* MGPShadowManager.m in Sources */,
 				95784A8823C229CB00296A51 /* MGPScene.m in Sources */,
@@ -1985,6 +1993,7 @@
 				95F002AD22CCEFB5000A951B /* MGPPostProcessingLayer.m in Sources */,
 				95F0F94522C1FEA6002AF368 /* SSAO.metal in Sources */,
 				95BED31C2286746B006E5C2F /* CommonMath.metal in Sources */,
+				955D1BFD240D65FF0022035C /* MGPTextureManager.m in Sources */,
 				959C8301227F409E00C2C245 /* ImageBasedLighting.metal in Sources */,
 				95F6725722D7867300B630A7 /* Shadow.metal in Sources */,
 				95BF56BC234DAB8D0001A7EC /* MGPDeferredRenderer.m in Sources */,
@@ -2032,6 +2041,7 @@
 				95EFD8DC22AF941800D4C0F5 /* DDSTextureLoader.mm in Sources */,
 				9564B6B0234B0D6900DC394A /* MGPCameraComponent.m in Sources */,
 				95F40BC322AD76EA00F747D2 /* ImageBasedLighting.metal in Sources */,
+				955D1BFE240D65FF0022035C /* MGPTextureManager.m in Sources */,
 				95BF56BD234DAB8D0001A7EC /* MGPDeferredRenderer.m in Sources */,
 				95F40BC422AD76EA00F747D2 /* Skybox.metal in Sources */,
 				95F40BC522AD76EA00F747D2 /* CommonStages.metal in Sources */,
@@ -2272,7 +2282,9 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
-				MTL_ENABLE_DEBUG_INFO = YES;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_ENABLE_MODULES = YES;
+				MTL_LANGUAGE_REVISION = UseDeploymentTarget;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = macosx;
 			};
@@ -2320,6 +2332,8 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_ENABLE_MODULES = YES;
+				MTL_LANGUAGE_REVISION = UseDeploymentTarget;
 				SDKROOT = macosx;
 			};
 			name = Release;
@@ -2520,7 +2534,6 @@
 				INFOPLIST_FILE = MetalSceneGraph/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 10.15;
-				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.Prin-E.test.MetalSceneGraph";
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -2611,7 +2624,6 @@
 				INFOPLIST_FILE = MetalDeferred/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 10.14;
-				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.Prin-E.test.MetalDeferred";
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -2664,7 +2676,6 @@
 				INFOPLIST_FILE = MetalPostProcessing/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 10.14;
-				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.Prin-E.test.MetalPostProcessing";
 				PRODUCT_NAME = "$(TARGET_NAME)";

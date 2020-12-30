@@ -39,10 +39,16 @@ typedef NS_ENUM(NSUInteger, MGPPostProcessingRenderingOrder) {
 @end
 
 #pragma mark - Ambient Occlusion
+typedef NS_ENUM(NSUInteger, MGPSSAOType) {
+    MGPSSAOTypeDefault,
+    MGPSSAOTypeAdaptive
+};
+
 @interface MGPPostProcessingLayerSSAO : MGPPostProcessingLayer
 
 @property (nonatomic, readonly) id<MTLTexture> ssaoTexture;
 
+@property (nonatomic) MGPSSAOType type;
 @property (nonatomic) uint32_t numSamples;
 @property (nonatomic) uint32_t downsample;  // 0 : full size, 1~n : 2^n downscale
 @property (nonatomic) float intensity;      // 0.0~1.0

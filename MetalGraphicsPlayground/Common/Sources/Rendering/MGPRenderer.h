@@ -25,6 +25,12 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property (weak) MGPView *view;
 
+// Render options
+@property (readonly) CGSize size;
+@property (readonly) CGSize scaledSize;
+@property (readwrite) float renderScale;    // 1.0 : 100%
+
+
 // Profiling
 @property (readonly) float CPUTime;
 @property (readonly) float GPUTime;

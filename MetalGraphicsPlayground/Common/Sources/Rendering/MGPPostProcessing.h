@@ -12,10 +12,13 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+@class MGPTextureManager;
+
 @interface MGPPostProcessing : NSObject
 
 @property (nonatomic, readonly) id<MTLDevice> device;
 @property (nonatomic, readonly) id<MTLLibrary> library;
+@property (nonatomic, readonly) MGPTextureManager *textureManager;
 
 // ordered by renderingOrder
 @property (nonatomic, readonly) NSArray<id<MGPPostProcessingLayer>> *layers;
@@ -28,6 +31,10 @@ NS_ASSUME_NONNULL_BEGIN
 // init
 - (instancetype)initWithDevice:(id<MTLDevice>)device
                        library:(id<MTLLibrary>)library;
+
+- (instancetype)initWithDevice:(id<MTLDevice>)device
+                       library:(id<MTLLibrary>)library
+                textureManager:(MGPTextureManager *)textureManager;
 
 // add/remove
 - (void)addLayer:(id<MGPPostProcessingLayer>)layer;

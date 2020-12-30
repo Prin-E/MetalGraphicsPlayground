@@ -40,7 +40,7 @@ float3 view_pos_from_depth(constant float4x4 &invProjection, uint2 coords, uint2
     return vp.xyz;
 }
 
-float3 view_pos_from_depth(constant matrix_float4x4 &invProjection, float2 uv, float depth) {
+float3 view_pos_from_depth(constant float4x4 &invProjection, float2 uv, float depth) {
     uv.y = 1.0 - uv.y;
     float4 ndc = float4(uv * 2.0 - 1.0, depth, 1.0);
     float4 vp = invProjection * ndc;

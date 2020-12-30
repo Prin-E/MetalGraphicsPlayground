@@ -152,6 +152,23 @@ typedef void(^SGRUpdateHandler)(float deltaTime);
     mesh3Node.scale = simd_make_float3(0.5, 0.5, 0.5);
     [mesh2Node addChild:mesh3Node];
     
+    srand((unsigned int)time(NULL));
+    for(NSUInteger i = 0; i < 256*10; i++) {
+        MGPPrimitiveNode *meshNode = [[MGPPrimitiveNode alloc] initWithPrimitiveType:MGPPrimitiveNodeTypeCube
+                                                                     vertexDescriptor:_renderer.gBuffer.baseVertexDescriptor
+                                                                               device:_renderer.device];
+        mat.roughness = 1.0;
+        mat.metalic = 0.0;
+        mat.albedo = simd_make_float3(1.0f, 1.0f, 1.0f);
+        meshNode.material = mat;
+        float r = rand()/(float)RAND_MAX;
+        float r2 = rand()/(float)RAND_MAX;
+        float r3 = rand()/(float)RAND_MAX;
+        meshNode.position = simd_make_float3(cos(r*M_PI*2), sin(r*M_PI*2), 0) * (3.0+r2*3.0);
+        meshNode.scale = simd_make_float3(1,1,1)*(r3+0.5)*0.1;
+        [centerNode addChild:meshNode];
+    }
+    
     // Plane
     MGPPrimitiveNode *planeNode = [[MGPPrimitiveNode alloc] initWithPrimitiveType:MGPPrimitiveNodeTypePlane
                                                                  vertexDescriptor:_renderer.gBuffer.baseVertexDescriptor

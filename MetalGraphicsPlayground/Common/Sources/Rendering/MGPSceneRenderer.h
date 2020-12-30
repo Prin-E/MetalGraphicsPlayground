@@ -27,6 +27,7 @@ NS_ASSUME_NONNULL_BEGIN
 @class MGPCameraComponent;
 @class MGPLightComponent;
 @class MGPMeshComponent;
+@class MGPTextureManager;
 
 @interface MGPDrawCall : NSObject
 
@@ -55,13 +56,12 @@ NS_ASSUME_NONNULL_BEGIN
     id<MTLBuffer> _lightPropsBuffer;
     id<MTLBuffer> _lightGlobalBuffer;
     
-    CGSize _size;
-    
     // Profiling
     float _CPUTime;
     float _GPUTime;
 }
 
+@property (nonatomic, readonly) MGPTextureManager *textureManager;
 @property (nonatomic) MGPScene *scene;
 
 - (MGPDrawCallList *)drawCallListWithFrustum: (MGPFrustum *)frustum;

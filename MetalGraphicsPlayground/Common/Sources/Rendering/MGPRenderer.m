@@ -12,12 +12,19 @@
     dispatch_semaphore_t _semaphore;
     NSTimeInterval _prevCPUTimeInterval;
     NSTimeInterval _prevGPUTimeInterval;    // for 10.14 or earlier
+    
+    float _renderScale;
 }
+
+@synthesize renderScale = _renderScale;
 
 - (instancetype)init {
     self = [super init];
     if(self) {
         [self initMetal];
+        _size = CGSizeMake(512, 512);
+        _scaledSize = CGSizeMake(512, 512);
+        _renderScale = 1.0f;
     }
     return self;
 }
@@ -27,7 +34,7 @@
     NSArray *devices = MTLCopyAllDevices();
     for(id<MTLDevice> device in devices) {
         if(device.isLowPower) {
-            _device = device;
+            //_device = device;
             break;
         }
     }
@@ -47,7 +54,17 @@
 }
 
 - (void)resize:(CGSize)newSize {
-    // do nothing
+    _size = newSize;
+    _scaledSize = CGSizeMake(ceilf(_size.width * _renderScale), ceilf(_size.height * _renderScale));
+}
+
+- (float)renderScale {
+    return _renderScale;
+}
+
+- (void)setRenderScale:(float)renderScale {
+    _renderScale = renderScale;
+    [self resize:_size];
 }
 
 #pragma mark - Rendering

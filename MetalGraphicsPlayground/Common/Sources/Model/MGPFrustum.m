@@ -13,6 +13,14 @@
 
 @implementation MGPFrustum
 
+- (instancetype)init {
+    self = [super init];
+    if(self) {
+        [self _makePlanes];
+    }
+    return self;
+}
+
 - (instancetype)initWithCamera:(MGPCamera *)camera {
     self = [super init];
     if(self) {
@@ -75,7 +83,7 @@
     light_t shaderProps = light.shaderProperties;
     MGPProjectionState proj = light.projectionState;
     [self setPlanesWithProjectionState:proj
-                               matrix:shaderProps.light_view];
+                               matrix:simd_inverse(shaderProps.light_view)];
 }
 
 - (void)multiplyMatrix:(simd_float4x4)matrix {

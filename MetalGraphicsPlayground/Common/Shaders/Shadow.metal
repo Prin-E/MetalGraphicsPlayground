@@ -26,14 +26,10 @@ using namespace metal;
 
 typedef struct {
     float3 pos     [[attribute(attrib_pos)]];
-    float2 uv      [[attribute(attrib_uv)]];
-    float3 normal  [[attribute(attrib_normal)]];
-    float3 tangent [[attribute(attrib_tangent)]];
 } ShadowVertex;
 
 typedef struct {
-    float4 clipPos      [[position]];
-    float2 uv;
+    float4 clip_pos      [[position]];
 } ShadowFragment;
 
 #pragma mark - Stages
@@ -44,15 +40,14 @@ vertex ShadowFragment shadow_vert(ShadowVertex in [[stage_in]],
                                   uint iid [[instance_id]]) {
     ShadowFragment out;
     float4 v = float4(in.pos, 1.0);
-    out.clipPos = light_global.light_projection * light.light_view * instanceProps[iid].model * v;
-    out.uv = in.uv;
+    out.clip_pos = light.light_view_projection * instanceProps[iid].model * v;
     return out;
 }
 
 // for Debug only
-fragment half4 shadow_frag(ShadowFragment in [[stage_in]],
-                           texture2d<half> albedo [[texture(0)]]) {
-    return albedo.sample(linear, in.uv);
+fragment float shadow_frag(ShadowFragment in [[stage_in]]) {
+    //return albedo.sample(linear, in.uv);
+    return in.clip_pos.z;
 }
 
 #pragma mark - Sampling

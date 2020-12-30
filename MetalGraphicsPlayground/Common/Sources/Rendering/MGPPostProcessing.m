@@ -8,6 +8,7 @@
 
 #import "MGPPostProcessing.h"
 #import "MGPPostProcessingLayer.h"
+#import "../Utility/MGPTextureManager.h"
 
 NSString * const MGPPostProcessingErrorDomain = @"MGPPostProcessingErrorDomain";
 
@@ -28,10 +29,19 @@ NSString * const MGPPostProcessingErrorDomain = @"MGPPostProcessingErrorDomain";
 
 - (instancetype)initWithDevice:(id<MTLDevice>)device
                        library:(id<MTLLibrary>)library {
+    return [self initWithDevice:device
+                        library:library
+                 textureManager:[[MGPTextureManager alloc] initWithDevice:device]];
+}
+
+- (instancetype)initWithDevice:(id<MTLDevice>)device
+                       library:(id<MTLLibrary>)library
+                textureManager:(MGPTextureManager *)textureManager {
     self = [super init];
     if(self) {
         _device = device;
         _library = library;
+        _textureManager = textureManager;
         _layers = [NSMutableArray arrayWithCapacity: 8];
         _layersForRendering = [NSMutableArray arrayWithCapacity: 4];
     }

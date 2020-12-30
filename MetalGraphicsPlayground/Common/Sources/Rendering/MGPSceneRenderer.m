@@ -16,6 +16,7 @@
 #import "../Model/MGPMesh.h"
 #import "../Model/MGPFrustum.h"
 #import "../Model/MGPBoundingVolume.h"
+#import "../Utility/MGPTextureManager.h"
 #import "LightingCommon.h"
 
 @interface MGPDrawCall ()
@@ -51,6 +52,7 @@
 @end
 
 @implementation MGPSceneRenderer {
+    MGPTextureManager *_textureManager;
     NSMutableArray<id<MTLBuffer>> *_instancePropsBuffersList[kMaxBuffersInFlight];
     NSUInteger _instancePropsBufferIndex;
     NSUInteger _instancePropsBufferOffset;
@@ -74,12 +76,11 @@
         _cameraComponents = [NSMutableArray new];
         _lightComponents = [NSMutableArray new];
         _meshComponents = [NSMutableArray new];
+        
+        // texture manager
+        _textureManager = [[MGPTextureManager alloc] initWithDevice:self.device];
     }
     return self;
-}
-
-- (void)resize:(CGSize)newSize {
-    _size = newSize;
 }
 
 - (void)beginFrame {
@@ -121,9 +122,12 @@
     // find first point light index
     NSUInteger numLights = MIN(MAX_NUM_LIGHTS, _lightComponents.count);
     NSUInteger firstPointLightIndex = 0;
+    NSUInteger numDirectionalShadowedLight = 0;
     for(NSUInteger i = 0; i < numLights; i++) {
         if(_lightComponents[i].type == MGPLightTypeDirectional) {
             firstPointLightIndex++;
+            if(_lightComponents[i].castShadows)
+                numDirectionalShadowedLight++;
         }
         else {
             break;
@@ -148,6 +152,7 @@
     light_global_t lightGlobalProps = _scene.lightGlobalProps;
     lightGlobalProps.num_light = (unsigned int)numLights;
     lightGlobalProps.first_point_light_index = (unsigned int)firstPointLightIndex;
+    lightGlobalProps.num_directional_shadowed_light = (unsigned int)numDirectionalShadowedLight;
     _scene.lightGlobalProps = lightGlobalProps;
     memcpy(_lightGlobalBuffer.contents + _currentBufferIndex * sizeof(light_global_t), &lightGlobalProps, sizeof(light_global_t));
     [_lightGlobalBuffer didModifyRange: NSMakeRange(_currentBufferIndex * sizeof(light_global_t),
@@ -157,6 +162,7 @@
     size_t lightPropsBufferOffset = _currentBufferIndex * sizeof(light_t) * MAX_NUM_LIGHTS;
     for(NSUInteger i = 0; i < numLights; i++) {
         light_t lightProps = _lightComponents[i].shaderProperties;
+        lightProps.light_view_projection = simd_mul(lightGlobalProps.light_projection, lightProps.light_view);
         memcpy(_lightPropsBuffer.contents + lightPropsBufferOffset, &lightProps, sizeof(light_t));
         lightPropsBufferOffset += sizeof(light_t);
     }
@@ -166,7 +172,7 @@
     // update camera buffer...
     size_t cameraPropsBufferOffset = _currentBufferIndex * sizeof(camera_props_t) * MAX_NUM_CAMS;
     for(NSUInteger i = 0; i < MIN(4, _cameraComponents.count); i++) {
-        _cameraComponents[i].aspectRatio = _size.width / MAX(0.01f, _size.height);
+        _cameraComponents[i].aspectRatio = self.scaledSize.width / MAX(0.01f, self.scaledSize.height);
         camera_props_t cameraProps = _cameraComponents[i].shaderProperties;
         memcpy(_cameraPropsBuffer.contents + cameraPropsBufferOffset, &cameraProps, sizeof(camera_props_t));
         cameraPropsBufferOffset += sizeof(camera_props_t);
@@ -280,6 +286,11 @@
     MGPDrawCallList *drawCallList = [[MGPDrawCallList alloc] initWithFrustum: frustum
                                                                    drawCalls: combinedDrawCalls];
     return drawCallList;
+}
+
+- (void)resize:(CGSize)newSize {
+    [super resize:newSize];
+    [_textureManager clearUnusedTemporaryTextures];
 }
 
 @end
