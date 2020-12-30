@@ -456,7 +456,6 @@
     
     encoder.label = @"Direct Lighting";
     [encoder setRenderPipelineState: shadingPipeline];
-    [encoder setDepthStencilState:_depthStencilNoWrite];
     [encoder setCullMode: MTLCullModeBack];
     [encoder setFragmentBuffer: _cameraPropsBuffer
                         offset: _currentBufferIndex * sizeof(camera_props_t) * MAX_NUM_CAMS
