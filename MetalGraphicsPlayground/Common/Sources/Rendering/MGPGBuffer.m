@@ -84,9 +84,11 @@
     _prePassDescriptorDict = [NSMutableDictionary dictionaryWithCapacity:4];
     
     _renderPipelineDict = [NSMutableDictionary dictionaryWithCapacity:24];
+    _lightingPipelineDict = [NSMutableDictionary dictionaryWithCapacity:8];
     _shadingPipelineDict = [NSMutableDictionary dictionaryWithCapacity:4];
     _indirectLightingPipelineDict = [NSMutableDictionary dictionaryWithCapacity:4];
     _directionalShadowedLightingPipelineDict = [NSMutableDictionary dictionaryWithCapacity:4];
+    _nonLightCulledShadingPipelineDict = [NSMutableDictionary dictionaryWithCapacity:4];
     
     [self _makeGBufferTextures];
     [self _makeBaseVertexDescriptor];
