@@ -129,9 +129,8 @@ const inline __attribute__((__always_inline__)) float lerp(float a, float b, flo
     NSInteger screenNumber = [screen.deviceDescription[@"NSScreenNumber"] integerValue];
     CVDisplayLinkCreateWithCGDisplay((CGDirectDisplayID)screenNumber, &_displayLinkRef);
     
-    // host time - mach_absolute_time() == CVGetCurrentHostTime()
-    _prevHostTime = mach_absolute_time();
-    double clockFreq = NSEC_PER_SEC; // == CVGetHostClockFrequency();
+    _prevHostTime = CVGetCurrentHostTime();
+    double clockFreq = CVGetHostClockFrequency();
     NSLog(@"Host time : %llu", _prevHostTime);
     NSLog(@"Host clock minimum time delta : %u", CVGetHostClockMinimumTimeDelta());
     NSLog(@"Host clock frequency : %lf", clockFreq);
