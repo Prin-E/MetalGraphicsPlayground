@@ -7,12 +7,11 @@
 //
 
 #import <Cocoa/Cocoa.h>
-#import "MetalView.h"
 @import Metal;
 @import MetalKit;
 @import ModelIO;
 
-@interface AppDelegate : NSObject <NSApplicationDelegate, MetalViewDelegate, NSWindowDelegate>
+@interface AppDelegate : NSObject <NSApplicationDelegate, MTKViewDelegate, NSWindowDelegate>
 
 @property (nonatomic) float roughness, metalic;
 @property (nonatomic) vector_float4 albedo;

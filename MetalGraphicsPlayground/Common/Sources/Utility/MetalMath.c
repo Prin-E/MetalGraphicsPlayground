@@ -80,8 +80,8 @@ matrix_float4x4 matrix_from_rotation(float radians, float x, float y, float z)
 matrix_float4x4 matrix_from_euler(vector_float3 euler) {
     // M = Mz * My * Mx (right to left)
     simd_float4 euler_f4 = simd_make_float4(euler, 0.0f);
-    simd_float4 s = _simd_sin_f4(euler_f4);
-    simd_float4 c = _simd_cos_f4(euler_f4);
+    simd_float4 s = sin(euler_f4);
+    simd_float4 c = cos(euler_f4);
     matrix_float4x4 matrix = matrix_identity_float4x4;
     matrix.columns[0] = simd_make_float4(c.y*c.z, c.y*s.z, -s.y, 0.0);
     matrix.columns[1] = simd_make_float4(s.x*s.y*c.z-c.x*s.z, s.x*s.y*s.z+c.x*c.z, s.x*c.y, 0.0);

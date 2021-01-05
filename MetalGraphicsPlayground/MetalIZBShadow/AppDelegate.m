@@ -56,7 +56,7 @@ typedef NS_OPTIONS(NSInteger, MDepthMapType) {
     float _r2;
 }
 
-@property (weak) IBOutlet MGPView *view;
+@property (weak) IBOutlet MTKView *view;
 @property (weak) IBOutlet NSWindow *window;
 @end
 

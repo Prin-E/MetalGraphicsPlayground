@@ -13,7 +13,7 @@
 @interface AppDelegate ()
 
 @property (weak) IBOutlet NSWindow *window;
-@property (weak) IBOutlet MetalView *view;
+@property (weak) IBOutlet MTKView *view;
 @end
 
 @implementation AppDelegate {
@@ -620,6 +620,7 @@ static BOOL _shouldDrawLUT = YES;
     [self _reshape];
 }
 
+/*
 - (void)metalView:(MetalView *)view keyDown:(NSEvent *)theEvent {
     if(theEvent.keyCode == 126)
         _zPos += .01f;
@@ -653,14 +654,15 @@ static BOOL _shouldDrawLUT = YES;
     }
 }
 
-- (void)metalView:(MetalView *)view mouseDragged:(NSEvent *)theEvent {
+- (void)metalView:(MTKView *)view mouseDragged:(NSEvent *)theEvent {
     //CGSize viewSize = _view.drawableSize;
     //float aspect = viewSize.width / viewSize.height;
     
     //_mouseRotZ += theEvent.deltaY / viewSize.height * -90.0f;
     //_mouseRotX += theEvent.deltaX / viewSize.width * 90.0f;
 }
-
+*/
+  
 - (void)windowDidEnterFullScreen:(NSNotification *)notification {
     [self _reshape];
 }
