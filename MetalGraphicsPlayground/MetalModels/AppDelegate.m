@@ -163,7 +163,7 @@
     [encoder endEncoding];
     
     [buffer addCompletedHandler: ^(id<MTLCommandBuffer> buffer) {
-        dispatch_semaphore_signal(semaphore);
+        dispatch_semaphore_signal(self->semaphore);
     }];
     [buffer presentDrawable: _view.currentDrawable];
     [buffer commit];

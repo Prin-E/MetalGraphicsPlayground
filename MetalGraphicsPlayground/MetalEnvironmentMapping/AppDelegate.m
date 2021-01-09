@@ -10,10 +10,20 @@
 #import "MetalMath.h"
 #import "SharedStructures.h"
 
+@interface MetalView : MTKView
+@property (nonatomic) id<MetalViewEventHandler> eventHandler;
+@end
+
+@implementation MetalView
+-(void)keyDown:(NSEvent *)event {
+    [self.eventHandler metalView:self keyDown:event];
+}
+@end
+
 @interface AppDelegate ()
 
 @property (weak) IBOutlet NSWindow *window;
-@property (weak) IBOutlet MTKView *view;
+@property (weak) IBOutlet MetalView *view;
 @end
 
 @implementation AppDelegate {
@@ -70,36 +80,10 @@ id<MTLTexture> ddd;
     _prevDate = [NSDate date];
     _window.delegate = self;
     
-    
-    
     [self _initMetal];
     [self _initView];
     [self _initAssets];
     [self _reshape];
-    
-    
-    
-    const int cnt = 256;
-    float arr[cnt][cnt][2];
-    for(int i = 0; i < cnt; i++) {
-        for(int j = 0; j < cnt; j++) {
-            vector_float2 c = IntegrateBRDF((float)i/(float)cnt, (float)j/(float)cnt);
-            arr[i][j][0] = c.x;
-            arr[i][j][1] = c.y;
-        }
-    }
-    
-    MTLTextureDescriptor *desc = [MTLTextureDescriptor texture2DDescriptorWithPixelFormat: MTLPixelFormatRG32Float
-                                                                                   width: cnt
-                                                                                  height: cnt
-                                                                               mipmapped: NO];
-    id<MTLTexture> tex = [_device newTextureWithDescriptor: desc];
-    [tex setLabel: @"DummyTex"];
-    [tex replaceRegion: MTLRegionMake2D(0, 0, cnt, cnt)
-           mipmapLevel: 0
-             withBytes: arr
-           bytesPerRow: 8*cnt];
-    ddd =tex;
 }
 
 
@@ -117,6 +101,7 @@ id<MTLTexture> ddd;
     _view.device = _device;
     _view.preferredFramesPerSecond = 60;
     _view.delegate = self;
+    _view.eventHandler = self;
     _view.depthStencilPixelFormat = MTLPixelFormatDepth32Float_Stencil8;
 }
 
@@ -399,7 +384,6 @@ id<MTLTexture> ddd;
                            indexBuffer: submesh.indexBuffer.buffer
                      indexBufferOffset: submesh.indexBuffer.offset];
         }
-        [enc textureBarrier];
         [enc endEncoding];
     }
     
@@ -474,7 +458,6 @@ id<MTLTexture> ddd;
                                indexBuffer: submesh.indexBuffer.buffer
                          indexBufferOffset: submesh.indexBuffer.offset];
             }
-            [enc textureBarrier];
             [enc endEncoding];
         }
     }
@@ -502,7 +485,6 @@ id<MTLTexture> ddd;
                        indexBuffer: submesh.indexBuffer.buffer
                  indexBufferOffset: submesh.indexBuffer.offset];
     }
-    [enc textureBarrier];
     [enc endEncoding];
     
     [buffer commit];
@@ -608,7 +590,7 @@ static BOOL _shouldDrawLUT = YES;
     [enc endEncoding];
     
     [buffer addCompletedHandler: ^(id<MTLCommandBuffer> b) {
-        dispatch_semaphore_signal(_semaphore);
+        dispatch_semaphore_signal(self->_semaphore);
     }];
     [buffer presentDrawable: _view.currentDrawable];
     [buffer commit];
@@ -620,7 +602,6 @@ static BOOL _shouldDrawLUT = YES;
     [self _reshape];
 }
 
-/*
 - (void)metalView:(MetalView *)view keyDown:(NSEvent *)theEvent {
     if(theEvent.keyCode == 126)
         _zPos += .01f;
@@ -654,15 +635,6 @@ static BOOL _shouldDrawLUT = YES;
     }
 }
 
-- (void)metalView:(MTKView *)view mouseDragged:(NSEvent *)theEvent {
-    //CGSize viewSize = _view.drawableSize;
-    //float aspect = viewSize.width / viewSize.height;
-    
-    //_mouseRotZ += theEvent.deltaY / viewSize.height * -90.0f;
-    //_mouseRotX += theEvent.deltaX / viewSize.width * 90.0f;
-}
-*/
-  
 - (void)windowDidEnterFullScreen:(NSNotification *)notification {
     [self _reshape];
 }

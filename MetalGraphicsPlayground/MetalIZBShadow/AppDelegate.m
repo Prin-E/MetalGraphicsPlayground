@@ -202,7 +202,6 @@ typedef NS_OPTIONS(NSInteger, MDepthMapType) {
     [enc setLabel: @"Shadow"];
     [enc setDepthStencilState: _depthState];
     [self _draw: enc isShadowMap: YES depthMapType: MDepthMapTypeLightView];
-    [enc textureBarrier];
     [enc endEncoding];
     
     // Render
@@ -216,7 +215,7 @@ typedef NS_OPTIONS(NSInteger, MDepthMapType) {
     [enc endEncoding];
     
     [buffer addCompletedHandler: ^(id<MTLCommandBuffer> b) {
-        dispatch_semaphore_signal(_semaphore);
+        dispatch_semaphore_signal(self->_semaphore);
     }];
     [buffer presentDrawable: _view.currentDrawable];
     [buffer commit];
@@ -252,9 +251,6 @@ typedef NS_OPTIONS(NSInteger, MDepthMapType) {
     [enc setDepthStencilState: _depthState];
     [self _draw: enc isShadowMap: YES depthMapType: MDepthMapTypeEyeView];
     [enc endEncoding];
-    
-    id<MTLComputeCommandEncoder> comp = [buffer computeCommandEncoder];
-    [comp setComputePipelineState: nil];
 }
 
 - (void)_computeIZB_LightView: (id<MTLCommandBuffer>)buffer {

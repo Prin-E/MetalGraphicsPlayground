@@ -11,7 +11,12 @@
 @import MetalKit;
 @import ModelIO;
 
-@interface AppDelegate : NSObject <NSApplicationDelegate, MTKViewDelegate, NSWindowDelegate>
+@class MetalView;
+@protocol MetalViewEventHandler <NSObject>
+- (void)metalView:(MetalView*)view keyDown:(NSEvent*)event;
+@end
+ 
+@interface AppDelegate : NSObject <NSApplicationDelegate, MTKViewDelegate, MetalViewEventHandler, NSWindowDelegate>
 
 @property (nonatomic) float roughness, metalic;
 @property (nonatomic) vector_float4 albedo;
