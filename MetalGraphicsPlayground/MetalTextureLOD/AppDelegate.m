@@ -128,11 +128,14 @@ static NSUInteger kTextureComp = 4;
             NSLog(@"MTLIndirectArgumentBuffersTier2");
         BOOL rasterOrderGroupsSupported = _device.rasterOrderGroupsSupported;
         NSLog(@"Raster order group : %d", rasterOrderGroupsSupported);
+        MTLSize maxThreadsPerThreadgroup = _device.maxThreadsPerThreadgroup;
+        NSLog(@"Max threads per threadgroup : %lux%lux%lu", maxThreadsPerThreadgroup.width, maxThreadsPerThreadgroup.height, maxThreadsPerThreadgroup.depth);
+        NSInteger maxThreadgroupMemoryLength = _device.maxThreadgroupMemoryLength;
+        NSLog(@"Max threadgroup memory length : %lu", maxThreadgroupMemoryLength);
     }
     
     _library = [_device newDefaultLibrary];
     _queue = [_device newCommandQueue];
-    
     
     /*
     MTLHeapDescriptor *heapDesc = [MTLHeapDescriptor new];
