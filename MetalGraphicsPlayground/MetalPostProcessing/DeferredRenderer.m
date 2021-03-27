@@ -39,7 +39,7 @@ const float kLightIntensityBase = 1.0f;
 const float kLightIntensityVariation = 1.0f;
 const size_t kShadowResolution = 512;
 const float kCameraSpeed = 1;
-const size_t kLightCullBufferSize = 8100*4*16;
+const size_t kLightCullBufferSize = 19881*4*16; // fits Pro Display XDR (6016/16)*(3384/16)/4=19881
 const NSUInteger kLightCountPerDrawCall = 4;
 
 #define DEG_TO_RAD(x) ((x)*0.0174532925)

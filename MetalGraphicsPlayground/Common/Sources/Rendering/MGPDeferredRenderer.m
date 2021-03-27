@@ -23,7 +23,7 @@
 #import "../Model/MGPImageBasedLighting.h"
 
 #define DEFAULT_SHADOW_RESOLUTION 512
-#define LIGHT_CULL_BUFFER_SIZE (8100*4*16)
+#define LIGHT_CULL_BUFFER_SIZE (19881*4*16) // fits Pro Display XDR (6016/16)*(3384/16)/4=19881
 #define LIGHT_CULL_GRID_TILE_SIZE 16
 
 @interface MGPDeferredRenderer ()
