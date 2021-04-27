@@ -49,7 +49,7 @@
         descriptor.attributes[attrib_tangent].bufferIndex = 0;
         descriptor.layouts[0].stride = 44;
         descriptor.layouts[0].stepRate = 1;
-        descriptor.layouts[0].stepFunction = MTLStepFunctionPerVertex;
+        descriptor.layouts[0].stepFunction = MTLVertexStepFunctionPerVertex;
     }
     _vertexDescriptor = MTKModelIOVertexDescriptorFromMetal(descriptor);
     _vertexDescriptor.attributes[attrib_pos].name = MDLVertexAttributePosition;

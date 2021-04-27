@@ -202,7 +202,7 @@
     _baseVertexDescriptor.attributes[attrib_tangent].bufferIndex = 0;
     _baseVertexDescriptor.layouts[0].stride = 44;
     _baseVertexDescriptor.layouts[0].stepRate = 1;
-    _baseVertexDescriptor.layouts[0].stepFunction = MTLStepFunctionPerVertex;
+    _baseVertexDescriptor.layouts[0].stepFunction = MTLVertexStepFunctionPerVertex;
 }
 
 - (void)_makeRenderPipelineDescriptor {
