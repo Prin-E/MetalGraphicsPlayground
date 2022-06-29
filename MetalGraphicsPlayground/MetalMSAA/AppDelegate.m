@@ -40,6 +40,7 @@ const NSInteger kNumInflightBuffers = 3;
     id<MTLRenderPipelineState> _pipelineState;
     NSUInteger _textureWidth, _textureHeight, _textureComp;
     
+    NSInteger _maxSampleCount;
     uniform_t _uniform;
     uint8_t _uniformBufferIndex;
     float _rot;
@@ -65,6 +66,13 @@ const NSInteger kNumInflightBuffers = 3;
     _library = [_device newDefaultLibrary];
     
     semaphore = dispatch_semaphore_create(kNumInflightBuffers);
+    
+    _maxSampleCount = 1;
+    NSInteger sampleCounts[] = { 2, 4, 8, 16 };
+    for(int i = 0; i < sizeof(sampleCounts)/sizeof(sampleCounts[0]); i++) {
+        if([_device supportsTextureSampleCount: sampleCounts[i]])
+            _maxSampleCount = sampleCounts[i];
+    }
 }
 
 - (void)_initView {
@@ -154,7 +162,7 @@ const NSInteger kNumInflightBuffers = 3;
     
     pipelineDesc.vertexFunction = [_library newFunctionWithName: @"vert"];
     pipelineDesc.fragmentFunction = [_library newFunctionWithName: @"frag"];
-    pipelineDesc.sampleCount = 8;
+    pipelineDesc.rasterSampleCount = _maxSampleCount;
     _msPipeline = [_device newRenderPipelineStateWithDescriptor: pipelineDesc error: &err];
     CHECK_ERR(err);
     
@@ -163,7 +171,7 @@ const NSInteger kNumInflightBuffers = 3;
                                                                      width: 1000
                                                                     height: 1000
                                                                  mipmapped: NO];
-    textureDesc.sampleCount = 8;
+    textureDesc.sampleCount = _maxSampleCount;
     textureDesc.storageMode = MTLStorageModePrivate;
     textureDesc.textureType = MTLTextureType2DMultisample;
     textureDesc.usage = MTLTextureUsageRenderTarget | MTLTextureUsageShaderRead;
@@ -171,7 +179,7 @@ const NSInteger kNumInflightBuffers = 3;
     textureDesc.pixelFormat = MTLPixelFormatDepth32Float_Stencil8;
     id<MTLTexture> msDepthTex = [_device newTextureWithDescriptor: textureDesc];
     textureDesc.textureType = MTLTextureType2D;
-    textureDesc.sampleCount = 8;
+    textureDesc.sampleCount = _maxSampleCount;
     textureDesc.pixelFormat = MTLPixelFormatBGRA8Unorm;
     //id<MTLTexture> resolveTexture = [_device newTextureWithDescriptor: textureDesc];
     
@@ -204,7 +212,6 @@ const NSInteger kNumInflightBuffers = 3;
                          indexType: MTLIndexTypeUInt32
                        indexBuffer: _indexBuffer
                  indexBufferOffset: 0];
-    [encoder textureBarrier];
     [encoder endEncoding];
 
     MTLRenderPassDescriptor *renderPassDesc = [_view currentRenderPassDescriptor];
@@ -231,7 +238,7 @@ const NSInteger kNumInflightBuffers = 3;
     [self _updateUniformBuffer];
     
     [buffer addCompletedHandler: ^(id<MTLCommandBuffer> buffer) {
-        dispatch_semaphore_signal(semaphore);
+        dispatch_semaphore_signal(self->semaphore);
     }];
     [buffer presentDrawable: _view.currentDrawable];
     [buffer commit];

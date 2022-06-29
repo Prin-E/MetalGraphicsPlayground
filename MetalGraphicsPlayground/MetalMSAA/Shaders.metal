@@ -28,12 +28,9 @@ typedef struct {
 constexpr sampler s(coord::normalized,
                     address::clamp_to_edge,
                     filter::linear);
-constexpr sampler s2(coord::normalized,
-                    address::clamp_to_edge,
-                    filter::linear);
 
 
-vertex f_in vert(v_in in [[stage_in]], device uniform_t &uniform [[buffer(1)]]) {
+vertex f_in vert(v_in in [[stage_in]], constant uniform_t &uniform [[buffer(1)]]) {
     f_in out;
     out.position = uniform.modelview * float4(in.position, 1.0f);
     out.uv = in.uv;
@@ -41,11 +38,11 @@ vertex f_in vert(v_in in [[stage_in]], device uniform_t &uniform [[buffer(1)]]) 
 }
 
 fragment float4 frag(f_in in [[stage_in]], texture2d<float> tex [[texture(0)]]) {
-    float4 color = tex.sample(s2, in.uv);
+    float4 color = tex.sample(s, in.uv);
     return color;
 }
 
-vertex f_in vert2(v_in in [[stage_in]], device uniform_t &uniform [[buffer(1)]]) {
+vertex f_in vert2(v_in in [[stage_in]], constant uniform_t &uniform [[buffer(1)]]) {
     f_in out;
     out.position = uniform.projection * float4(in.position, 1.0f);
     out.uv = in.uv;
@@ -56,7 +53,7 @@ fragment f_out frag2(f_in in [[stage_in]], texture2d_ms<float> tex [[texture(0)]
     f_out out;
     float4 color = float4(0.0f, 0.0f, 0.0f, 0.0f);
 
-    uint sc = 8;
+    uint sc = tex.get_num_samples();
     uint2 pixel = uint2(in.uv.x * 1000, in.uv.y * 1000);
     for(uint i = 0; i < sc; i++) {
         float4 sample = tex.read(pixel, i);
