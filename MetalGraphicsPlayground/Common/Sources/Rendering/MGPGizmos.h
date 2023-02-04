@@ -13,6 +13,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+@class MGPVolume;
 @interface MGPGizmos : NSObject
 
 @property (nonatomic) NSUInteger currentBufferIndex;
@@ -26,6 +27,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)drawWireframeSphereWithCenter:(simd_float3)position
                                radius:(float)radius;
+- (void)drawWireframeBoxWithCenter:(simd_float3)position
+                            extent:(simd_float3)extent;
 
 - (void)prepareEncodingWithColorTexture:(id<MTLTexture>)colorTex
                            depthTexture:(id<MTLTexture>)depthTex

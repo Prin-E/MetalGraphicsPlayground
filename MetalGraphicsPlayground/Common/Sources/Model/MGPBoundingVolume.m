@@ -15,8 +15,18 @@
 @synthesize position = _position;
 
 - (BOOL)isCulledInFrustum:(MGPFrustum *)frustum {
-    // TODO:
-    return NO;
+    BOOL isCulled = NO;
+    simd_float3 abs_extent = simd_abs(_extent);
+    NSArray<MGPPlane*> *planes = frustum.planes;
+    for(MGPPlane *plane in planes) {
+        float distance = [plane distanceToPosition: _position];
+        float radius = simd_dot(simd_abs(plane.normal), abs_extent);
+        if(distance < -radius) {
+            isCulled = YES;
+            break;
+        }
+    }
+    return isCulled;
 }
 
 @end

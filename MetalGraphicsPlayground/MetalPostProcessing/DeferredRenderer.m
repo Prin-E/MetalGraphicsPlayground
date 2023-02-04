@@ -168,6 +168,11 @@ const NSUInteger kLightCountPerDrawCall = 4;
         self.cullOn = !self.cullOn;
         NSLog(@"Cull : %d", self.cullOn);
     }
+    if(theEvent.keyCode == 20) {
+        // 2
+        self.locksFrustum = !self.locksFrustum;
+        NSLog(@"Frustum Lock : %d", self.locksFrustum);
+    }
     if(theEvent.keyCode == 49) {
         // space
         NSLog(@"camera (%.3f, %.3f, %.3f)", _camera.position.x, _camera.position.y, _camera.position.z);
@@ -824,10 +829,21 @@ const NSUInteger kLightCountPerDrawCall = 4;
             
             // Gizmo
             if(bindTextures && _drawGizmos) {
+                // TODO: needs more sophiscated local to world translation...
+                
                 if([volume class] == [MGPBoundingSphere class]) {
                     MGPBoundingSphere *sphere = volume;
-                    [_gizmos drawWireframeSphereWithCenter:sphere.position
-                                                    radius:sphere.radius];
+                    simd_float3 world_pos = sphere.position * 0.01f;
+                    float world_radius = sphere.radius * 0.01f;
+                    [_gizmos drawWireframeSphereWithCenter:world_pos
+                                                    radius:world_radius];
+                }
+                else if([volume class] == [MGPBoundingBox class]) {
+                    MGPBoundingBox *box = volume;
+                    simd_float3 world_pos = box.position * 0.01f;
+                    simd_float3 world_extent = box.extent * 0.01f;
+                    [_gizmos drawWireframeBoxWithCenter:world_pos
+                                                 extent:world_extent];
                 }
             }
             
@@ -913,9 +929,20 @@ const NSUInteger kLightCountPerDrawCall = 4;
                         offset: _currentBufferIndex * sizeof(instance_props_t) * kNumInstance
                        atIndex: 2];
     
+    static MGPFrustum *frustum = nil;
+    if(_locksFrustum) {
+        if(_camera.frustum == frustum)
+            frustum = nil;
+        if(frustum == nil)
+            frustum = [_camera.frustum frustumByMultipliedWithMatrix:matrix_identity_float4x4];
+    }
+    else {
+        frustum = _camera.frustum;
+    }
+    
     [self renderObjects: encoder
            bindTextures: YES
-                frustum: _camera.frustum];
+                frustum: frustum];
     [encoder endEncoding];
 }
 

@@ -20,6 +20,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 // Frustum culling
 @property (readwrite) BOOL cullOn;
+@property (readwrite) BOOL locksFrustum;
 
 // G-buffer
 @property (readwrite) NSUInteger gBufferIndex;

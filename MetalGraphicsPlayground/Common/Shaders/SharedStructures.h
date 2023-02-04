@@ -76,10 +76,15 @@ typedef struct __attribute__((__aligned__(256))) {
     float vignette;
 } screen_space_reflection_props_t;
 
+typedef enum {
+    gizmo_sphere,
+    gizmo_box
+} gizmo_type_t;
+
 typedef struct __attribute__((__aligned__(256))) {
-    vector_float4 color;
-    vector_float3 position;
-    float radius;
+    simd_float4x4 model;
+    simd_float4 color;
+    gizmo_type_t type;
 } gizmo_props_t;
 
 // attachment

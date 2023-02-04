@@ -24,7 +24,7 @@ vertex GizmoFragment gizmo_wireframe_vert(GizmoVertex in [[stage_in]],
                                           constant gizmo_props_t *gizmo_props [[buffer(2)]],
                                           uint iid [[instance_id]]) {
     GizmoFragment out;
-    float4 pos = float4(in.pos * gizmo_props[iid].radius + gizmo_props[iid].position, 1.0);
+    float4 pos = gizmo_props[iid].model * float4(in.pos, 1.0);
     out.clipPos = camera_props.viewProjection * pos;
     return out;
 }

@@ -100,14 +100,21 @@
     
     // calculate center point and radius
     simd_float3 center = (min+max)*0.5;
-    float radius = simd_length(max-center);
+    simd_float3 extent = max-center;
     
     // make bounding sphere
-    // TODO: applying bounding box...
+    /*
     MGPBoundingSphere *sphere = [MGPBoundingSphere new];
-    sphere.radius = radius;
+    sphere.radius = simd_length(extent);
     sphere.position = center;
     _volume = sphere;
+     */
+    
+    // make bounding box
+    MGPBoundingBox *box = [MGPBoundingBox new];
+    box.extent = extent;
+    box.position = center;
+    _volume = box;
 }
 
 + (nonnull id<MTLTexture>) createMetalTextureFromMaterial:(nonnull MDLMaterial *)material
